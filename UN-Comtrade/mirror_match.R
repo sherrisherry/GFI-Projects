@@ -10,15 +10,17 @@ library("aws.s3")
 library('aws.ec2metadata')
 library('jsonlite')
 library('googledrive')
+library("data.table")
 
 #=====================================modify the following parameters for each new run==============================================#
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2000 # the years we want to download
+hk_years <- 2016:2000 # years HK re-export data is available
 out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-comtrade' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
-hk_DIR <- "HongKong_Trade"
+tag <- "Comtrade"
 counts_DIR <- "Comtrade_Counts"
 oplog <- 'mirror_match.log' # progress report file
 dinfo <- 'download.log' # file of the information of the downloaded data
@@ -26,11 +28,11 @@ max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 googlekey <- '~/vars/googleapi.json' # Google service credentials
 gpath <- 'Mirror-Analysis' # the folder name of this project
-tag <- 'Comtrade'
+i_WRITEALL <- 1  # set to 1 if you wish to write intermediate output to disk, but it adds significantly to run time
 # column names of the raw data; if it gets changed, we may also need to change the subsetting code.
 col_names_UN <- c("classification","year","period","perioddesc","aggregatelevel","isleafcode","tradeflowcode",
-                  "tradeflow","reportercode","reporter","reporteriso","partnercode","partner","partneriso",
-                  "commoditycode","commodity","qtyunitcode","qtyunit","qty","netweightkg","tradevalueus","flag")
+                  "tradeflow","reportercode","reporteriso","partnercode","partneriso",
+                  "commoditycode","qtyunitcode","qtyunit","qty","netweightkg","tradevalueus","flag")
 
 #===================================================================================================================================#
 				  
@@ -46,36 +48,6 @@ if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = g
 options(stringsAsFactors= FALSE)
 cat(NULL, file = oplog, append = FALSE)
 
-
-options(stringsAsFactors= FALSE)
-
-# read in function to process preliminary data treatments
-  source("prox-treat.R",sep=""))
-
-#=================
-# Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data and stored in swiss_DIR as CSV files
-  M_swiss <- read.csv("Swiss_trade_m.csv",header=TRUE,na.strings="")
-  X_swiss <- read.csv("Swiss_trade_x.csv",header=TRUE,na.strings="")
-  colnames(M_swiss) <- c("i","j","k","t","v_M_swiss","q_kg_M_swiss")
-  colnames(X_swiss) <- c("i","j","k","t","v_X_swiss","q_kg_X_swiss")
-  # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
-  #     (NB, monetary gold trade flows should not be included in UN-Comtrade dataset for any country)
-  M_swiss <- subset(M_swiss,M_swiss$k==710812)
-  X_swiss <- subset(X_swiss,X_swiss$k==710812)
-  # read in "swiss.r" a procedure to make adjustments for each tradeflow matrix
-  colnames(M_swiss) <- c("i","j","k","t","v_M_swiss","q_kg_M_swiss")
-colnames(X_swiss) <- c("i","j","k","t","v_X_swiss","q_kg_X_swiss")
-  source("prox-swiss.R")
-
-# Data hkrx compiled by Joe Spanjers from Hong Kong sources and stored  in hk_DIR as CSV file
-  nms_hk <- c("t","k","origin_hk","consig_hk","vrx_hkd","origin_un","consig_un","usd_per_hkd","vrx_usd")
-  cls_hk <- c(rep("integer",4),"numeric",rep("integer",2),rep("numeric",2))
-  rx_hk <- fread(paste(hk_DIR,"/hkrx.csv",sep=""),header=TRUE,colClasses=cls_hk,na.strings="")
-  rx_hk <- as.data.frame(rx_hk)
-  colnames(rx_hk) <- nms_hk
-  rx_hk <- rx_hk[,c("t","origin_un","consig_un","k","vrx_usd")]
-  colnames(rx_hk) <- c("t","i","j","k","v_rx_hk")
-#==================
 
 # Set up counters to collect for multiple years
 n_dates <- length(years)
@@ -110,22 +82,13 @@ for (t in 1:n_dates) {
 # Start RAW module
     cat("\n","   (1) RAW module")
     cat("\n","        ...reading data file downloaded from UN-COMTRADE...","\n")
-    raw_data <- s3read_using(FUN = function(x)read.csv(xzfile(x), header=TRUE), object = paste(year, '.csv.xz', sep = ''), bucket = in_bucket)
-    cat("\n","        ...collecting commodity codes...")
-    temp <- unique(raw_data[,"commoditycode"])
-    write.csv(temp,"tmp/codes-commodities.csv",row.names=FALSE)
-    cat("\n","        ...collecting country codes...")
-    temp1 <- unique(raw_data[,c("reportercode","reporteriso")])
-    temp2 <- unique(raw_data[,c("partnercode","partneriso")])
-    cty_cols <- c("code","iso")
-    colnames(temp1) <- cty_cols
-    colnames(temp2) <- cty_cols
-    temp <- unique(rbind(temp1,temp2))
-    write.csv(temp,"tmp/codes-countries.csv",row.names=FALSE)
-    cat("\n","        ...collecting quantity codes...")
-    temp <- unique(raw_data[,c("qtyunitcode","qtyunit")])
-    write.csv(temp,"tmp/codes-quantities.csv",row.names=FALSE)
-#    cat("\n","        ...eliminating redundant columns...")
+    raw_data <- s3read_using(FUN = function(x)read.csv(xzfile(x), header=TRUE), 
+                             object = paste(year, '.csv.xz', sep = ''), bucket = in_bucket)
+    if(!identical(colnames(raw_data),col_names_UN)){
+      logg(paste(year, '!', 'colnames mismatching', sep = '\t'))
+      next
+      }
+    cat("\n","        ...eliminating redundant columns...")
     raw_data <- raw_data[,c("tradeflowcode","classification","reportercode","partnercode","commoditycode","qtyunitcode",
                             "qty","netweightkg","tradevalueus")]
     colnames(raw_data) <- c("tf","hs","i","j","k","q_code","q","q_kg","v")
@@ -146,20 +109,12 @@ for (t in 1:n_dates) {
     rM<-subset(raw_data,raw_data$tf==4) ; rM <- rM[,c("hs","i","j","k","v","q_code","q","q_kg")]
     colnames(rM) <- c("hs","i","j","k","v_rM","q_code_rM","q_rM","q_kg_rM")
     n_RAW$rM[t] <- dim(rM)[1]
-    if (i_WRITEALL) {
-      cat("\n","        ...writing RAW files to disk")
-           fwrite(M,file="raw-M.csv",col.names=TRUE,row.names=FALSE,na="",sep=",")
-           fwrite(X,file="raw-X.csv",col.names=TRUE,row.names=FALSE,na="",sep=",")
-           fwrite(rX,file="raw-rX.csv",col.names=TRUE,row.names=FALSE,na="",sep=",")
-           fwrite(rM,file="raw-rM.csv",col.names=TRUE,row.names=FALSE,na="",sep=",")
-           }
     remove(raw_data)
 #   End RAW module
-    
-    
-    
+
 #   Start TREAT module 
- 
+    # read in function to process preliminary data treatments
+    source("prox-treat.R",sep="")
     cat("\n","   (2) TREAT module")
     cat("\n","        ...treating M...") ; M  <- treat(M,t)
     cat("\n","        ...treating X...") ; X  <- treat(X,t)
@@ -174,15 +129,31 @@ for (t in 1:n_dates) {
       # write
       if(i_WRITEALL) {
           cat("\n","        ...writing treated flows to disk...")
-          cat("\n","           ...M...") ; fwrite(M,file="treated-M.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
-          cat("\n","           ...X...") ; fwrite(X,file="treated-X.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
-          cat("\n","           ...rX...") ; fwrite(rX,file="treated-rX.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
-          cat("\n","           ...rM...") ; fwrite(rM,file="treated-rM.csv",sep=",",col.names=TRUE,row.names=FALSE,na="") 
-        }
+          cat("\n","           ...M...") ; fwrite(M,file="tmp/M.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+          cat("\n","           ...X...") ; fwrite(X,file="tmp/X.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+          cat("\n","           ...rX...") ; fwrite(rX,file="tmp/rX.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+          cat("\n","           ...rM...") ; fwrite(rM,file="tmp/rM.csv",sep=",",col.names=TRUE,row.names=FALSE,na="") 
+      }
+      logg(paste(year, ':', 'treated', sep = '\t'))
 
     #   End TREAT module
  
 # Start SWISS module
+      # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data and stored in swiss_DIR as CSV files
+      M_swiss <- s3read_using(FUN = function(x)read.csv(x, header=TRUE, na.strings=""), 
+                              object = "Swiss_trade_m.csv", bucket = sup_bucket)
+      X_swiss <- s3read_using(FUN = function(x)read.csv(x, header=TRUE, na.strings=""), 
+                              object = "Swiss_trade_x.csv", bucket = sup_bucket)
+      colnames(M_swiss) <- c("i","j","k","t","v_M_swiss","q_kg_M_swiss")
+      colnames(X_swiss) <- c("i","j","k","t","v_X_swiss","q_kg_X_swiss")
+      # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
+      #     (NB, monetary gold trade flows should not be included in UN-Comtrade dataset for any country)
+      M_swiss <- subset(M_swiss,M_swiss$k==710812)
+      X_swiss <- subset(X_swiss,X_swiss$k==710812)
+      # read in "swiss.r" a procedure to make adjustments for each tradeflow matrix
+      colnames(M_swiss) <- c("i","j","k","t","v_M_swiss","q_kg_M_swiss")
+      colnames(X_swiss) <- c("i","j","k","t","v_X_swiss","q_kg_X_swiss")
+      source("prox-swiss.R")
     cat("\n","   (3) SWISS module")
     cat("\n","        ...making Swiss adjustments for M...") ; M  <- swiss(M,M_swiss,t)
     cat("\n","        ...making Swiss adjustments for X...") ; X  <- swiss(X,X_swiss,t)
@@ -195,9 +166,11 @@ for (t in 1:n_dates) {
     # write
       if(i_WRITEALL) {
         cat("\n","        ...writing Swiss-adjusted flows to disk...")
-          cat("\n","           ...M...") ; fwrite(M,file="swiss-M.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
-          cat("\n","           ...X...") ; fwrite(X,file="swiss-X.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+          cat("\n","           ...M...") ; fwrite(M,file="tmp/M.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+          cat("\n","           ...X...") ; fwrite(X,file="tmp/X.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
       }
+    logg(paste(year, ':', 'swiss-adjusted', sep = '\t'))
+    rm(M_swiss, X_swiss)
     # End SWISS module
        
 #   Start PAIR module 
@@ -222,7 +195,8 @@ for (t in 1:n_dates) {
     M_paired <- M_paired[,c("hs_rpt","hs_ptn","i","j","k","v_M","v_X","v_rX","v_rM","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")]
     #
     cat("\n","        ...writing unadjusted paired M data")
-        fwrite(M_paired,"M-paired-no-HK-adjustment.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+        fwrite(M_paired,"tmp/M.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+    logg(paste(year, ':', 'M-paired', sep = '\t'))
   
     # Pair X
     cat("\n","        ...pairing X data")
@@ -244,14 +218,23 @@ for (t in 1:n_dates) {
     #
     #
     cat("\n","        ...writing unadjusted paired X data")
-      fwrite(X_paired,"X-paired-no-HK-adjustment.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+      fwrite(X_paired,"tmp/X.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+    logg(paste(year, ':', 'X-paired', sep = '\t'))
+    rm(z_M, z_X, z_rX, z_rM)
     # end PAIR module
 
 # Start Hong Kong module
     cat("\n","   (5) Hong Kong module","\n")
+    # Data hkrx compiled by Joe Spanjers from Hong Kong sources and stored  in hk_DIR as CSV file
+    nms_hk <- c("t","k","origin_hk","consig_hk","vrx_hkd","origin_un","consig_un","usd_per_hkd","vrx_usd")
+    cls_hk <- c(rep("integer",4),"numeric",rep("integer",2),rep("numeric",2))
+    rx_hk <- s3read_using(FUN = function(x)read.csv(unz(x, 'hkrx.csv'), header=TRUE, na.strings=""), 
+                          object = "HK_trade_rx.zip", bucket = sup_bucket)
+    colnames(rx_hk) <- nms_hk
+    rx_hk <- rx_hk[,c("t","origin_un","consig_un","k","vrx_usd")]
+    colnames(rx_hk) <- c("t","i","j","k","v_rx_hk")
     # operate on X-paired and M-paired and then redo the matching etc
-    if ((year <= 2016) & (year >= 2000) ) {
-      #if ((year <= 2016) & (year >= 2000) & (!year == 2001)) {
+    if (year %in% hk_years) {
         hk <- subset(rx_hk,rx_hk$t==year)
         hk <- hk[,c("i","j","k","v_rx_hk")]
         # adjusting M variables
@@ -293,8 +276,10 @@ for (t in 1:n_dates) {
         fwrite(junk,file="X-not HK adjusted.csv",col.names = TRUE,row.names = FALSE,sep=",",na = "")
         remove(temp,junk)
     }
-    cat("\n","        ...writing adjusted paired M data") ; fwrite(M_paired,"M-paired.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
-    cat("\n","        ...writing adjusted paired X data") ; fwrite(X_paired,"X-paired.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+    cat("\n","        ...writing adjusted paired M data") ; fwrite(M_paired,"tmp/M.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+    logg(paste(year, ':', 'M-HK-adjusted', sep = '\t'))
+    cat("\n","        ...writing adjusted paired X data") ; fwrite(X_paired,"tmp/X.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+    logg(paste(year, ':', 'X-HK-adjusted', sep = '\t'))
     # end Hong Kong module
 
 # Start MATCH module 
@@ -320,14 +305,17 @@ for (t in 1:n_dates) {
       X_lost <- M_orphan
          #
       cat("\n","        ...writing matched M data")
+      s3write_using(M_matched, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
+                    bucket = out_bucket,
+                    object = paste(tag, '-M-matched-', year, '.csv.xz', sep = ''))
         fwrite(M_matched,"M-matched.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
         fwrite(M_matched_q,"M-matched-q.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
-        fwrite(M_orphan,"M-orphaned.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
         cat("\n","        ...writing matched X data")
         fwrite(X_matched,"X-matched.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
         fwrite(X_matched_q,"X-matched-q.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
-        fwrite(X_orphan,"X-orphaned.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
         cat("\n","        ...writing lost X & M data")
+        fwrite(M_orphan,"M-orphaned.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
+        fwrite(X_orphan,"X-orphaned.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
         fwrite(X_lost,"X-lost.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
         fwrite(M_lost,"M-lost.csv",sep=",",col.names=TRUE,row.names=FALSE,na="")
 # end MATCH module
@@ -424,10 +412,6 @@ for (t in 1:n_dates) {
     remove(X)
     remove(rX)
     remove(rM)
-    remove(z_M)
-    remove(z_X)
-    remove(z_rX)
-    remove(z_rM)
     remove(M_paired)
     remove(M_matched)
     remove(M_orphan)
@@ -438,9 +422,7 @@ for (t in 1:n_dates) {
     remove(X_orphan)
     remove(X_lost)
     remove(X_matched_q)
-    remove(temp)   
-    remove(temp1)
-    remove(temp2)
+    remove(temp)
 } # end t loop
 #
 setwd(counts_DIR)
