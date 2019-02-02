@@ -59,7 +59,7 @@ treat <- function(df_in,t_in) {
     n_891  <- dim(s_891)[1]
     if (n_891 > 0) {
       s_688 <-   subset(df_out, df_out$i==703 & df_out$j==688)  #  subset of Slovakia reported trade with partner Serbia alone
-      temp <- merge(x=s_891,y=s_688,by=c("hs","i","j","k"),all.x=TRUE)
+      temp <- merge(x=s_891,y=s_688,by=c("hs","i","k"),all.x=TRUE)
       # colnames(df_IN) is given by c("hs","i","j","k","v_?","q_code_?","q_?","q_kg_?") (where ?={M,X,rX,rM}) so with the left merge
       # colnames(temp) will have column structure:
       #    1 "hs"
