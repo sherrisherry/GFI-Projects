@@ -15,22 +15,29 @@ library("data.table")
 #=====================================modify the following parameters for each new run==============================================#
 
 usr <- 'aws00' # the user account for using AWS service
-years <- 2016:2000 # the years we want to download
+dates <- 2005:2001 # the years we want to download
 hk_years <- 2016:2000 # years HK re-export data is available
 out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-comtrade' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
-counts_DIR <- "Comtrade_Counts"
 oplog <- 'mirror_match.log' # progress report file
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-i_WRITEALL <- 1  # set to 1 if you wish to write intermediate output to disk, but it adds significantly to run time
-# column names of the raw data; if it gets changed, we may also need to change the subsetting code.
-col_names_UN <- c("classification","year","period","perioddesc","aggregatelevel","isleafcode","tradeflowcode",
+cols_UN <- rep('NULL', 19)
+names(cols_UN) <- c("classification","year","period","perioddesc","aggregatelevel","isleafcode","tradeflowcode",
                   "tradeflow","reportercode","reporteriso","partnercode","partneriso",
                   "commoditycode","qtyunitcode","qtyunit","qty","netweightkg","tradevalueus","flag")
+incol <- c("tradeflowcode","classification","reportercode","partnercode","commoditycode", "tradevalueus", "qtyunitcode", "qty", "netweightkg")
+names(incol) <- c("tf","hs","i","j","k","v","q_code","q","q_kg")
+cols_UN[incol] <- c("integer","character","integer","integer","character","numeric","integer","numeric","numeric")
+cols_hk <- c(rep("integer",3),"character","numeric",rep("integer",2),rep("numeric",2))
+names(cols_hk) <- c("t","origin_hk","consig_hk","k","vrx_hkd","origin_un","consig_un","usd_per_hkd","vrx_usd")
+cols_swiss <- c("integer","integer","character","integer",rep("numeric",2))
+# use "character" for k or codes like '9999AA' messes up
+tfn <- c('M','rM','X','rX')
+names(tfn) <- c('1','4','2','3')
 
 #===================================================================================================================================#
 				  
@@ -42,34 +49,45 @@ Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
 if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = gsub('.{1}$', '', metadata$availability_zone()))
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
-dinfo <- read.delim(dinfo); dinfo <- unique(dinfo[dinfo$Status=='uploaded', 'Year'])
-years <- intersect(years, dinfo)
-rm(dinfo)
+dinfo <- read.delim(dinfo); dyears <- unique(dinfo[dinfo$Status=='uploaded', 'Year'])
+dates <- intersect(dates, dyears)
+n_dates <- length(dates); stopifnot(length(n_dates)>0)
+dinfo <- dinfo[dinfo$Mark == '#', c('Year', 'Status')]
+rm(dyears)
 
 # Set up counters to collect for multiple years
-n_dates <- length(years); stopifnot(length(n_dates)>0)
-n_RAW <-  data.frame(Year = dates, M = rep(0,n_dates),X = rep(0,n_dates),rX = rep(0,n_dates),rM = rep(0,n_dates))
-n_TREAT <-  data.frame(Year = dates, M = rep(0,n_dates),X = rep(0,n_dates),rX = rep(0,n_dates),rM = rep(0,n_dates))
-n_SWISS <-  data.frame(Year = dates, M = rep(0,n_dates),X = rep(0,n_dates),rX = rep(0,n_dates),rM = rep(0,n_dates))
-n_MATCH_M <-  data.frame(Year = dates, Paired = rep(0,n_dates), Matched = rep(0,n_dates),Orphaned = rep(0,n_dates),Lost = rep(0,n_dates))
-v_MATCH_X <- n_MATCH_X <- v_MATCH_M <-  n_MATCH_M
-n_M_matched_q <- data.frame(Year= dates,
-                            Total = rep(0,n_dates),
-                            Matched = rep(0,n_dates),
-                            Number_of_items = rep(0,n_dates),
-                            No_quantity = rep(0,n_dates),
-                            Area_sq_meters = rep(0,n_dates),
-                            Electrical_energy_thou_kw = rep(0,n_dates),
-                            Length_meters = rep(0,n_dates),
-                            Number_of_pairs = rep(0,n_dates),
-                            Volume_liters = rep(0,n_dates),
-                            Weight_kg = rep(0,n_dates),
-                            Number_of_items_thou = rep(0,n_dates),
-                            Number_of_pkgs = rep(0,n_dates),
-                            UNKNOWN_11 = rep(0,n_dates),
-                            Volume_cubic_meters = rep(0,n_dates),
-                            Weight_carats = rep(0,n_dates))
-v_X_matched_q <- n_X_matched_q <- v_M_matched_q <- n_M_matched_q
+
+counts1 <- list()
+counts1$n_RAW <- data.frame(Year = dates, M = NA, X = NA, rX = NA, rM = NA)
+counts1$n_TREAT <-  counts1$n_SWISS <- counts1$n_RAW
+out_names <- c('M-matched', 'X-matched', 'M-matched-q', 'X-matched-q', 'M-orphaned', 'X-orphaned', 'M-lost', 'X-lost')
+names(out_names) <- c('M', 'X', 'M_q', 'X_q', 'M_orphan', 'X_orphan', 'M_lost', 'X_lost')
+tmp <- c('M_p','X_p', names(out_names))
+counts2 <- matrix(nrow = n_dates, ncol = 10, dimnames = list(dates, paste('n_', tmp, sep = '')))
+counts2 <- as.data.frame(counts2)
+
+# read in 'treat' function for preliminary data treatments in TREAT module
+source("prox-treat.R")
+
+# Prepare for SWISS module
+    # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data
+      ecycle(M_swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
+                                     object = "Swiss_trade_m.csv", bucket = sup_bucket),
+             {tmp <- paste('0000', '!', 'loading Swiss M failed', sep = '\t'); logg(tmp); stop(tmp)},
+             max_try)
+      ecycle(X_swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
+                                     object = "Swiss_trade_x.csv", bucket = sup_bucket),
+             {tmp <- paste('0000', '!', 'loading Swiss X failed', sep = '\t'); logg(tmp); stop(tmp)}, 
+             max_try)
+      colnames(M_swiss) <- c("i","j","k","t","v_M_swiss","q_kg_M_swiss")
+      colnames(X_swiss) <- c("i","j","k","t","v_X_swiss","q_kg_X_swiss")
+      # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
+      #     (NB, monetary gold trade flows should not be included in UN-Comtrade dataset for any country)
+      M_swiss <- subset(M_swiss,M_swiss$k==710812)
+      X_swiss <- subset(X_swiss,X_swiss$k==710812)
+      setkeyv(M_swiss, c('i', 'j', 'k')); setkeyv(X_swiss, c('i', 'j', 'k'))
+      # read in "swiss.r" a procedure to make adjustments for each tradeflow matrix
+      source("prox-swiss.R")
 
 # Loop by date
 for (t in 1:n_dates) {
@@ -79,414 +97,206 @@ for (t in 1:n_dates) {
 # Start RAW module
     cat("\n","   (1) RAW module")
     cat("\n","        ...reading data file downloaded from UN-COMTRADE...","\n")
-    ecycle(raw_data <- s3read_using(FUN = function(x)read.csv(xzfile(x), header=TRUE), 
-                             object = paste(year, '.csv.xz', sep = ''), bucket = in_bucket),
-           {logg(paste(year, '!', 'loading file failed', sep = '\t')); break}, max_try)
-    if(!identical(colnames(raw_data),col_names_UN)){
+    ecycle(save_object(object = paste(year, '.csv.bz2', sep = ''), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
+		   {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
+	ecycle(rdata <- fread(cmd = "bzip2 -dc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_UN),
+		   {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
+		   cond = is.data.table(rdata))
+	if(!setequal(colnames(rdata), incol)){
       logg(paste(year, '!', 'colnames mismatching', sep = '\t'))
       next
       }
-    cat("\n","        ...eliminating redundant columns...")
-    raw_data <- raw_data[,c("tradeflowcode","classification","reportercode","partnercode","commoditycode","qtyunitcode",
-                            "qty","netweightkg","tradevalueus")]
-    colnames(raw_data) <- c("tf","hs","i","j","k","q_code","q","q_kg","v")
-    raw_data <- raw_data[,c("tf","hs","i","j","k","v","q_code","q","q_kg")]
-    cat("\n","        ...parsing M...")
-    M <-subset(raw_data,raw_data$tf==1) ; M <- M[,c("hs","i","j","k","v","q_code","q","q_kg")]
-    colnames(M) <- c("hs","i","j","k","v_M","q_code_M","q_M","q_kg_M")
-    n_RAW$M[t] <- dim(M)[1]
-    cat("\n","        ...parsing X...")
-    X<-subset(raw_data,raw_data$tf==2) ; X <- X[,c("hs","i","j","k","v","q_code","q","q_kg")]
-    colnames(X) <- c("hs","i","j","k","v_X","q_code_X","q_X","q_kg_X")
-    n_RAW$X[t] <- dim(X)[1]
-    cat("\n","        ...parsing rX...")
-    rX<-subset(raw_data,raw_data$tf==3) ; rX <- rX[,c("hs","i","j","k","v","q_code","q","q_kg")]
-    colnames(rX) <- c("hs","i","j","k","v_rX","q_code_rX","q_rX","q_kg_rX")
-    n_RAW$rX[t] <- dim(rX)[1]
-    cat("\n","        ...parsing rM...")
-    rM<-subset(raw_data,raw_data$tf==4) ; rM <- rM[,c("hs","i","j","k","v","q_code","q","q_kg")]
-    colnames(rM) <- c("hs","i","j","k","v_rM","q_code_rM","q_rM","q_kg_rM")
-    n_RAW$rM[t] <- dim(rM)[1]
-    remove(raw_data)
-    logg(paste(year, ':', 'divided', sep = '\t'))
+	logg(paste(year, ':', 'opened', sep = '\t'))
+	if(nrow(rdata) != dinfo$Status[dinfo$Year==year]){logg(paste(year, '#', nrow(rdata), sep = '\t'))}
+	# avoid reordering data table because of speed
+    tmp <- colnames(rdata)
+    colnames(rdata)[match(incol, tmp)] <- names(incol)
+	rdata <- na.omit(rdata, cols=c("hs","i","j","k","v"))
+    setkeyv(rdata, c('i', 'j', 'k'))
+	logg(paste(year, ':', 'preprocessed', sep = '\t'))
+    cat("\n","        ...dividing raw data...")
+	rdata<- split(rdata, rdata$tf)
+	names(rdata) <- tfn[match(names(rdata),names(tfn))]
+	rdata <- lapply(rdata, function(x){cols <- colnames(x); nm <- c("v","q_code","q","q_kg"); lsn <- tfn[as.character(x$tf[1])]
+										colnames(x)[match(nm, cols)] <- paste(nm, lsn, sep = '_'); x$tf <- NULL
+										return(x)})
+    counts1$n_RAW[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
+	logg(paste(year, ':', 'divided', sep = '\t'))
 #   End RAW module
 
-#   Start TREAT module 
-    # read in function to process preliminary data treatments
-    source("prox-treat.R",sep="")
+#   Implement TREAT module 
     cat("\n","   (2) TREAT module")
-    cat("\n","        ...treating M...") ; M  <- treat(M,t)
-    cat("\n","        ...treating X...") ; X  <- treat(X,t)
-    cat("\n","        ...treating rX...") ; rX <- treat(rX,t)
-    cat("\n","        ...treating rM...") ; rM <- treat(rM,t)
-      
-    # counts
-      n_TREAT$M[t] <- dim(M)[1]
-      n_TREAT$X[t] <- dim(X)[1]
-      n_TREAT$rX[t] <- dim(rX)[1]
-      n_TREAT$rM[t] <- dim(rM)[1]
-      # write
-      if(i_WRITEALL) {
-          cat("\n","        ...writing treated flows to disk...")
-          tryCatch(fwrite(M,file=paste("tmp/", year, "M.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-                   finally = logg(paste(year, '.', 'treated M not saved', sep = '\t')))
-        tryCatch(fwrite(X,file=paste("tmp/", year, "X.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-                 finally = logg(paste(year, '.', 'treated X not saved', sep = '\t')))
-        tryCatch(fwrite(rM,file=paste("tmp/", year, "rM.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-                 finally = logg(paste(year, '.', 'treated rM not saved', sep = '\t')))
-        tryCatch(fwrite(rX,file=paste("tmp/", year, "rX.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-                 finally = logg(paste(year, '.', 'treated rX not saved', sep = '\t')))
-      }
-      logg(paste(year, ':', 'treated', sep = '\t'))
+	rdata <- lapply(rdata, function(x)treat(x,t))
+	counts1$n_TREAT[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
+	logg(paste(year, ':', 'treated', sep = '\t'))
 
     #   End TREAT module
- 
-# Start SWISS module
-      # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data and stored in swiss_DIR as CSV files
-      ecycle(M_swiss <- s3read_using(FUN = function(x)read.csv(x, header=TRUE, na.strings=""), 
-                                     object = "Swiss_trade_m.csv", bucket = sup_bucket),
-             {logg(paste(year, '!', 'loading Swiss M failed', sep = '\t')); break}, max_try)
-      ecycle(X_swiss <- s3read_using(FUN = function(x)read.csv(x, header=TRUE, na.strings=""), 
-                                     object = "Swiss_trade_x.csv", bucket = sup_bucket),
-             {logg(paste(year, '!', 'loading Swiss X failed', sep = '\t')); break}, max_try)
-      colnames(M_swiss) <- c("i","j","k","t","v_M_swiss","q_kg_M_swiss")
-      colnames(X_swiss) <- c("i","j","k","t","v_X_swiss","q_kg_X_swiss")
-      # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
-      #     (NB, monetary gold trade flows should not be included in UN-Comtrade dataset for any country)
-      M_swiss <- subset(M_swiss,M_swiss$k==710812)
-      X_swiss <- subset(X_swiss,X_swiss$k==710812)
-      # read in "swiss.r" a procedure to make adjustments for each tradeflow matrix
-      colnames(M_swiss) <- c("i","j","k","t","v_M_swiss","q_kg_M_swiss")
-      colnames(X_swiss) <- c("i","j","k","t","v_X_swiss","q_kg_X_swiss")
-      source("prox-swiss.R")
+
+#   Implement SWISS module
     cat("\n","   (3) SWISS module")
-    cat("\n","        ...making Swiss adjustments for M...") ; M  <- swiss(M,M_swiss,t)
-    cat("\n","        ...making Swiss adjustments for X...") ; X  <- swiss(X,X_swiss,t)
+    cat("\n","        ...making Swiss adjustments for M...") ; rdata$M  <- swiss(rdata$M,M_swiss,t)
+    cat("\n","        ...making Swiss adjustments for X...") ; rdata$X  <- swiss(rdata$X,X_swiss,t)
    # counts
-    n_SWISS$M[t] <- dim(M)[1]
-    n_SWISS$X[t] <- dim(X)[1]
-    n_SWISS$rX[t] <- dim(rX)[1]
-    n_SWISS$rM[t] <- dim(rM)[1]
-      
-    # write
-      if(i_WRITEALL) {
-        cat("\n","        ...writing Swiss-adjusted flows to disk...")
-        tryCatch(fwrite(M,file=paste("tmp/", year, "M.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-                 finally = logg(paste(year, '.', 'Swiss M not saved', sep = '\t')))
-        tryCatch(fwrite(X,file=paste("tmp/", year, "X.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-                 finally = logg(paste(year, '.', 'Swiss X not saved', sep = '\t')))
-      }
+   counts1$n_SWISS[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
     logg(paste(year, ':', 'swiss-adjusted', sep = '\t'))
-    rm(M_swiss, X_swiss)
     # End SWISS module
-       
+    
 #   Start PAIR module 
     cat("\n","   (4) PAIR module")
     
     # Pair M
     cat("\n","        ...pairing M data")
-    cols_M <- c("hs","i","j","k","v_M","q_code_M","q_M","q_kg_M")
-    cols_X <- c("hs","j","i","k","v_X","q_code_X","q_X","q_kg_X")
-    cols_rX <- c("hs","j","i","k","v_rX","q_code_rX","q_rX","q_kg_rX")
-    cols_rM <- c("hs","i","j","k","v_rM","q_code_rM","q_rM","q_kg_rM")
-    M_paired <- subset(M,M$v_M>0) ; colnames(M_paired) <- cols_M
-    z_X <- X  ; colnames(z_X) <- cols_X
-    z_rX <- rX  ; colnames(z_rX) <- cols_rX
-    z_rM <- rM  ; colnames(z_rM) <- cols_rM
-    #
-    cat("\n","            ...M to X") ;  M_paired <- merge(x=M_paired,y=z_X,by = c("i","j","k"), all.x=TRUE)
-    colnames(M_paired) <- c("i","j","k","hs_rpt","v_M","q_code_M","q_M","q_kg_M","hs_ptn","v_X","q_code_X","q_X","q_kg_X")
-    cat("\n","            ...M to rX") ; M_paired <- merge(x=M_paired,y=z_rX,by = c("i","j","k"), all.x=TRUE)
-    M_paired <- M_paired[,c("i","j","k","hs_rpt","v_M","q_code_M","q_M","q_kg_M","hs_ptn","v_X","q_code_X","q_X","q_kg_X","v_rX")]
-    cat("\n","            ...M to rM") ; M_paired <- merge(x=M_paired,y=z_rM,by = c("i","j","k"), all.x=TRUE)
-    M_paired <- M_paired[,c("hs_rpt","hs_ptn","i","j","k","v_M","v_X","v_rX","v_rM","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")]
-    #
-    cat("\n","        ...writing unadjusted paired M data")
-        tryCatch(fwrite(M,file=paste("tmp/", year, "M.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-                 finally = logg(paste(year, '.', 'paired M not saved', sep = '\t')))
+	tmp <- colnames(rdata$M); colnames(rdata$M)[c(grep('hs', tmp))] <- c('hs_rpt')
+	tmp <- colnames(rdata$X); colnames(rdata$X)[c(grep('hs', tmp), grep('i', tmp), grep('j', tmp))] <- c('hs_ptn', 'j', 'i')
+	tmp <- colnames(rdata$rX); colnames(rdata$rX)[c(grep('i', tmp), grep('j', tmp))] <- c('j', 'i')
+	mirror <- list()
+    cat("\n","            ...M to X") ;  mirror$M <- merge(x=rdata$M,y=rdata$X,by = c("i","j","k"), all.x=TRUE)
+    cat("\n","            ...M to rX") ; mirror$M <- merge(x=mirror$M,y=rdata$rX[, c("i","j","k","v_rX")],by = c("i","j","k"), all.x=TRUE)
+    cat("\n","            ...M to rM") ; mirror$M <- merge(x=mirror$M,y=rdata$rM[, c("i","j","k","v_rM")],by = c("i","j","k"), all.x=TRUE)
     logg(paste(year, ':', 'M-paired', sep = '\t'))
   
     # Pair X
     cat("\n","        ...pairing X data")
-    cols_M <- c("hs","j","i","k","v_M","q_code_M","q_M","q_kg_M")
-    cols_X <- c("hs","i","j","k","v_X","q_code_X","q_X","q_kg_X")
-    cols_rX <- c("hs","i","j","k","v_rX","q_code_rX","q_rX","q_kg_rX")
-    cols_rM <- c("hs","j","i","k","v_rM","q_code_rM","q_rM","q_kg_rM")
-    X_paired <- subset(X,X$v_X>0) ; colnames(X_paired) <- cols_X
-    z_M <- M  ; colnames(z_M) <- cols_M
-    z_rX <- rX  ; colnames(z_rX) <- cols_rX
-    z_rM <- rM  ; colnames(z_rM) <- cols_rM
-      #
-    cat("\n","            ...X to M") ;  X_paired <- merge(x=X_paired,y=z_M,by = c("i","j","k"), all.x=TRUE)
-    colnames(X_paired) <- c("i","j","k","hs_rpt","v_X","q_code_X","q_X","q_kg_X","hs_ptn","v_M","q_code_M","q_M","q_kg_M")
-    cat("\n","            ...X to rX") ; X_paired <- merge(x=X_paired,y=z_rX,by = c("i","j","k"), all.x=TRUE)
-    X_paired <- X_paired[,c("i","j","k","hs_rpt","v_X","q_code_X","q_X","q_kg_X","hs_ptn","v_M","q_code_M","q_M","q_kg_M","v_rX")]
-    cat("\n","            ...X to rM") ; X_paired <- merge(x=X_paired,y=z_rM,by = c("i","j","k"), all.x=TRUE)
-    X_paired <- X_paired[,c("hs_rpt","hs_ptn","i","j","k","v_M","v_X","v_rX","v_rM","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")]
-    #
-    #
-    cat("\n","        ...writing unadjusted paired X data")
-      tryCatch(fwrite(X,file=paste("tmp/", year, "X.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-               finally = logg(paste(year, '.', 'paired X not saved', sep = '\t')))
+    tmp <- colnames(rdata$X); colnames(rdata$X)[c(grep('hs_ptn', tmp), grep('i', tmp), grep('j', tmp))] <- c('hs_rpt', 'j', 'i')
+	tmp <- colnames(rdata$M); colnames(rdata$M)[c(grep('hs_rpt', tmp), grep('i', tmp), grep('j', tmp))] <- c('hs_ptn', 'j', 'i')
+	tmp <- colnames(rdata$rM); colnames(rdata$rM)[c(grep('i', tmp), grep('j', tmp))] <- c('j', 'i')
+	tmp <- colnames(rdata$rX); colnames(rdata$rX)[c(grep('i', tmp), grep('j', tmp))] <- c('j', 'i')
+    cat("\n","            ...X to M") ;  mirror$X <- merge(x=rdata$X,y=rdata$M,by = c("i","j","k"), all.x=TRUE)
+    cat("\n","            ...X to rX") ; mirror$X <- merge(x=mirror$X,y=rdata$rX[, c("i","j","k","v_rX")],by = c("i","j","k"), all.x=TRUE)
+    cat("\n","            ...X to rM") ; mirror$X <- merge(x=mirror$X,y=rdata$rM[, c("i","j","k","v_rM")],by = c("i","j","k"), all.x=TRUE)
+
+    rm(rdata)
     logg(paste(year, ':', 'X-paired', sep = '\t'))
-    rm(z_M, z_X, z_rX, z_rM)
     # end PAIR module
 
 # Start Hong Kong module
     cat("\n","   (5) Hong Kong module","\n")
-    # Data hkrx compiled by Joe Spanjers from Hong Kong sources and stored  in hk_DIR as CSV file
-    nms_hk <- c("t","k","origin_hk","consig_hk","vrx_hkd","origin_un","consig_un","usd_per_hkd","vrx_usd")
-    cls_hk <- c(rep("integer",4),"numeric",rep("integer",2),rep("numeric",2))
-    ecycle(rx_hk <- s3read_using(FUN = function(x)read.csv(unz(x, 'hkrx.csv'), header=TRUE, na.strings=""), 
-                                 object = "HK_trade_rx.zip", bucket = sup_bucket),
-           {logg(paste(year, '!', 'loading hkrx failed', sep = '\t')); break}, max_try)
-    colnames(rx_hk) <- nms_hk
-    rx_hk <- rx_hk[,c("t","origin_un","consig_un","k","vrx_usd")]
-    colnames(rx_hk) <- c("t","i","j","k","v_rx_hk")
     # operate on X-paired and M-paired and then redo the matching etc
     if (year %in% hk_years) {
-        hk <- subset(rx_hk,rx_hk$t==year)
-        hk <- hk[,c("i","j","k","v_rx_hk")]
+    # use normalized hkrx data
+    ecycle(save_object(object = paste('HK_trade', year, 'rx.csv.bz2', sep = '_'), bucket = sup_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
+		       {logg(paste(year, '!', 'retrieving hkrx file failed', sep = '\t')); next}, max_try) 
+	  ecycle(hk <- fread(cmd = "bzip2 -dc ./tmp/tmp.csv.bz2", header=T, colClasses=cols_hk,na.strings=""),
+		              {logg(paste(year, '!', 'loading hkrx file failed', sep = '\t')); next}, 
+		              max_try, cond = is.data.table(hk) && nrow(hk)>10)
+    hk <- hk[,c("origin_un","consig_un","k","vrx_usd")]
+    colnames(hk) <- c("i","j","k","v_rx_hk")
+        logg(paste(year, ':', 'HK prepared', sep = '\t'))
         # adjusting M variables
-        temp <- M_paired
+        tmp <- mirror$M
         colnames(hk) <- c("j","i","k","v_rx_hk")
-        M_paired <- merge(x=M_paired,y=hk,by=c("i","j","k"),all.x=TRUE)
+        setkeyv(hk, c('i', 'j', 'k'))
+        mirror$M <- merge(x=mirror$M,y=hk,by=c("i","j","k"),all.x=TRUE)
         hk_344 <- hk[,c("i","k","v_rx_hk")]
         colnames(hk_344) <- c("i","k","adj_344")
         hk_344 <- aggregate(hk_344$adj_344,list(hk_344$i,hk_344$k),sum) ; colnames(hk_344) <- c("i","k","adj_344")
-        M_paired <- merge(x=M_paired,y=hk_344,by=c("i","k"),all.x=TRUE)
-        M_paired[is.na(M_paired$v_rx_hk),"v_rx_hk"] <- 0
-        M_paired[is.na(M_paired$adj_344),"adj_344"] <- 0
-        temp <- M_paired
-        M_paired[!M_paired$j==344,"v_M"] <- M_paired[!M_paired$j==344,"v_M"] - M_paired[!M_paired$j==344,"v_rx_hk"]
-        M_paired[ M_paired$j==344,"v_M"] <- M_paired[ M_paired$j==344,"v_M"] + M_paired[ M_paired$j==344,"adj_344"]
-        M_paired <- M_paired[,c("hs_rpt","hs_ptn","i","j","k","v_M","v_X","v_rX","v_rM","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")]
-        junk <- subset(M_paired,M_paired$v_M<0)
-        M_paired[M_paired$v_M<0,"v_M"] <- temp[M_paired$v_M<0,"v_M"]  ;   # undo the adjustment for negative values
-        M_paired[M_paired$i==752,"v_M"] <- temp[M_paired$i==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
-        M_paired[M_paired$i==348,"v_M"] <- temp[M_paired$i==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
-        tryCatch(s3write_using(junk, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
+        hk_344 <- data.table(hk_344, key = c('i','k'))
+        mirror$M <- merge(x=mirror$M,y=hk_344,by=c("i","k"),all.x=TRUE)
+        mirror$M[is.na(mirror$M$v_rx_hk),"v_rx_hk"] <- 0
+        mirror$M[is.na(mirror$M$adj_344),"adj_344"] <- 0
+        tmp <- mirror$M
+        mirror$M[!mirror$M$j==344,"v_M"] <- mirror$M[!mirror$M$j==344,"v_M"] - mirror$M[!mirror$M$j==344,"v_rx_hk"]
+        mirror$M[ mirror$M$j==344,"v_M"] <- mirror$M[ mirror$M$j==344,"v_M"] + mirror$M[ mirror$M$j==344,"adj_344"]
+        mirror$M <- mirror$M[,c("hs_rpt","hs_ptn","i","j","k","v_M","v_X","v_rX","v_rM","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")]
+        junk <- subset(mirror$M,mirror$M$v_M<0)
+        mirror$M[mirror$M$v_M<0,"v_M"] <- tmp[mirror$M$v_M<0,"v_M"]  ;   # undo the adjustment for negative values
+        mirror$M[mirror$M$i==752,"v_M"] <- tmp[mirror$M$i==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
+        mirror$M[mirror$M$i==348,"v_M"] <- tmp[mirror$M$i==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
+        logg(paste(year, ':', 'HK M-adjusted', sep = '\t'))
+        ecycle(s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                                bucket = out_bucket,
-                               object = paste(tag, year, 'M-junked-HK-adj.csv.xz', sep = '-')),
-                 finally = logg(paste(year, '.', 'junked HK-adj not uploaded', sep = '\t')))
-        remove(temp,junk)
+                               object = paste(tag, year, 'M-junked-HK-adj.csv.bz2', sep = '-')),
+                logg(paste(year, '.', 'junked M HK-adj not uploaded', sep = '\t')), 3)
+        # adjusting X variables
+        colnames(hk) <- c("i","j","k","v_rx_hk")
+        setkeyv(hk, c('i', 'j', 'k'))
+        mirror$X <- merge(x=mirror$X,y=hk,by=c("i","j","k"),all.x=TRUE)
+        hk_344 <- hk[,c("j","k","v_rx_hk")]
+        colnames(hk_344) <- c("j","k","adj_344")
+        hk_344 <- aggregate(hk_344$adj_344,list(hk_344$j,hk_344$k),sum) ; colnames(hk_344) <- c("j","k","adj_344")
+        hk_344 <- data.table(hk_344, key = c('j','k'))
+        mirror$X <- merge(x=mirror$X,y=hk_344,by=c("j","k"),all.x=TRUE)
+        mirror$X[is.na(mirror$X$v_rx_hk),"v_rx_hk"] <- 0
+        mirror$X[is.na(mirror$X$adj_344),"adj_344"] <- 0
+        tmp <- mirror$X
+        mirror$X[!mirror$X$i==344,"v_M"] <- mirror$X[!mirror$X$i==344,"v_M"] - mirror$X[!mirror$X$i==344,"v_rx_hk"]
+        mirror$X[ mirror$X$i==344,"v_M"] <- mirror$X[ mirror$X$i==344,"v_M"] + mirror$X[ mirror$X$i==344,"adj_344"]
+        mirror$X <- mirror$X[,c("hs_rpt","hs_ptn","i","j","k","v_X","v_M","v_rM","v_rX","q_X","q_M","q_kg_X","q_kg_M","q_code_X","q_code_M")]
+        junk <- subset(mirror$X,mirror$X$v_M<0)
+        mirror$X[mirror$X$v_M<0,"v_M"] <- tmp[mirror$X$v_M<0,"v_M"]  ; # undo the adjustment for negative values
+        mirror$X[mirror$X$j==752,"v_M"] <- tmp[mirror$X$j==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
+        mirror$X[mirror$X$j==348,"v_M"] <- tmp[mirror$X$j==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
+        logg(paste(year, ':', 'HK X-adjusted', sep = '\t'))
+        ecycle(s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+                               bucket = out_bucket,
+                               object = paste(tag, year, 'X-junked-HK-adj.csv.bz2', sep = '-')),
+                 logg(paste(year, '.', 'junked X HK-adj not uploaded', sep = '\t')), 3)
+        remove(tmp,junk, hk, hk_344)
     }
-    cat("\n","        ...writing adjusted paired M data")
-    tryCatch(fwrite(X,file=paste("tmp/", year, "M.csv", sep = ''),sep=",",col.names=TRUE,row.names=FALSE,na=""),
-             finally = logg(paste(year, '.', 'HK adjusted M not saved', sep = '\t')))
-    logg(paste(year, ':', 'M-HK-adjusted', sep = '\t'))
     # end Hong Kong module
 
-    rm(M, X, rX, rM, rx_hk, hk, hk_344)
+	counts2[t, c('n_M_p', 'n_X_p')] <- as.data.frame(lapply(mirror, nrow))[c('M', 'X')]
     
 # Start MATCH module 
     cat("\n","   (6) MATCH module")
- 
+	rmatch <- list()
       # Matching M
       cat("\n","        ...matching M data")
-      M_matched <- subset(M_paired,M_paired$v_X>0)
-      M_orphan  <- subset(M_paired,is.na(M_paired$v_X))
+      rmatch$M <- subset(mirror$M, mirror$M$v_X>0 & mirror$M$v_M>0)
+      rmatch$M_orphan  <- subset(mirror$M,is.na(mirror$M$v_X))
       cat("\n","        ...matching M quantity data")
-      M_matched_q <- subset(M_matched,M_matched$q_code_M==M_matched$q_code_X)
-      M_matched_q <- subset(M_matched_q, ((M_matched_q$q_M>0)&(M_matched_q$q_X>0)))
+      rmatch$M_q <- subset(rmatch$M,rmatch$M$q_code_M==rmatch$M$q_code_X)
+      rmatch$M_q <- subset(rmatch$M_q, ((rmatch$M_q$q_M>0)&(rmatch$M_q$q_X>0)))
           
       # Matching X
       cat("\n","        ...matching X data")
-      X_matched <- subset(X_paired,X_paired$v_M>0)              # should equal M_matched from above
-      X_orphan  <- subset(X_paired,is.na(X_paired$v_M))
+      rmatch$X <- subset(mirror$X, mirror$X$v_M>0 & mirror$X$v_X>0)              # should equal rmatch$M from above
+      rmatch$X_orphan  <- subset(mirror$X,is.na(mirror$X$v_M))
       cat("\n","        ...matching X quantity data")
-      X_matched_q <- subset(X_matched,X_matched$q_code_X==X_matched$q_code_M)
-      X_matched_q <- subset(X_matched_q, ((X_matched_q$q_M>0)&(X_matched_q$q_X>0)))
+      rmatch$X_q <- subset(rmatch$X,rmatch$X$q_code_X==rmatch$X$q_code_M)
+      rmatch$X_q <- subset(rmatch$X_q, ((rmatch$X_q$q_M>0)&(rmatch$X_q$q_X>0)))
       #
-      M_lost <- X_orphan
-      X_lost <- M_orphan
+      rmatch$M_lost <- rmatch$X_orphan
+      rmatch$X_lost <- rmatch$M_orphan
     # uploading results
-      tn <- paste(tag, year, 'M-matched.csv.xz', sep = '-'); bak <- paste('tmp', tn, sep = '/')
-      ecycle(write.csv(M_matched, file = xzfile(bak),row.names=FALSE,na=""), 
-             ecycle(s3write_using(M_matched, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
-                                  bucket = out_bucket, object = tn),
-                     logg(paste(year, '!', 'uploading M-matched failed', sep = '\t')), max_try), 
+	  stopifnot(setequal(names(rmatch),names(out_names)))
+	  tmp <- paste(tag, year, out_names, sep = '-'); tmp <- paste('tmp/', tmp, '.csv.bz2', sep = '')
+	  names(tmp) <- names(out_names)
+	  for(i in names(rmatch)){
+	  ecycle(write.csv(rmatch[[i]], file = bzfile(tmp[i]),row.names=FALSE,na=""), 
+             ecycle(s3write_using(rmatch[[i]], FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+                                  bucket = out_bucket, object = basename(tmp[i])),
+                     logg(paste(year, '!', paste('uploading', basename(tmp[i]), 'failed', sep = ' '), sep = '\t')), max_try), 
              max_try,
-             ecycle(put_object(bak, tn, bucket = bucket), 
-                    logg(paste(year, '!', 'uploading M-matched failed', sep = '\t')),
+             ecycle(put_object(tmp[i], basename(tmp[i]), bucket = out_bucket), 
+                    logg(paste(year, '!', paste('uploading', basename(tmp[i]), 'failed', sep = ' '), sep = '\t')),
                     max_try,
-                    {logg(paste(year, '|', 'uploaded M-matched', sep = '\t')); unlink(bak)}))
-      tn <- paste(tag, year, 'M-matched-q.csv.xz', sep = '-'); bak <- paste('tmp', tn, sep = '/')
-      ecycle(write.csv(M_matched_q, file = xzfile(bak),row.names=FALSE,na=""), 
-             ecycle(s3write_using(M_matched_q, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
-                                  bucket = out_bucket, object = tn),
-                    logg(paste(year, '!', 'uploading M-matched-q failed', sep = '\t')), max_try), 
-             max_try,
-             ecycle(put_object(bak, tn, bucket = bucket), 
-                    logg(paste(year, '!', 'uploading M-matched-q failed', sep = '\t')),
-                    max_try,
-                    {logg(paste(year, '|', 'uploaded M-matched-q', sep = '\t')); unlink(bak)}))
-      tn <- paste(tag, year, 'X-matched-q.csv.xz', sep = '-'); bak <- paste('tmp', tn, sep = '/')
-      ecycle(write.csv(X_matched_q, file = xzfile(bak),row.names=FALSE,na=""), 
-             ecycle(s3write_using(X_matched_q, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
-                                  bucket = out_bucket, object = tn),
-                    logg(paste(year, '!', 'uploading X-matched-q failed', sep = '\t')), max_try), 
-             max_try,
-             ecycle(put_object(bak, tn, bucket = bucket), 
-                    logg(paste(year, '!', 'uploading X-matched-q failed', sep = '\t')),
-                    max_try,
-                    {logg(paste(year, '|', 'uploaded X-matched-q', sep = '\t')); unlink(bak)}))
-      tn <- paste(tag, year, 'X-matched.csv.xz', sep = '-'); bak <- paste('tmp', tn, sep = '/')
-      ecycle(write.csv(X_matched, file = xzfile(bak),row.names=FALSE,na=""), 
-             ecycle(s3write_using(X_matched, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
-                                  bucket = out_bucket, object = tn),
-                    logg(paste(year, '!', 'uploading X-matched failed', sep = '\t')), max_try), 
-             max_try,
-             ecycle(put_object(bak, tn, bucket = bucket), 
-                    logg(paste(year, '!', 'uploading X-matched failed', sep = '\t')),
-                    max_try,
-                    {logg(paste(year, '|', 'uploaded X-matched', sep = '\t')); unlink(bak)}))
-      tn <- paste(tag, year, 'M-orphaned.csv.xz', sep = '-'); bak <- paste('tmp', tn, sep = '/')
-      ecycle(write.csv(M_orphan, file = xzfile(bak),row.names=FALSE,na=""), 
-             ecycle(s3write_using(M_orphan, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
-                                  bucket = out_bucket, object = tn),
-                    logg(paste(year, '!', 'uploading M-orphaned failed', sep = '\t')), max_try), 
-             max_try,
-             ecycle(put_object(bak, tn, bucket = bucket), 
-                    logg(paste(year, '!', 'uploading M-orphaned failed', sep = '\t')),
-                    max_try,
-                    {logg(paste(year, '|', 'uploaded M-orphaned', sep = '\t')); unlink(bak)}))
-      tn <- paste(tag, year, 'X-orphaned.csv.xz', sep = '-'); bak <- paste('tmp', tn, sep = '/')
-      ecycle(write.csv(X_orphan, file = xzfile(bak),row.names=FALSE,na=""), 
-             ecycle(s3write_using(X_orphan, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
-                                  bucket = out_bucket, object = tn),
-                    logg(paste(year, '!', 'uploading X-orphaned failed', sep = '\t')), max_try), 
-             max_try,
-             ecycle(put_object(bak, tn, bucket = bucket), 
-                    logg(paste(year, '!', 'uploading X-orphaned failed', sep = '\t')),
-                    max_try,
-                    {logg(paste(year, '|', 'uploaded X-orphaned', sep = '\t')); unlink(bak)}))
-      tn <- paste(tag, year, 'X-lost.csv.xz', sep = '-'); bak <- paste('tmp', tn, sep = '/')
-      ecycle(write.csv(X_lost, file = xzfile(bak),row.names=FALSE,na=""), 
-             ecycle(s3write_using(X_lost, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
-                                  bucket = out_bucket, object = tn),
-                    logg(paste(year, '!', 'uploading X-lost failed', sep = '\t')), max_try), 
-             max_try,
-             ecycle(put_object(bak, tn, bucket = bucket), 
-                    logg(paste(year, '!', 'uploading X-lost failed', sep = '\t')),
-                    max_try,
-                    {logg(paste(year, '|', 'uploaded X-lost', sep = '\t')); unlink(bak)}))
-      tn <- paste(tag, year, 'M-lost.csv.xz', sep = '-'); bak <- paste('tmp', tn, sep = '/')
-      ecycle(write.csv(M_lost, file = xzfile(bak),row.names=FALSE,na=""), 
-             ecycle(s3write_using(M_lost, FUN = function(x, y)write.csv(x, file=xzfile(y), row.names = FALSE),
-                                  bucket = out_bucket, object = tn),
-                    logg(paste(year, '!', 'uploading M-lost failed', sep = '\t')), max_try), 
-             max_try,
-             ecycle(put_object(bak, tn, bucket = bucket), 
-                    logg(paste(year, '!', 'uploading M-lost failed', sep = '\t')),
-                    max_try,
-                    {logg(paste(year, '|', 'uploaded M-lost', sep = '\t')); unlink(bak)}))
+                    {logg(paste(year, '|', paste('uploaded', basename(tmp[i]), sep = ' '), sep = '\t')); unlink(tmp[i])}))
+	  }
       
 # end MATCH module
 
+	rm(mirror)
+
 # update counts   
       cat("\n","   (7) updating counts")
-      n_MATCH_M$Paired[t] <- dim(M_paired)[1]
-      n_MATCH_M$Matched[t] <- dim(M_matched)[1]
-      n_MATCH_M$Orphaned[t] <- dim(M_orphan)[1]
-      n_MATCH_M$Lost[t] <- dim(M_lost)[1]
+      
+	  counts2[t, paste('n_', names(rmatch), sep = '')] <- as.data.frame(lapply(rmatch, nrow))
       #
-      n_MATCH_X$Paired[t] <- dim(X_paired)[1]
-      n_MATCH_X$Matched[t] <- dim(X_matched)[1]
-      n_MATCH_X$Orphaned[t] <- dim(X_orphan)[1]
-      n_MATCH_X$Lost[t] <- dim(X_lost)[1]
-      #
-      v_MATCH_M$Paired[t] <- sum(M_paired$v_M,na.rm=TRUE)
-      v_MATCH_M$Matched[t] <- sum(M_matched$v_M,na.rm=TRUE)
-      v_MATCH_M$Orphaned[t] <- sum(M_orphan$v_M,na.rm=TRUE)
-      v_MATCH_M$Lost[t] <- sum(M_lost$v_X,na.rm=TRUE)
-      #
-      v_MATCH_X$Paired[t] <- sum(X_paired$v_X,na.rm=TRUE)
-      v_MATCH_X$Matched[t] <- sum(X_matched$v_X,na.rm=TRUE)
-      v_MATCH_X$Orphaned[t] <- sum(X_orphan$v_X,na.rm=TRUE)
-      v_MATCH_X$Lost[t] <- sum(X_lost$v_M,na.rm=TRUE)
-      #
-      n_M_matched_q[t,2] <- dim(M_matched)[1]
-      n_M_matched_q[t,3] <- dim(M_matched_q)[1]
-      n_M_matched_q[t,4] <- sum(M_matched_q$q_code_M==5,na.rm=TRUE) 
-      n_M_matched_q[t,5] <- sum(M_matched_q$q_code_M==1,na.rm=TRUE) 
-      n_M_matched_q[t,6] <- sum(M_matched_q$q_code_M==2,na.rm=TRUE) 
-      n_M_matched_q[t,7] <- sum(M_matched_q$q_code_M==3,na.rm=TRUE) 
-      n_M_matched_q[t,8] <- sum(M_matched_q$q_code_M==4,na.rm=TRUE) 
-      n_M_matched_q[t,9] <- sum(M_matched_q$q_code_M==6,na.rm=TRUE) 
-      n_M_matched_q[t,10] <- sum(M_matched_q$q_code_M==7,na.rm=TRUE) 
-      n_M_matched_q[t,11] <- sum(M_matched_q$q_code_M==8,na.rm=TRUE) 
-      n_M_matched_q[t,12] <- sum(M_matched_q$q_code_M==9,na.rm=TRUE) 
-      n_M_matched_q[t,13] <- sum(M_matched_q$q_code_M==10,na.rm=TRUE) 
-      n_M_matched_q[t,14] <- sum(M_matched_q$q_code_M==11,na.rm=TRUE) 
-      n_M_matched_q[t,15] <- sum(M_matched_q$q_code_M==12,na.rm=TRUE) 
-      n_M_matched_q[t,16] <- sum(M_matched_q$q_code_M==13,na.rm=TRUE)
-      #
-      v_M_matched_q[t,2] <- sum(M_matched$v_M,na.rm=TRUE)
-      v_M_matched_q[t,3] <- sum(M_matched_q$v_M,na.rm=TRUE)
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==5); v_M_matched_q[t,4] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==1); v_M_matched_q[t,5] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==2); v_M_matched_q[t,6] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==3); v_M_matched_q[t,7] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==4); v_M_matched_q[t,8] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==6); v_M_matched_q[t,9] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==7); v_M_matched_q[t,10] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==8); v_M_matched_q[t,11] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==9); v_M_matched_q[t,12] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==10); v_M_matched_q[t,13] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==11); v_M_matched_q[t,14] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==12); v_M_matched_q[t,15] <- sum(temp$v_M,na.rm=TRUE) 
-      temp<- subset(M_matched_q,M_matched_q$q_code_M==13); v_M_matched_q[t,16] <- sum(temp$v_M,na.rm=TRUE) 
-      #
-      n_X_matched_q[t,2] <- dim(X_matched)[1]
-      n_X_matched_q[t,3] <- dim(X_matched_q)[1]
-      n_X_matched_q[t,4] <- sum(X_matched_q$q_code_X==5,na.rm=TRUE) 
-      n_X_matched_q[t,5] <- sum(X_matched_q$q_code_X==2,na.rm=TRUE) 
-      n_X_matched_q[t,6] <- sum(X_matched_q$q_code_X==3,na.rm=TRUE) 
-      n_X_matched_q[t,7] <- sum(X_matched_q$q_code_X==4,na.rm=TRUE) 
-      n_X_matched_q[t,8] <- sum(X_matched_q$q_code_X==5,na.rm=TRUE) 
-      n_X_matched_q[t,9] <- sum(X_matched_q$q_code_X==6,na.rm=TRUE) 
-      n_X_matched_q[t,10] <- sum(X_matched_q$q_code_X==7,na.rm=TRUE) 
-      n_X_matched_q[t,11] <- sum(X_matched_q$q_code_X==8,na.rm=TRUE) 
-      n_X_matched_q[t,12] <- sum(X_matched_q$q_code_X==9,na.rm=TRUE) 
-      n_X_matched_q[t,13] <- sum(X_matched_q$q_code_X==10,na.rm=TRUE) 
-      n_X_matched_q[t,14] <- sum(X_matched_q$q_code_X==11,na.rm=TRUE) 
-      n_X_matched_q[t,15] <- sum(X_matched_q$q_code_X==12,na.rm=TRUE) 
-      n_X_matched_q[t,16] <- sum(X_matched_q$q_code_X==13,na.rm=TRUE)
-      #
-      v_X_matched_q[t,2] <- sum(X_matched$v_X,na.rm=TRUE)
-      v_X_matched_q[t,3] <- sum(X_matched_q$v_X,na.rm=TRUE)
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==5); v_X_matched_q[t,4] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==1); v_X_matched_q[t,5] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==2); v_X_matched_q[t,6] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==3); v_X_matched_q[t,7] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==4); v_X_matched_q[t,8] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==6); v_X_matched_q[t,9] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==7); v_X_matched_q[t,10] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==8); v_X_matched_q[t,11] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==9); v_X_matched_q[t,12] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==10); v_X_matched_q[t,13] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==11); v_X_matched_q[t,14] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==12); v_X_matched_q[t,15] <- sum(temp$v_X,na.rm=TRUE) 
-      temp<- subset(X_matched_q,X_matched_q$q_code_X==13); v_X_matched_q[t,16] <- sum(temp$v_X,na.rm=TRUE) 
-    
+
+    # Cache counts
+	writeLines(toJSON(counts1), 'tmp/counts1.json')
+    write.csv(counts2,file='tmp/counts2.csv',row.names=T,na="")
+
     #   End  module
     # cleanup some
-    rm(M_paired, M_matched, M_orphan, M_lost, M_matched_q, X_paired, X_matched, X_orphan, X_lost, X_matched_q, temp)
+    rm(rmatch)
 } # end t loop
 #
-setwd(counts_DIR)
-cat("\n","\n","...Writing out final M & X counts","\n")
-if (auto_dates) {yr_suffix <- ".csv"} else {yr_suffix <- paste("-special.csv",sep="")}
-write.csv(n_RAW,file=paste(tag,"-counts-record-RAW",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(n_TREAT,file=paste(tag,"-counts-record-TREAT",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(n_SWISS,file=paste(tag,"-counts-record-SWISS",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(n_MATCH_M,file=paste(tag,"-counts-record-MATCH_M",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(v_MATCH_M,file=paste(tag,"-counts-value-MATCH_M",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(n_MATCH_X,file=paste(tag,"-counts-record-MATCH_X",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(v_MATCH_X,file=paste(tag,"-counts-value-MATCH_X",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(n_M_matched_q,file=paste(tag,"-counts-record-MATCH_M_q",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(n_X_matched_q,file=paste(tag,"-counts-record-MATCH_X_q",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(v_M_matched_q,file=paste(tag,"-counts-value-MATCH_M_q",yr_suffix,sep=""),row.names=FALSE,na="")
-write.csv(v_X_matched_q,file=paste(tag,"-counts-value-MATCH_X_q",yr_suffix,sep=""),row.names=FALSE,na="")
 
+check <- row.names(counts2)[counts2$n_M != counts2$n_X | counts2$n_M_q != counts2$n_X_q]
+if(length(check)>0)logg(paste('0000', '!', check, sep = '\t'))
+
+put_object(oplog, basename(oplog), bucket = out_bucket)
+
+# system('sudo shutdown')

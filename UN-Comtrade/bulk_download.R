@@ -15,14 +15,13 @@ library('data.table')
 
 usr <- 'aws00' # the user account for using AWS service
 client <- 'comtrade00' # the user account for downloading Comtrade data
-years <- c(2016:2000, 2017) # the years we want to download, order as download order
+years <- c(2010:2001, 2016:2011) # the years we want to download, order as download order
 bucket <- 'gfi-comtrade' # save the results to a S3 bucket called 'gfi-comtrade'
 subdir <- NULL # currently not using
 oplog <- 'bulk_download.log' # progress report file
 dinfo <- 'download.log' # file of the information of the downloaded data
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-# column names of the raw data; if it gets changed, we may also need to change the subsetting code.
 excol <- c('reporter', 'partner', 'commodity')
 colc_UN <- c("character","integer","integer","character","integer","integer","integer",
                     "character","character","character","character","character","character",
@@ -40,6 +39,8 @@ coln_UN <- c("classification","year","period","perioddesc","aggregatelevel","isl
 oplog <- paste('logs/', oplog, sep = '')
 dinfo <- paste('logs/', dinfo, sep = '')
 excol <- match(excol, coln_UN)
+coln_UN <- coln_UN[-excol]
+colc_UN[excol] <- 'NULL'
 token <- function(){
   url <- paste('https://comtrade.un.org/api/getAuthToken?username=',
                keycache$user[keycache$service==client],'&password=',
@@ -90,7 +91,6 @@ for(t in years){
   }
   trycount <- 0
   rdata <- FALSE
-  colc_UN[excol] <- 'NULL'
 #  try(rdata <- read.csv(pipe('./prepd.sh'), header = F, colClasses = colc_UN))
   try(rdata <- fread(cmd = "./prepd.sh", header=F, colClasses = colc_UN))
   # add a blank line to the end output or fread fails:
@@ -103,8 +103,7 @@ for(t in years){
   trycount <- 0
   logg(paste(t, ':', 'opened', sep = '\t'))
   tmp <- nrow(rdata)
-  logg(paste(t, ':', tmp, sep = '\t'))
-  coln_UN <- coln_UN[-excol]
+  logg(paste(t, '#', tmp, sep = '\t'))
   if(ncol(rdata)!=length(coln_UN)){
     logg(paste(t, '!', '# of cols mismatched', sep = '\t'))
     next
@@ -118,9 +117,9 @@ for(t in years){
   bak <- paste('tmp/', t, '.csv.bz2', sep = '')
   class(msg) <- 'try-error'
   while(class(msg)=='try-error' && trycount <= max_try){
-    tmpcon <- bzfile(bak, open = 'wb')
-    msg <- try(write.csv(rdata, file=tmpcon, row.names = FALSE))
-    close(tmpcon)
+    tmp <- bzfile(bak, open = 'wb')
+    msg <- try(write.csv(rdata, file=tmp, row.names = FALSE))
+    close(tmp)
     trycount <- trycount + 1
   }
   trycount <- 0
@@ -153,8 +152,8 @@ for(t in years){
   rm(rdata, info)
 }
 
-# put_object(oplog, oplog, bucket = bucket)
-# put_object(dinfo, dinfo, bucket = bucket)
+put_object(oplog, basename(oplog), bucket = bucket)
+put_object(dinfo, basename(dinfo), bucket = bucket)
 
 unlink('tmp/tmp.zip')
 

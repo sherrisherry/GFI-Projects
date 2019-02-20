@@ -38,18 +38,14 @@ treat <- function(df_in,t_in) {
              473,   #         South America, nes
              879    #         Western Asia, nes
              )
-  for (cty in x_cty) {
-    df_out <- subset(df_out,!df_out$i==cty)
-    df_out <- subset(df_out,!df_out$j==cty)
-  }
+
+    df_out <- subset(df_out,!(df_out$i %in% x_cty) & !(df_out$j %in% x_cty))
+	
   # Special country treatments
   # (1) Beginning in 2000, exclude San Marino[674] & Vatican[381] (already included in Italy[381])
   if (t_in >= 2000) {
     x_cty <- c(674,381)
-    for (cty in x_cty) {
-      df_out <- subset(df_out,!df_out$i==cty)
-      df_out <- subset(df_out,!df_out$j==cty)
-    }
+      df_out <- subset(df_out,!(df_out$i %in% x_cty) & !(df_out$j %in% x_cty))
   }
   # (2) Beginning in 2006, adjust Slovakia[703] reports to reflect Montenegro[499] independently from Serbia-Montegro[891]
   if (t_in >= 2006) {
@@ -75,18 +71,16 @@ treat <- function(df_in,t_in) {
       #   11 "q_?.y"
       #   12 "q_kg_?.y"
       # so we'll be using merged trade flow values (cols 5 & 9) and quantities (if col6=col10, cols 7 & 11 + cols 8 & 12)
-      for (i in 1:n_891) {
-        s_891[i,"j"] <- 499                   # replace partner code for Serbia-Montenegro [899] with Montenegro [499]
-        s_891[i,5] <- temp[i,5] - temp[i,9] # $ trade flow for Serbia = Serbia-Montenegro minus Serbia
-        if (temp[i,6]==temp[i,10]) {
-          s_891[i,7] <- temp[i,7]-temp[i,11]
-          s_891[i,8] <- temp[i,8]-temp[i,12]
+        s_891[,"j"] <- 499                   # replace partner code for Serbia-Montenegro [899] with Montenegro [499]
+        s_891[,5] <- temp[,5] - temp[,9] # $ trade flow for Serbia = Serbia-Montenegro minus Serbia
+        if (temp[,6]==temp[,10]) {
+          s_891[,7] <- temp[,7]-temp[,11]
+          s_891[,8] <- temp[,8]-temp[,12]
         } else {
-          s_891[i,6] <- 1                   # if mismatch on merged quantities, reset to No quantity
-          s_891[i,7] <- NA                  # missing
-          s_891[i,8] <- NA                  # missing
+          s_891[,6] <- 1                   # if mismatch on merged quantities, reset to No quantity
+          s_891[,7] <- NA                  # missing
+          s_891[,8] <- NA                  # missing
         }
-      } # end loop through s_891
       df_out <- subset(df_out,!(df_out$i==703 & df_out$j==891))
       df_out <- rbind(df_out,s_891)
     } # end if (n_891>0)
