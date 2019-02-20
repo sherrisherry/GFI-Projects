@@ -94,16 +94,7 @@ ecycle(write.csv(model_train, file = bzfile(bak),row.names=FALSE,na=""),
               max_try,
               {logg(paste('0000', '|', 'uploaded model_train', sep = '\t')); unlink(bak)}))
 
-bak <- 'tmp/process_train.csv.bz2'
-ecycle(write.csv(row_count, file = bzfile(bak),row.names=FALSE,na=""), 
-       ecycle(s3write_using(row_count, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
-                            bucket = out_bucket, object = basename(bak)),
-              logg(paste('0000', '!', 'uploading row_count failed', sep = '\t')), max_try), 
-       max_try,
-       ecycle(put_object(bak, basename(bak), bucket = out_bucket), 
-              logg(paste('0000', '!', 'uploading row_count failed', sep = '\t')),
-              max_try,
-              {logg(paste('0000', '|', 'uploaded row_count', sep = '\t')); unlink(bak)}))
+write.csv(row_count, file = 'data/process_train.csv',row.names=FALSE,na="")
 rm(row_count)
 #
 cat("\n","...estimating model...","\n")

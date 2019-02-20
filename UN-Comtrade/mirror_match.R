@@ -140,7 +140,7 @@ for (t in 1:n_dates) {
    counts1$n_SWISS[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
     logg(paste(year, ':', 'swiss-adjusted', sep = '\t'))
     # End SWISS module
-    
+   
 #   Start PAIR module 
     cat("\n","   (4) PAIR module")
     
@@ -153,6 +153,7 @@ for (t in 1:n_dates) {
     cat("\n","            ...M to X") ;  mirror$M <- merge(x=rdata$M,y=rdata$X,by = c("i","j","k"), all.x=TRUE)
     cat("\n","            ...M to rX") ; mirror$M <- merge(x=mirror$M,y=rdata$rX[, c("i","j","k","v_rX")],by = c("i","j","k"), all.x=TRUE)
     cat("\n","            ...M to rM") ; mirror$M <- merge(x=mirror$M,y=rdata$rM[, c("i","j","k","v_rM")],by = c("i","j","k"), all.x=TRUE)
+
     logg(paste(year, ':', 'M-paired', sep = '\t'))
   
     # Pair X
@@ -285,8 +286,8 @@ for (t in 1:n_dates) {
       #
 
     # Cache counts
-	writeLines(toJSON(counts1), 'tmp/counts1.json')
-    write.csv(counts2,file='tmp/counts2.csv',row.names=T,na="")
+	writeLines(toJSON(counts1), 'data/process_prematch.json')
+    write.csv(counts2,file='data/counts_match.csv',row.names=T,na="")
 
     #   End  module
     # cleanup some
