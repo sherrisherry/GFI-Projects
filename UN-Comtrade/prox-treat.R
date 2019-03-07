@@ -86,8 +86,7 @@ treat <- function(df_in,t_in) {
     } # end if (n_891>0)
   } # end if (t>=2006) ...Slovakia treatment
   # NEC commodity exclusions
-  df_out <- df_out[(!df_out$k==999999),]
-  df_out <- df_out[(!df_out$k=="9999AA"),]
+  df_out <- df_out[(!df_out$k==999999),]; df_out <- df_out[(!df_out$k=="9999AA"),]
   # 
   return(df_out)
-} 
+}

@@ -5,11 +5,8 @@
 # 5. shutdown system after completion.
 
 rm(list=ls()) # clean up environment
-library("aws.s3")
-library('aws.ec2metadata')
-library('jsonlite')
-library('scripting')
-library('data.table')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'jsonlite', 'scripting', 'data.table')
+for(i in pkgs)library(i, character.only = T)
 
 #=====================================modify the following parameters for each new run==============================================#
 

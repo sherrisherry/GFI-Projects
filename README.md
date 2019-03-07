@@ -10,14 +10,16 @@ At this stage, we use a data lake rather than a database strategy to manage data
 
 * Computing: AWS EC2
   * Operation System: Ubuntu Linux
-  * Type: t1.micro
+  * Type: t2.micro
 
 * Memory: AWS EBS
-  * 9G root
-  * 21G swap
+  * 9G root, gp2
+  * 21G swap, gp2
 
 * Storage: AWS S3
   * gfi-comtrade: downsized Comtrade datasets
+  * gfi-supplemental: supplemental files
+  * gfi-mirror-analysis: matched data for mirror analysis
 
 * Supplement: Google Drive
   * work progress reports
@@ -31,3 +33,4 @@ At this stage, we use a data lake rather than a database strategy to manage data
 ## Update History
 
 * 01/30/2019: repository creation, with vars/ and UN-Comtrade/
+* 02/19/2019: large update, improving efficiency and robustness

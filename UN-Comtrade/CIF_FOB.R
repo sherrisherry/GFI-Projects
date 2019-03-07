@@ -1,9 +1,8 @@
-# missing input files: GeoDist.csv, EIA.csv, GFI-20??-M-matched-q.csv
-## middle output: GFI-M-matched-q.csv (missing) the subsetted (records met price and quantity tresholds) model inputs in the year range
+# build model to estimate gap between CIF and FOB
 # produce cif-fob model coefficients: Margins Model Coefficients.csv
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'scripting', 'cleandata')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'cleandata')
 for(i in pkgs)library(i, character.only = T)
 
 #=====================================modify the following parameters for each new run==============================================#
@@ -21,12 +20,11 @@ q_crit    <- 0.025  # threshold for quantity-based exclusions
 p_crit_hi <- 1.75   # upper threshhold for price-based exclusions
 p_crit_lo <- 0.75   # lower threshhold for price-based exclusions
 #
-cols_in <- c(rep("integer",3),rep("character",3),rep("NULL",4),rep("numeric",6),rep("integer",4), "numeric", rep("integer",5)) 
-names(cols_in) <- c("t","j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","d_fob_i","d_fob_j","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X","d_dev_i","d_dev_j",
+cols_in <- c(rep("integer",3),rep("character",3),rep("NULL",2),rep("numeric",6),rep("integer",5), "numeric", rep("integer",5)) 
+names(cols_in) <- c("t","j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X","d_fob","d_dev_i","d_dev_j",
                     "distw","d_landlocked_j","d_landlocked_i","d_contig","d_conti","d_rta")
-cols_out <- c(rep('numeric', 4), rep('integer', 23))
-tmp <- c('ln_v_margin', 'ln_distw', 'ln_distw_squared', 'ln_uvmdn', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
-names(cols_out) <- append(tmp, paste('d', years[-1], sep = '_'))
+cols_model <- c('ln_v_margin', 'ln_distw', 'ln_distw_squared', 'ln_uvmdn', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
+cols_model <- append(cols_model, paste('d', years[-1], sep = '_'))
 #===================================================================================================================================#
 				  
 oplog <- paste('logs/', oplog, sep = '')
@@ -37,7 +35,7 @@ if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = g
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
-row_count <- data.frame(Year = years); row_count$raw <- NA; row_count$nona <- NA; row_count$inlim <- NA
+row_count <- data.frame(Year = years); row_count$raw <- NA; row_count$nofob <- NA; row_count$nona <- NA; row_count$inlim <- NA
 
 model_train <- list()
 for (year in years) {
@@ -55,6 +53,8 @@ ecycle(x_in <- read.csv(pipe("bzip2 -dkc ./tmp/tmp.csv.bz2"), header=T, colClass
     #          (2) records where the differences in quantities exceeds q_crit
     #          (3) the ratio between import unit values and export unit values exceeds 2 or is less than 1
     cat("   ...processing...")
+    x_in <- subset(x_in, d_fob == 0, -match('d_fob',colnames(x_in))) # this handles NAs
+    row_count$nofob[row_count$Year==year] <- nrow(x_in)
     x_in <- x_in[complete.cases(x_in),]
     row_count$nona[row_count$Year==year] <- nrow(x_in)
     x_in <- subset(x_in,x_in$q_code_M == x_in$q_code_X)
@@ -72,10 +72,11 @@ ecycle(x_in <- read.csv(pipe("bzip2 -dkc ./tmp/tmp.csv.bz2"), header=T, colClass
     x_in$ln_distw_squared <- x_in$ln_distw * x_in$ln_distw
     x_in$ln_uvmdn <- log(x_in$uvmdn)
     x_in$d_hs_diff <- as.integer(x_in$hs_ptn!=x_in$hs_rpt)
-    tmp <- colnames(x_in); colnames(x_in)[match('t',tmp)] <- 'd'
-    x_in$d <- factor(x_in$d, levels = years); tmp <- encode_onehot(x_in[,'d', drop=FALSE], drop1st = T)
+    x_in$d <- factor(x_in$t, levels = years); tmp <- encode_onehot(x_in[,'d', drop=FALSE], drop1st = T)
     x_in$d <- NULL; x_in <- cbind(x_in, tmp)
-	model_train[[as.character(year)]] <- x_in[, names(cols_out)]
+    x_in <- x_in[, cols_model]
+    # this eleminates countries outside GFI focus because of NAs in d_dev
+	model_train[[as.character(year)]] <- na.omit(x_in)
 	logg(paste(year, '|', 'processed', sep = '\t'))
 }
 
@@ -83,29 +84,28 @@ rm(x_in)
 
 model_train <- do.call('rbind', model_train)
 
-bak <- 'tmp/model_train.csv.bz2'
-ecycle(write.csv(model_train, file = bzfile(bak),row.names=FALSE,na=""), 
-       ecycle(s3write_using(model_train, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+bak <- 'data/process_cifob_train.csv'
+ecycle(write.csv(row_count, file = bzfile(bak),row.names=FALSE,na=""), 
+       ecycle(s3write_using(row_count, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                             bucket = out_bucket, object = basename(bak)),
-              logg(paste('0000', '!', 'uploading model_train failed', sep = '\t')), max_try), 
+              logg(paste('0000', '!', 'uploading train set process failed', sep = '\t')), max_try), 
        max_try,
        ecycle(put_object(bak, basename(bak), bucket = out_bucket), 
-              logg(paste('0000', '!', 'uploading model_train failed', sep = '\t')),
+              logg(paste('0000', '!', 'uploading train set process failed', sep = '\t')),
               max_try,
-              {logg(paste('0000', '|', 'uploaded model_train', sep = '\t')); unlink(bak)}))
+              logg(paste('0000', '|', 'uploaded train set process', sep = '\t'))))
 
-write.csv(row_count, file = 'data/process_train.csv',row.names=FALSE,na="")
 rm(row_count)
 #
 cat("\n","...estimating model...","\n")
-model_lm <- paste(names(cols_out)[1], paste(names(cols_out)[-1], collapse = '+'), sep = '~')
+model_lm <- paste(cols_model[1], paste(cols_model[-1], collapse = '+'), sep = '~')
 # model_lm: ln_v_margin ~ ln_distw + ln_distw_squared + ln_uvmdn + d_contig + d_conti + d_rta + d_landlocked_i + d_landlocked_j
 #                         + d_dev_i + d_dev_j + d_hs_diff + d_2001 + ... + d_2016
-margins_model <- lm(formula = model_lm, data= model_train)
+cifob_model <- lm(formula = model_lm, data= model_train)
 logg(paste('0000', ':', 'trained model', sep = '\t'))
-bak <- 'data/margins_model.rds'
-ecycle(saveRDS(margins_model, bak, ascii = F, compress = T), 
-       ecycle(s3write_using(margins_model, FUN = function(x, y)saveRDS(x, file=y, ascii = F, compress = T),
+bak <- 'data/cifob_model.rds.bz2'
+ecycle(saveRDS(cifob_model, bzfile(bak), ascii = F), 
+       ecycle(s3write_using(cifob_model, FUN = function(x, y)saveRDS(x, file=bzfile(y), ascii = F, compress = T),
                             bucket = out_bucket, object = basename(bak)),
               logg(paste('0000', '!', 'uploading margins_model failed', sep = '\t')), max_try), 
        max_try,
@@ -113,15 +113,15 @@ ecycle(saveRDS(margins_model, bak, ascii = F, compress = T),
               logg(paste('0000', '!', 'uploading margins_model failed', sep = '\t')),
               max_try,
               {logg(paste('0000', '|', 'uploaded margins_model', sep = '\t')); unlink(bak)}))
-margins_fitted <- exp(margins_model$fitted.values)
-capture.output(summary(margins_fitted), file= "data/Stats_for_Fitted_Values.txt")
-capture.output(summary(margins_model), file= "data/Regression_Summary.txt")
+cifob_fitted <- exp(cifob_model$fitted.values)
+capture.output(summary(cifob_fitted), file= "data/Stats_Fitted_Values.txt")
+capture.output(summary(cifob_model), file= "data/cifob_Regression_Summary.txt")
 # collect coefficients
-model_row_names <- c("Intercept", names(cols_out)[-1])
+model_row_names <- c("Intercept", cols_model[-1])
 model_coeffs <- data.frame(Coefficients = rep(NA, length(model_row_names)))
 rownames(model_coeffs)<-model_row_names
 model_coeffs[,"Coefficients"] <- coef(margins_model)
-write.csv(model_coeffs,file="data/Margins_Model_Coefficients.csv")
+write.csv(model_coeffs,file="data/cifob_Model_Coefficients.csv")
 logg(paste('0000', '|', 'saved stats', sep = '\t'))
 
 put_object(oplog, basename(oplog), bucket = out_bucket)

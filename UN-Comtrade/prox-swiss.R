@@ -23,7 +23,7 @@ swiss <- function(df_in,df_swiss,t_in) {
         swiss_out <- data.frame( hs = rep(hs,n_temp),
                                   i = rep(757,n_temp),
                                   j=rep(0,n_temp),
-                                  k=rep(710812,n_temp),
+                                  k=rep("710812",n_temp),
                                   v=rep(0,n_temp),
                                   q_code = rep(8,n_temp), # output quantities in kg
                                   q = rep(1,n_temp),      # q=1 
@@ -32,7 +32,7 @@ swiss <- function(df_in,df_swiss,t_in) {
         swiss_out$v    <- temp$v
         swiss_out$q_kg <- temp$q_kg
         colnames(swiss_out) <- col_names_out  # also equal to col_names_in
-        df_out <- subset(df_out,!((df_out$i=757)&(df_out$k=710812)))  # eliminate any existing rows on Swiss reported trade in 710812
+        df_out <- subset(df_out,!((df_out$i=757)&(df_out$k="710812")))  # eliminate any existing rows on Swiss reported trade in 710812
         df_out <- rbind(df_out,swiss_out)                
   }
   return(df_out)

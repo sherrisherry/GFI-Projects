@@ -6,11 +6,8 @@
 # 6. shutdown system after completion.
 
 rm(list=ls()) # clean up environment
-library("aws.s3")
-library('aws.ec2metadata')
-library('jsonlite')
-library('scripting')
-library("data.table")
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'jsonlite', 'scripting', 'data.table')
+for(i in pkgs)library(i, character.only = T)
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -146,9 +143,9 @@ for (t in 1:n_dates) {
     
     # Pair M
     cat("\n","        ...pairing M data")
-	tmp <- colnames(rdata$M); colnames(rdata$M)[c(grep('hs', tmp))] <- c('hs_rpt')
-	tmp <- colnames(rdata$X); colnames(rdata$X)[c(grep('hs', tmp), grep('i', tmp), grep('j', tmp))] <- c('hs_ptn', 'j', 'i')
-	tmp <- colnames(rdata$rX); colnames(rdata$rX)[c(grep('i', tmp), grep('j', tmp))] <- c('j', 'i')
+	tmp <- colnames(rdata$M); colnames(rdata$M)[match('hs', tmp)] <- c('hs_rpt')
+	tmp <- colnames(rdata$X); colnames(rdata$X)[match(c('hs', 'i', 'j'), tmp)] <- c('hs_ptn', 'j', 'i')
+	tmp <- colnames(rdata$rX); colnames(rdata$rX)[match(c('i', 'j'), tmp)] <- c('j', 'i')
 	mirror <- list()
     cat("\n","            ...M to X") ;  mirror$M <- merge(x=rdata$M,y=rdata$X,by = c("i","j","k"), all.x=TRUE)
     cat("\n","            ...M to rX") ; mirror$M <- merge(x=mirror$M,y=rdata$rX[, c("i","j","k","v_rX")],by = c("i","j","k"), all.x=TRUE)
@@ -158,10 +155,10 @@ for (t in 1:n_dates) {
   
     # Pair X
     cat("\n","        ...pairing X data")
-    tmp <- colnames(rdata$X); colnames(rdata$X)[c(grep('hs_ptn', tmp), grep('i', tmp), grep('j', tmp))] <- c('hs_rpt', 'j', 'i')
-	tmp <- colnames(rdata$M); colnames(rdata$M)[c(grep('hs_rpt', tmp), grep('i', tmp), grep('j', tmp))] <- c('hs_ptn', 'j', 'i')
-	tmp <- colnames(rdata$rM); colnames(rdata$rM)[c(grep('i', tmp), grep('j', tmp))] <- c('j', 'i')
-	tmp <- colnames(rdata$rX); colnames(rdata$rX)[c(grep('i', tmp), grep('j', tmp))] <- c('j', 'i')
+    tmp <- colnames(rdata$X); colnames(rdata$X)[match(c('hs_ptn', 'i', 'j'), tmp)] <- c('hs_rpt', 'j', 'i')
+	tmp <- colnames(rdata$M); colnames(rdata$M)[match(c('hs_rpt', 'i', 'j'), tmp)] <- c('hs_ptn', 'j', 'i')
+	tmp <- colnames(rdata$rM); colnames(rdata$rM)[match(c('i', 'j'), tmp)] <- c('j', 'i')
+	tmp <- colnames(rdata$rX); colnames(rdata$rX)[match(c('i', 'j'), tmp)] <- c('j', 'i')
     cat("\n","            ...X to M") ;  mirror$X <- merge(x=rdata$X,y=rdata$M,by = c("i","j","k"), all.x=TRUE)
     cat("\n","            ...X to rX") ; mirror$X <- merge(x=mirror$X,y=rdata$rX[, c("i","j","k","v_rX")],by = c("i","j","k"), all.x=TRUE)
     cat("\n","            ...X to rM") ; mirror$X <- merge(x=mirror$X,y=rdata$rM[, c("i","j","k","v_rM")],by = c("i","j","k"), all.x=TRUE)
