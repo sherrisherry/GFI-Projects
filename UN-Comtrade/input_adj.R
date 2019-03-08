@@ -10,7 +10,7 @@ out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gf
 in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
-oplog <- 'model_input_adj.log' # progress report file
+oplog <- 'input_adj.log' # progress report file
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials

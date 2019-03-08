@@ -1,5 +1,4 @@
-# 1. automatically download Comtrade data that is newer than our existing data from the UN;
-# 2. decompress and subset the raw data to only keep aggregation level 6 and remove country names and commodity names;
+# 1. decompress and subset the raw data to only keep aggregation level 6 and remove country names and commodity names;
 # 3. compress the results and send them to AWS S3;
 # 4. record the information of downloaded data;
 # 5. send a progress report to Google Drive;
@@ -20,6 +19,7 @@ sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
 oplog <- 'mirror_match.log' # progress report file
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
+opcounter <- 'process_mirror_match.json'
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 cols_UN <- rep('NULL', 19)
@@ -40,6 +40,7 @@ names(tfn) <- c('1','4','2','3')
 				  
 oplog <- paste('logs/', oplog, sep = '')
 dinfo <- paste('logs/', dinfo, sep = '')
+opcounter <- paste('data/', opcounter, sep = '')
 logg <- function(x)mklog(x, path = oplog)
 Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
            "AWS_SECRET_ACCESS_KEY" = keycache$Secret_access_key[keycache$service==usr])
@@ -54,14 +55,14 @@ rm(dyears)
 
 # Set up counters to collect for multiple years
 
-counts1 <- list()
-counts1$n_RAW <- data.frame(Year = dates, M = NA, X = NA, rX = NA, rM = NA)
-counts1$n_TREAT <-  counts1$n_SWISS <- counts1$n_RAW
-out_names <- c('M-matched', 'X-matched', 'M-matched-q', 'X-matched-q', 'M-orphaned', 'X-orphaned', 'M-lost', 'X-lost')
-names(out_names) <- c('M', 'X', 'M_q', 'X_q', 'M_orphan', 'X_orphan', 'M_lost', 'X_lost')
+counter <- list()
+counter$n_RAW <- data.frame(Year = dates, M = NA, X = NA, rX = NA, rM = NA)
+counter$n_TREAT <-  counter$n_SWISS <- counter$n_RAW
+out_names <- c('M-matched', 'X-matched', 'M-orphaned', 'M-lost')
+names(out_names) <- c('M', 'X', 'M_orphan', 'M_lost')
 tmp <- c('M_p','X_p', names(out_names))
-counts2 <- matrix(nrow = n_dates, ncol = 10, dimnames = list(dates, paste('n_', tmp, sep = '')))
-counts2 <- as.data.frame(counts2)
+counter$n_pair_match <- matrix(nrow = n_dates, ncol = 10, dimnames = list(dates, paste('n_', tmp, sep = '')))
+counter$n_pair_match <- as.data.frame(counter$n_pair_match)
 
 # read in 'treat' function for preliminary data treatments in TREAT module
 source("prox-treat.R")
@@ -117,14 +118,14 @@ for (t in 1:n_dates) {
 	rdata <- lapply(rdata, function(x){cols <- colnames(x); nm <- c("v","q_code","q","q_kg"); lsn <- tfn[as.character(x$tf[1])]
 										colnames(x)[match(nm, cols)] <- paste(nm, lsn, sep = '_'); x$tf <- NULL
 										return(x)})
-    counts1$n_RAW[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
+    counter$n_RAW[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
 	logg(paste(year, ':', 'divided', sep = '\t'))
 #   End RAW module
 
 #   Implement TREAT module 
     cat("\n","   (2) TREAT module")
 	rdata <- lapply(rdata, function(x)treat(x,t))
-	counts1$n_TREAT[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
+	counter$n_TREAT[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
 	logg(paste(year, ':', 'treated', sep = '\t'))
 
     #   End TREAT module
@@ -134,7 +135,7 @@ for (t in 1:n_dates) {
     cat("\n","        ...making Swiss adjustments for M...") ; rdata$M  <- swiss(rdata$M,M_swiss,t)
     cat("\n","        ...making Swiss adjustments for X...") ; rdata$X  <- swiss(rdata$X,X_swiss,t)
    # counts
-   counts1$n_SWISS[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
+   counter$n_SWISS[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
     logg(paste(year, ':', 'swiss-adjusted', sep = '\t'))
     # End SWISS module
    
@@ -233,7 +234,7 @@ for (t in 1:n_dates) {
     }
     # end Hong Kong module
 
-	counts2[t, c('n_M_p', 'n_X_p')] <- as.data.frame(lapply(mirror, nrow))[c('M', 'X')]
+	counter$n_pair_match[t, c('n_M_p', 'n_X_p')] <- as.data.frame(lapply(mirror, nrow))[c('M', 'X')]
     
 # Start MATCH module 
     cat("\n","   (6) MATCH module")
@@ -242,24 +243,28 @@ for (t in 1:n_dates) {
       cat("\n","        ...matching M data")
       rmatch$M <- subset(mirror$M, mirror$M$v_X>0 & mirror$M$v_M>0)
       rmatch$M_orphan  <- subset(mirror$M,is.na(mirror$M$v_X))
-      cat("\n","        ...matching M quantity data")
-      rmatch$M_q <- subset(rmatch$M,rmatch$M$q_code_M==rmatch$M$q_code_X)
-      rmatch$M_q <- subset(rmatch$M_q, ((rmatch$M_q$q_M>0)&(rmatch$M_q$q_X>0)))
-          
       # Matching X
       cat("\n","        ...matching X data")
       rmatch$X <- subset(mirror$X, mirror$X$v_M>0 & mirror$X$v_X>0)              # should equal rmatch$M from above
-      rmatch$X_orphan  <- subset(mirror$X,is.na(mirror$X$v_M))
-      cat("\n","        ...matching X quantity data")
-      rmatch$X_q <- subset(rmatch$X,rmatch$X$q_code_X==rmatch$X$q_code_M)
-      rmatch$X_q <- subset(rmatch$X_q, ((rmatch$X_q$q_M>0)&(rmatch$X_q$q_X>0)))
-      #
-      rmatch$M_lost <- rmatch$X_orphan
-      rmatch$X_lost <- rmatch$M_orphan
-    # uploading results
+      rmatch$M_lost <- subset(mirror$X,is.na(mirror$X$v_M)) # M_lost == X_orphan
+  # end MATCH module
+      rm(mirror)
 	  stopifnot(setequal(names(rmatch),names(out_names)))
-	  tmp <- paste(tag, year, out_names, sep = '-'); tmp <- paste('tmp/', tmp, '.csv.bz2', sep = '')
-	  names(tmp) <- names(out_names)
+	  # update counts   
+	  cat("\n","   (7) updating counts")
+	  counter$n_pair_match[t, paste('n_', names(rmatch), sep = '')] <- as.data.frame(lapply(rmatch, nrow))
+	  # verify M==X
+	  if(counter$n_pair_match$n_M==counter$n_pair_match$n_X){
+	    tmp <- colnames(rmatch$X)
+	    colnames(rmatch$X)[match(c("hs_rpt","hs_ptn","i","j"), tmp)] <- c("hs_ptn","hs_rpt","j","i")
+	    tmp <- duplicated(rbind(rmatch$M, rmatch$X))
+	    if(sum(tmp)!=counter$n_pair_match$n_M)logg(paste(year, '!', 'MX nrow not identical', sep = '\t'))
+	    else{logg(paste(year, '|', 'identical', sep = '\t')); rmatch$X <-NULL}
+	  }else logg(paste(year, '!', 'MX not identical', sep = '\t'))
+	  
+	  # uploading results
+	  tmp <- paste(tag, year, out_names[names(rmatch)], sep = '-'); tmp <- paste('tmp/', tmp, '.csv.bz2', sep = '')
+	  names(tmp) <- names(out_names[names(rmatch)])
 	  for(i in names(rmatch)){
 	  ecycle(write.csv(rmatch[[i]], file = bzfile(tmp[i]),row.names=FALSE,na=""), 
              ecycle(s3write_using(rmatch[[i]], FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
@@ -272,29 +277,13 @@ for (t in 1:n_dates) {
                     {logg(paste(year, '|', paste('uploaded', basename(tmp[i]), sep = ' '), sep = '\t')); unlink(tmp[i])}))
 	  }
       
-# end MATCH module
-
-	rm(mirror)
-
-# update counts   
-      cat("\n","   (7) updating counts")
-      
-	  counts2[t, paste('n_', names(rmatch), sep = '')] <- as.data.frame(lapply(rmatch, nrow))
-      #
-
     # Cache counts
-	writeLines(toJSON(counts1), 'data/process_prematch.json')
-    write.csv(counts2,file='data/counts_match.csv',row.names=T,na="")
+	writeLines(toJSON(counter), opcounter)
 
-    #   End  module
     # cleanup some
     rm(rmatch)
 } # end t loop
 #
-
-check <- row.names(counts2)[counts2$n_M != counts2$n_X | counts2$n_M_q != counts2$n_X_q]
-if(length(check)>0)logg(paste('0000', '!', check, sep = '\t'))
-
 put_object(oplog, basename(oplog), bucket = out_bucket)
-
+put_object(opcounter, basename(opcounter), bucket = out_bucket)
 # system('sudo shutdown')

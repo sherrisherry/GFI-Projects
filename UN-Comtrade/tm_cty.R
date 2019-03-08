@@ -4,4 +4,4 @@ names(cols_in) <- c("t","j","i","d_dev_i","d_dev_j","k","hs_rpt","hs_ptn","v_rX"
                     "q_code_M","q_code_X",'uvmdn',"v_M","v_X", 'v_M_fob', 'a_wt', 'gap', 'gap_wtd')
 options(stringsAsFactors= FALSE)
 aggk <- read.csv('data/M-Gaps.csv', colClasses = cols_in)
-tmp <- subset(tmp, tmp$i %in% countries | tmp$j %in% countries)
+tmp <- subset(tmp, tmp$i %in% cty | tmp$j %in% cty)
