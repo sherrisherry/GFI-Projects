@@ -9,7 +9,7 @@ for(i in pkgs)library(i, character.only = T)
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
-out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
+out_bucket <- 'gfi-work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 oplog <- 'CIF_FOB.log' # progress report file
@@ -39,8 +39,8 @@ row_count <- data.frame(Year = years); row_count$raw <- NA; row_count$nofob <- N
 
 model_train <- list()
 for (year in years) {
-    obj_nm <- paste("Comtrade",year,"M-matched-q.csv.bz2",sep="-")
-    cat("\n","...reading M-matched-q for",year,"\n")
+    obj_nm <- paste("Comtrade",year,"input.csv.bz2",sep="-")
+    cat("\n","...reading input for",year,"\n")
 ecycle(save_object(object = obj_nm, bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
 		   {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
 ecycle(x_in <- read.csv(pipe("bzip2 -dkc ./tmp/tmp.csv.bz2"), header=T, colClasses = cols_in),
@@ -96,8 +96,8 @@ ecycle(write.csv(row_count, file = bzfile(bak),row.names=FALSE,na=""),
               logg(paste('0000', '|', 'uploaded train set process', sep = '\t'))))
 
 rm(row_count)
-#
-cat("\n","...estimating model...","\n")
+
+# start modeling
 model_lm <- paste(cols_model[1], paste(cols_model[-1], collapse = '+'), sep = '~')
 # model_lm: ln_v_margin ~ ln_distw + ln_distw_squared + ln_uvmdn + d_contig + d_conti + d_rta + d_landlocked_i + d_landlocked_j
 #                         + d_dev_i + d_dev_j + d_hs_diff + d_2001 + ... + d_2016

@@ -1,17 +1,17 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'scripting', 'cleandata')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'scripting', 'cleandata', 'data.table')
 for(i in pkgs)library(i, character.only = T)
 
 #=====================================modify the following parameters for each new run==============================================#
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
-out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
-in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
-sup_bucket <- 'gfi-supplemental' # supplemental files
+out_bucket <- 'gfi-work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
+in_bucket <- 'gfi-work' # read in raw data from this bucket
 oplog <- 'gaps.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
+file_inout <- 'Comtrade-input.csv.bz2'
 cifob_model <- 'cifob_model.rds.bz2'
 cols_in <- c(rep("integer",3),rep("character",3),rep("numeric",8),rep("integer",5), "numeric", rep("integer",5)) 
 names(cols_in) <- c("t","j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X","d_fob","d_dev_i","d_dev_j",
@@ -30,10 +30,12 @@ if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = g
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
-# change to before select-country
-m_in <- read.csv(bzfile('data/M-matched-q.csv.bz2'), colClasses=cols_in, na.strings="",sep=",")
-
+ecycle(save_object(object = file_inout, bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
+       {logg(paste('!', 'retrieving file failed', sep = '\t')); stop()}, max_try)
+ecycle(m_in <- read.csv(bzfile('tmp/tmp.csv.bz2'), colClasses=cols_in, na.strings="", header = T),
+       {logg(paste('!', 'loading file failed', sep = '\t')); stop()}, max_try)
 logg(paste(':', 'loaded data', sep = '\t'))
+unlink('tmp/tmp.csv.bz2')
 # this also removes countries outside GFI consideration because of d_dev
 m_in <- m_in[complete.cases(m_in[, -match(c("v_rX","v_rM"), colnames(m_in))]),]
 m_in <- subset(m_in,m_in$q_code_M == m_in$q_code_X)  # just to be sure
@@ -75,5 +77,15 @@ m_in$gap_wtd <- m_in$gap * m_in$a_wt
 logg(paste(':', 'weighted gaps', sep = '\t'))
 m_in <- m_in[, cols_out]
 cat("\n","   ...writing output","\n")
-write.csv(m_in,file='data/M-Gaps.csv',row.names=F)
-logg(paste('|', 'saved result', sep = '\t'))
+file_inout <- paste('tmp/', basename(file_inout), '.csv.bz2', sep = '')
+ecycle(write.csv(m_in, file = bzfile(file_inout),row.names=FALSE,na=""), 
+       ecycle(s3write_using(m_in, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+                            bucket = out_bucket, object = basename(file_inout)),
+              logg(paste(year, '!', paste('uploading', basename(file_inout), 'failed', sep = ' '), sep = '\t')), max_try), 
+       max_try,
+       ecycle(put_object(file_inout, basename(file_inout), bucket = out_bucket), 
+              logg(paste(year, '!', paste('uploading', basename(file_inout), 'failed', sep = ' '), sep = '\t')),
+              max_try,
+              {logg(paste(year, '|', paste('uploaded', basename(file_inout), sep = ' '), sep = '\t')); unlink(file_inout)}))
+
+put_object(oplog, basename(oplog), bucket = out_bucket)

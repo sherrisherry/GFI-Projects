@@ -6,15 +6,15 @@ for(i in pkgs)library(i, character.only = T)
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
-# out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
+out_bucket <- 'gfi-work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
-oplog <- 'select.log' # progress report file
+oplog <- 'cty_mol.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 tag <- 'Comtrade'
-countries <- c(231, 404, 800)
-in_nm <- c('M-matched-q','M-matched','M-orphaned','M-lost'); names(in_nm) <- in_nm
+cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
+in_nm <- c('input','M_matched','M_orphaned','M_lost'); names(in_nm) <- in_nm
 cols_in1 <- c(rep("integer",3),rep("character",3),rep("numeric",8),rep("integer",5), "numeric", rep("integer",5))
 names(cols_in1) <- c("t","j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X","d_fob","d_dev_i","d_dev_j",
                     "distw","d_landlocked_j","d_landlocked_i","d_contig","d_conti","d_rta")
@@ -29,16 +29,24 @@ if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = g
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
-row_count <- data.frame(Year = years); row_count$raw <- NA; row_count$nona <- NA; row_count$inlim <- NA
+if(is.null(cty)){
+  cols_bridge <- rep('NULL',20)
+  names(cols_bridge) <- c('un_code','imf_code','imf_nm','unct_nm','d_gfi','d_dev','d_ssa','d_asia','d_deur','d_mena','d_whem','d_adv','un_nm_en','un_nm_en_full','un_nm_en_abbr','un_note','iso2_a','iso3_a','un_start','un_end')
+  cols_bridge[c(1,5)] <- rep('integer',2)
+  ecycle(bridge <- s3read_using(FUN = function(x)read.csv(x, colClasses=cols_bridge, header=TRUE), 
+                                object = 'bridge.csv', bucket = sup_bucket),
+         {logg(paste(year, '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
+  bridge <- unique(bridge)
+  countries <- bridge$un_code[bridge$d_gfi==1]
+  rm(bridge, cols_bridge)
+}else countries <- cty
 
-output <- list()
 # start loop by country
 for(i in 1:length(in_nm)){
-	x_in <- list()
+	output <- list()
 	for(j in 1:length(years)){
 		year <- years[j]
-		in_nm[] <- paste(names(in_nm),'.csv.bz2', sep ='')
-		in_nm[] <- paste(tag,year,in_nm,sep="-")
+		in_nm[] <- paste(names(in_nm),'.csv.bz2', sep =''); in_nm[] <- paste(tag,year,in_nm,sep="-")
     cat("\n","...reading files for ",as.character(year)," ... ")
 		ecycle(save_object(object = in_nm[i], bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
 				{logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
@@ -51,15 +59,21 @@ for(i in 1:length(in_nm)){
     cat("... processing")
 		tmp <- subset(tmp, tmp$i %in% countries | tmp$j %in% countries)
 		tmp$t <- year
-		x_in[[j]] <- tmp
+		output[[j]] <- tmp
 		logg(paste(year, ':', paste('processed', in_nm[i]), sep = '\t'))
     }# end loop by date
-	output[[names(in_nm)[i]]] <- do.call(rbind, x_in)
-  }
-  rm(x_in)
-  tmp <- paste('data/', names(output), '.csv.bz2', sep = '')
-for(i in 1:length(output)){
-	write.csv(output[[i]], file = bzfile(tmp[i]),row.names=FALSE,na="")
-    logg(paste('0000', '|', paste('saved', basename(tmp[i]), sep = ' '), sep = '\t'))
-	}
+	output <- do.call(rbind, output)
+	tmp <- paste('tmp/', paste(tag, names(in_nm)[i], sep = '-'), '.csv.bz2', sep = '')
+	ecycle(write.csv(output, file = bzfile(tmp),row.names=FALSE,na=""), 
+	       ecycle(s3write_using(output, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+	                            bucket = out_bucket, object = basename(tmp)),
+	              logg(paste(year, '!', paste('uploading', basename(tmp), 'failed', sep = ' '), sep = '\t')), max_try), 
+	       max_try,
+	       ecycle(put_object(tmp, basename(tmp), bucket = out_bucket), 
+	              logg(paste(year, '!', paste('uploading', basename(tmp), 'failed', sep = ' '), sep = '\t')),
+	              max_try,
+	              {logg(paste(year, '|', paste('uploaded', basename(tmp), sep = ' '), sep = '\t')); unlink(tmp)}))
+}
+rm(output)
+put_object(oplog, basename(oplog), bucket = out_bucket)
 rm(list=ls())

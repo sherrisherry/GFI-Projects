@@ -58,11 +58,11 @@ rm(dyears)
 counter <- list()
 counter$n_RAW <- data.frame(Year = dates, M = NA, X = NA, rX = NA, rM = NA)
 counter$n_TREAT <-  counter$n_SWISS <- counter$n_RAW
-out_names <- c('M-matched', 'X-matched', 'M-orphaned', 'M-lost')
-names(out_names) <- c('M', 'X', 'M_orphan', 'M_lost')
-tmp <- c('M_p','X_p', names(out_names))
-counter$n_pair_match <- matrix(nrow = n_dates, ncol = 10, dimnames = list(dates, paste('n_', tmp, sep = '')))
-counter$n_pair_match <- as.data.frame(counter$n_pair_match)
+out_names <- c('M_matched', 'X_matched', 'M_orphaned', 'M_lost')
+names(out_names) <- c('M.FALSE', 'X.FALSE', 'M.TRUE', 'X.TRUE') # M_lost == X_orphan
+tmp <- c('M_paired','X_paired', out_names)
+counter$n_pair <- matrix(nrow = n_dates, ncol = 10, dimnames = list(dates, paste('n_', tmp, sep = '')))
+counter$n_pair <- as.data.frame(counter$n_pair)
 
 # read in 'treat' function for preliminary data treatments in TREAT module
 source("prox-treat.R")
@@ -97,7 +97,7 @@ for (t in 1:n_dates) {
     cat("\n","        ...reading data file downloaded from UN-COMTRADE...","\n")
     ecycle(save_object(object = paste(year, '.csv.bz2', sep = ''), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
 		   {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
-	ecycle(rdata <- fread(cmd = "bzip2 -dc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_UN),
+	ecycle(rdata <- fread(cmd = "bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_UN),
 		   {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
 		   cond = is.data.table(rdata))
 	if(!setequal(colnames(rdata), incol)){
@@ -234,40 +234,38 @@ for (t in 1:n_dates) {
     }
     # end Hong Kong module
 
-	counter$n_pair_match[t, c('n_M_p', 'n_X_p')] <- as.data.frame(lapply(mirror, nrow))[c('M', 'X')]
+	counter$n_pair[t, c('n_M_paired', 'n_X_paired')] <- as.data.frame(lapply(mirror, nrow))[c('M', 'X')]
     
 # Start MATCH module 
     cat("\n","   (6) MATCH module")
-	rmatch <- list()
       # Matching M
-      cat("\n","        ...matching M data")
-      rmatch$M <- subset(mirror$M, mirror$M$v_X>0 & mirror$M$v_M>0)
-      rmatch$M_orphan  <- subset(mirror$M,is.na(mirror$M$v_X))
-      # Matching X
-      cat("\n","        ...matching X data")
-      rmatch$X <- subset(mirror$X, mirror$X$v_M>0 & mirror$X$v_X>0)              # should equal rmatch$M from above
-      rmatch$M_lost <- subset(mirror$X,is.na(mirror$X$v_M)) # M_lost == X_orphan
+      cat("\n","        ...matching data")
+      mirror$M <- split(mirror$M, is.na(mirror$M$v_X))
+      mirror$X <- split(mirror$X, is.na(mirror$X$v_M))
+      mirror <- unlist(mirror, recursive = F)
+      # mirror$M.FALSE should equal mirror$X.FALSE
+      stopifnot(setequal(names(mirror),names(out_names)))
+      names(mirror) <- out_names[names(mirror)]
+      # renamed mirror to match out_names
   # end MATCH module
-      rm(mirror)
-	  stopifnot(setequal(names(rmatch),names(out_names)))
 	  # update counts   
 	  cat("\n","   (7) updating counts")
-	  counter$n_pair_match[t, paste('n_', names(rmatch), sep = '')] <- as.data.frame(lapply(rmatch, nrow))
-	  # verify M==X
-	  if(counter$n_pair_match$n_M==counter$n_pair_match$n_X){
-	    tmp <- colnames(rmatch$X)
-	    colnames(rmatch$X)[match(c("hs_rpt","hs_ptn","i","j"), tmp)] <- c("hs_ptn","hs_rpt","j","i")
-	    tmp <- duplicated(rbind(rmatch$M, rmatch$X))
-	    if(sum(tmp)!=counter$n_pair_match$n_M)logg(paste(year, '!', 'MX nrow not identical', sep = '\t'))
-	    else{logg(paste(year, '|', 'identical', sep = '\t')); rmatch$X <-NULL}
+	  counter$n_pair[t, paste('n_', names(mirror), sep = '')] <- as.data.frame(lapply(mirror, nrow))
+	  # verify matched M==X
+	  if(counter$n_pair$n_M_matched==counter$n_pair$n_X_matched){
+	    tmp <- colnames(mirror$X_matched)
+	    colnames(mirror$X_matched)[match(c("hs_rpt","hs_ptn","i","j"), tmp)] <- c("hs_ptn","hs_rpt","j","i")
+	    tmp <- duplicated(rbind(mirror$M_matched, mirror$X_matched))
+	    if(sum(tmp)!=counter$n_pair$n_M_matched)logg(paste(year, '!', 'MX nrow not identical', sep = '\t'))
+	    else{logg(paste(year, '|', 'identical', sep = '\t')); mirror$X_matched <-NULL}
 	  }else logg(paste(year, '!', 'MX not identical', sep = '\t'))
 	  
 	  # uploading results
-	  tmp <- paste(tag, year, out_names[names(rmatch)], sep = '-'); tmp <- paste('tmp/', tmp, '.csv.bz2', sep = '')
-	  names(tmp) <- names(out_names[names(rmatch)])
-	  for(i in names(rmatch)){
-	  ecycle(write.csv(rmatch[[i]], file = bzfile(tmp[i]),row.names=FALSE,na=""), 
-             ecycle(s3write_using(rmatch[[i]], FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+	  tmp <- paste(tag, year, names(mirror), sep = '-'); tmp <- paste('tmp/', tmp, '.csv.bz2', sep = '')
+	  names(tmp) <- names(mirror)
+	  for(i in names(mirror)){
+	  ecycle(write.csv(mirror[[i]], file = bzfile(tmp[i]),row.names=FALSE,na=""), 
+             ecycle(s3write_using(mirror[[i]], FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                                   bucket = out_bucket, object = basename(tmp[i])),
                      logg(paste(year, '!', paste('uploading', basename(tmp[i]), 'failed', sep = ' '), sep = '\t')), max_try), 
              max_try,
@@ -281,7 +279,7 @@ for (t in 1:n_dates) {
 	writeLines(toJSON(counter), opcounter)
 
     # cleanup some
-    rm(rmatch)
+    rm(mirror)
 } # end t loop
 #
 put_object(oplog, basename(oplog), bucket = out_bucket)

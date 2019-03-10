@@ -37,15 +37,15 @@ options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
 ecycle(fob <- s3read_using(FUN = function(x)fread(x, colClasses=cols_fob, header=TRUE, na.strings=""), 
-                                 object = 'MFOB.csv', bucket = in_bucket),
+                                 object = 'MFOB.csv', bucket = 'gfi-comtrade'),
            {logg(paste(year, '!', 'loading MFOB.csv failed', sep = '\t')); stop()}, max_try)
 fob <- subset(fob,fob$t %in% dates)
 fob$d_fob <- 1
 setkeyv(fob, c('t','i'))
-ecycle(bridge <- s3read_using(FUN = function(x)fread(x, colClasses=cols_bridge, header=TRUE, na.strings=""), 
+ecycle(bridge <- s3read_using(FUN = function(x)fread(x, colClasses=cols_bridge, header=TRUE), 
                                  object = 'bridge.csv', bucket = sup_bucket),
            {logg(paste(year, '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
-colnames(bridge)[1] <- 'i'
+tmp <- colnames(bridge); colnames(bridge)[match('un_code', tmp)] <- 'i'
 bridge <- unique(bridge)
 setkey(bridge, 'i')
 ecycle(geo <- s3read_using(FUN = function(x)fread(x, colClasses=cols_geo, header=TRUE, na.strings=""), 
@@ -63,16 +63,21 @@ setkeyv(eia, c('t','i','j'))
 logg(paste('0000', ':', 'prepared', sep = '\t'))
 
 for(year in dates){
-obj_nm <- paste(tag, year, 'M-matched.csv.bz2', sep = '-')
+obj_nm <- paste(tag, year, 'M_matched.csv.bz2', sep = '-')
 ecycle(save_object(object = obj_nm, bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
 		   {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
 ecycle(output <- fread(cmd="bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_match),
 		   {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
 		   cond = is.data.table(output) && nrow(output)>10)
 setkeyv(output, c('i','j'))
+output <- subset(output, output$v_X>0 & output$v_M>0)
+logg(paste(year, ':', 'M_matched$non0v', sep = '\t'))
+logg(paste(year, '#', nrow(output), sep = '\t'))
 output <- subset(output,output$q_code_M==output$q_code_X)
+logg(paste(year, ':', 'M_matched$q_code', sep = '\t'))
+logg(paste(year, '#', nrow(output), sep = '\t'))
 output <- subset(output, (output$q_M>0)&(output$q_X>0))
-logg(paste(year, ':', 'subsetted M-matched', sep = '\t'))
+logg(paste(year, ':', 'M_matched$non0q', sep = '\t'))
 logg(paste(year, '#', nrow(output), sep = '\t'))
 output <- merge(output, fob[fob$t==year,c("i","d_fob")], by = 'i', all.x = T)
 output$d_fob[is.na(output$d_fob)] <- 0
@@ -86,7 +91,7 @@ output <- merge(output, geo, by=c("i","j"), all.x=TRUE)
 logg(paste(year, ':', 'merged Geo', sep = '\t'))
 output <- merge(output, eia[eia$t==year,],by=c("i","j"),all.x=TRUE)
 logg(paste(year, ':', 'merged EIA', sep = '\t'))
-obj_nm <- paste('tmp/', paste(unlist(strsplit(obj_nm, '.', fixed = T))[1], 'q', sep = '-'), '.csv.bz2', sep = '')
+obj_nm <- paste('tmp/', sub('M_matched', 'input', obj_nm, fixed = T), sep = '')
 ecycle(write.csv(output, file = bzfile(obj_nm),row.names=FALSE,na=""), 
              ecycle(s3write_using(output, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                                   bucket = out_bucket, object = basename(obj_nm)),
@@ -96,7 +101,7 @@ ecycle(write.csv(output, file = bzfile(obj_nm),row.names=FALSE,na=""),
                     logg(paste(year, '!', paste('uploading', basename(obj_nm), 'failed', sep = ' '), sep = '\t')),
                     max_try,
                     {logg(paste(year, '|', paste('uploaded', basename(obj_nm), sep = ' '), sep = '\t')); unlink(obj_nm)}))
-}		   
-
+}
 unlink('tmp/tmp.csv.bz2')
+put_object(oplog, basename(oplog), bucket = in_bucket)
 rm(list=ls())
