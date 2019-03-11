@@ -11,10 +11,10 @@ in_bucket <- 'gfi-work' # read in raw data from this bucket
 oplog <- 'gaps.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-file_inout <- 'Comtrade-input.csv.bz2'
+cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
 cifob_model <- 'cifob_model.rds.bz2'
-cols_in <- c(rep("integer",3),rep("character",3),rep("numeric",8),rep("integer",5), "numeric", rep("integer",5)) 
-names(cols_in) <- c("t","j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X","d_fob","d_dev_i","d_dev_j",
+cols_in <- c(rep("integer",3),rep("character",3),rep("numeric",4),rep("integer",5), "numeric", rep("integer",5)) 
+names(cols_in) <- c("t","j","i","hs_rpt","hs_ptn","k","v_M","v_X","q_M","q_X","q_code_M","q_code_X","d_fob","d_dev_i","d_dev_j",
                     "distw","d_landlocked_j","d_landlocked_i","d_contig","d_conti","d_rta")
 cols_out <- c("t","j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X","d_dev_i","d_dev_j",
               'uvmdn', 'v_M_fob', 'a_wt', 'gap', 'gap_wtd')

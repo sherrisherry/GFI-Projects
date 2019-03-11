@@ -15,8 +15,8 @@ dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 
-cols_match <- c(rep("character",3),rep("integer",2),rep("numeric",8),rep("integer",2))
-names(cols_match) <- c("hs_rpt","hs_ptn","k","i","j","v_M","v_X","v_rX","v_rM","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")
+cols_match <- c(rep("character",3),rep("integer",2),rep("numeric",4),rep("integer",2),rep('NULL',4))
+names(cols_match) <- c("hs_rpt","hs_ptn","k","i","j","v_M","v_X","q_M","q_X","q_code_M","q_code_X","v_rX","v_rM","q_kg_M","q_kg_X")
 cols_fob <- rep("integer",2)
 names(cols_fob) <- c("t","i")
 cols_bridge <- rep('NULL',20)
@@ -25,7 +25,7 @@ cols_bridge[c(1,6)] <- rep('integer',2)
 cols_geo <- c(rep("integer",2),rep("NULL",2),"numeric",rep("integer",4))
 names(cols_geo) <- c("j","i","area_j","area_i","distw","d_landlocked_j","d_landlocked_i","d_contig","d_conti")
 cols_eia <- rep("integer",4)
-names(cols_eia) <- c("t","i","j","value")
+names(cols_eia) <- c("t","i","j","d_rta")
 #===================================================================================================================================#
 				  
 oplog <- paste('logs/', oplog, sep = '')
@@ -57,8 +57,8 @@ ecycle(save_object(object = 'EIA.csv.bz2', bucket = sup_bucket, file = 'tmp/tmp.
 		   {logg(paste(year, '!', 'retrieving EIA file failed', sep = '\t')); stop()}, max_try)
 ecycle(eia <- fread(cmd ="bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_eia),
 		   {logg(paste(year, '!', 'loading file failed', sep = '\t')); stop()}, max_try)
-colnames(eia)[4] <- 'd_rta'
 eia <- subset(eia, eia$t %in% dates)
+eia_yr_max <- max(eia$t)
 setkeyv(eia, c('t','i','j'))
 logg(paste('0000', ':', 'prepared', sep = '\t'))
 
@@ -71,13 +71,13 @@ ecycle(output <- fread(cmd="bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses 
 		   cond = is.data.table(output) && nrow(output)>10)
 setkeyv(output, c('i','j'))
 output <- subset(output, output$v_X>0 & output$v_M>0)
-logg(paste(year, ':', 'M_matched$non0v', sep = '\t'))
+logg(paste(year, ':', 'non0v', sep = '\t'))
 logg(paste(year, '#', nrow(output), sep = '\t'))
 output <- subset(output,output$q_code_M==output$q_code_X)
-logg(paste(year, ':', 'M_matched$q_code', sep = '\t'))
+logg(paste(year, ':', 'q_code', sep = '\t'))
 logg(paste(year, '#', nrow(output), sep = '\t'))
 output <- subset(output, (output$q_M>0)&(output$q_X>0))
-logg(paste(year, ':', 'M_matched$non0q', sep = '\t'))
+logg(paste(year, ':', 'non0q', sep = '\t'))
 logg(paste(year, '#', nrow(output), sep = '\t'))
 output <- merge(output, fob[fob$t==year,c("i","d_fob")], by = 'i', all.x = T)
 output$d_fob[is.na(output$d_fob)] <- 0
@@ -87,10 +87,23 @@ tmp <- colnames(output); colnames(output)[match('d_dev',tmp)]<-'d_dev_i'
 output <- merge(output, bridge, by.x = 'j', by.y = 'i', all.x = T)
 tmp <- colnames(output); colnames(output)[match('d_dev',tmp)]<-'d_dev_j'
 logg(paste(year, ':', 'merged bridge', sep = '\t'))
+output <- na.omit(output)
+logg(paste(year, ':', 'nona_bridge', sep = '\t'))
+logg(paste(year, '#', nrow(output), sep = '\t'))
 output <- merge(output, geo, by=c("i","j"), all.x=TRUE)
 logg(paste(year, ':', 'merged Geo', sep = '\t'))
-output <- merge(output, eia[eia$t==year,],by=c("i","j"),all.x=TRUE)
+output <- na.omit(output)
+logg(paste(year, ':', 'nona_Geo', sep = '\t'))
+logg(paste(year, '#', nrow(output), sep = '\t'))
+if(year > eia_yr_max){
+tmp <- eia[eia$t==eia_yr_max,]; tmp$t <- year
+logg(paste(year, ':', 'extended EIA', sep = '\t'))
+}else tmp <- eia[eia$t==year,]
+output <- merge(output, tmp, by=c("i","j"),all.x=TRUE)
 logg(paste(year, ':', 'merged EIA', sep = '\t'))
+output <- na.omit(output)
+logg(paste(year, ':', 'nona_EIA', sep = '\t'))
+logg(paste(year, '#', nrow(output), sep = '\t'))
 obj_nm <- paste('tmp/', sub('M_matched', 'input', obj_nm, fixed = T), sep = '')
 ecycle(write.csv(output, file = bzfile(obj_nm),row.names=FALSE,na=""), 
              ecycle(s3write_using(output, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
