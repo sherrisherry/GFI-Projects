@@ -11,7 +11,6 @@ in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
 oplog <- 'input_adj.log' # progress report file
-dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 
@@ -116,8 +115,8 @@ output$ln_uvmdn <- log(output$uvmdn)
 output$d_hs_diff <- as.integer(output$hs_ptn!=output$hs_rpt)
 logg(paste(year, ':', 'added model inputs', sep = '\t'))
 obj_nm <- paste('tmp/', sub('M_matched', 'input', obj_nm, fixed = T), sep = '')
-ecycle(write.csv(subset(output, , cols_out), file = bzfile(obj_nm),row.names=FALSE,na=""), 
-             ecycle(s3write_using(subset(output, , cols_out), FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+ecycle(write.csv(subset(output, TRUE, cols_out), file = bzfile(obj_nm),row.names=FALSE,na=""), 
+             ecycle(s3write_using(subset(output, TRUE, cols_out), FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                                   bucket = out_bucket, object = basename(obj_nm)),
                      logg(paste(year, '!', paste('uploading', basename(obj_nm), 'failed', sep = ' '), sep = '\t')), max_try), 
              max_try,
