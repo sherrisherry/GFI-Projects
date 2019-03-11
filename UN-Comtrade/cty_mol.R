@@ -35,7 +35,7 @@ if(is.null(cty)){
   cols_bridge[c(1,5)] <- rep('integer',2)
   ecycle(bridge <- s3read_using(FUN = function(x)read.csv(x, colClasses=cols_bridge, header=TRUE), 
                                 object = 'bridge.csv', bucket = sup_bucket),
-         {logg(paste(year, '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
+         {logg(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
   bridge <- unique(bridge)
   countries <- bridge$un_code[bridge$d_gfi==1]
   rm(bridge, cols_bridge)

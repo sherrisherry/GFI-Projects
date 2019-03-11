@@ -20,9 +20,9 @@ q_crit    <- 0.025  # threshold for quantity-based exclusions
 p_crit_hi <- 1.75   # upper threshhold for price-based exclusions
 p_crit_lo <- 0.75   # lower threshhold for price-based exclusions
 #
-cols_in <- c(rep("integer",3),rep("character",3),rep("numeric",4),rep("integer",5), "numeric", rep("integer",5)) 
-names(cols_in) <- c("t","j","i","hs_rpt","hs_ptn","k","v_M","v_X","q_M","q_X","q_code_M","q_code_X","d_fob","d_dev_i","d_dev_j",
-                    "distw","d_landlocked_j","d_landlocked_i","d_contig","d_conti","d_rta")
+cols_in <- c('character', rep("integer",3),rep("numeric",7),rep("integer",11)) 
+names(cols_in) <- c('k','t',"i","j","v_M","v_X","q_M","q_X", 'ln_distw', 'ln_distw_squared', 'ln_uvmdn', "q_code_M","q_code_X",
+                    'd_fob', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
 cols_model <- c('ln_v_margin', 'ln_distw', 'ln_distw_squared', 'ln_uvmdn', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
 cols_model <- append(cols_model, paste('d', years[-1], sep = '_'))
 #===================================================================================================================================#
@@ -58,16 +58,9 @@ ecycle(x_in <- read.csv(pipe("bzip2 -dkc ./tmp/tmp.csv.bz2"), header=T, colClass
     x_in$p_X <- x_in$v_X / x_in$q_X
     x_in <- subset(x_in, (x_in$p_M / x_in$p_X) < p_crit_hi)
     x_in <- subset(x_in, (x_in$p_M / x_in$p_X) > p_crit_lo)
-    logg(paste(year, ':', 'subseted', sep = '\t'))
-    tmp <- aggregate(x_in$p_M,list(x_in$k),median, na.rm=TRUE) ; colnames(tmp) <- c("k","uvmdn")
-    x_in <- merge(x=x_in,y=tmp,by=c("k"),all.x=TRUE)
     logg(paste(year, ':', 'inlim', sep = '\t'))
     logg(paste(year, '#', nrow(x_in), sep = '\t'))
-    x_in$ln_v_margin <- log(x_in$v_M/x_in$v_X)
-    x_in$ln_distw <- log(x_in$distw)
-    x_in$ln_distw_squared <- x_in$ln_distw * x_in$ln_distw
-    x_in$ln_uvmdn <- log(x_in$uvmdn)
-    x_in$d_hs_diff <- as.integer(x_in$hs_ptn!=x_in$hs_rpt)
+    x_in$ln_v_margin <- log(x_in$v_M/x_in$v_X) # target
     x_in$d <- factor(x_in$t, levels = years); tmp <- encode_onehot(x_in[,'d', drop=FALSE], drop1st = T)
     x_in$d <- NULL; x_in <- cbind(x_in, tmp)
 	model_train[[as.character(year)]] <- x_in[, cols_model]

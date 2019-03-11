@@ -1,5 +1,5 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'jsonlite', 'scripting', 'data.table')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'data.table')
 for(i in pkgs)library(i, character.only = T)
 
 #=====================================modify the following parameters for each new run==============================================#
@@ -26,8 +26,11 @@ cols_geo <- c(rep("integer",2),rep("NULL",2),"numeric",rep("integer",4))
 names(cols_geo) <- c("j","i","area_j","area_i","distw","d_landlocked_j","d_landlocked_i","d_contig","d_conti")
 cols_eia <- rep("integer",4)
 names(cols_eia) <- c("t","i","j","d_rta")
+cols_out <- c('t',"k","i","j","v_M","v_X","q_M","q_X","q_code_M","q_code_X", 'ln_distw', 'ln_distw_squared', 'ln_uvmdn',
+  'd_fob', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
+
 #===================================================================================================================================#
-				  
+
 oplog <- paste('logs/', oplog, sep = '')
 logg <- function(x)mklog(x, path = oplog)
 Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
@@ -38,25 +41,25 @@ cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
 ecycle(fob <- s3read_using(FUN = function(x)fread(x, colClasses=cols_fob, header=TRUE, na.strings=""), 
                                  object = 'MFOB.csv', bucket = 'gfi-comtrade'),
-           {logg(paste(year, '!', 'loading MFOB.csv failed', sep = '\t')); stop()}, max_try)
+           {logg(paste('0000', '!', 'loading MFOB.csv failed', sep = '\t')); stop()}, max_try)
 fob <- subset(fob,fob$t %in% dates)
 fob$d_fob <- 1
 setkeyv(fob, c('t','i'))
 ecycle(bridge <- s3read_using(FUN = function(x)fread(x, colClasses=cols_bridge, header=TRUE), 
                                  object = 'bridge.csv', bucket = sup_bucket),
-           {logg(paste(year, '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
+           {logg(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
 tmp <- colnames(bridge); colnames(bridge)[match('un_code', tmp)] <- 'i'
 bridge <- unique(bridge)
 setkey(bridge, 'i')
 ecycle(geo <- s3read_using(FUN = function(x)fread(x, colClasses=cols_geo, header=TRUE, na.strings=""), 
                                  object = 'CEPII_GeoDist.csv', bucket = sup_bucket),
-           {logg(paste(year, '!', 'loading CEPII_GeoDist.csv failed', sep = '\t')); next}, max_try)
+           {logg(paste('0000', '!', 'loading CEPII_GeoDist.csv failed', sep = '\t')); next}, max_try)
 geo <- subset(geo,geo$j!=geo$i)
 setkeyv(geo, c('i','j'))
 ecycle(save_object(object = 'EIA.csv.bz2', bucket = sup_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
-		   {logg(paste(year, '!', 'retrieving EIA file failed', sep = '\t')); stop()}, max_try)
+		   {logg(paste('0000', '!', 'retrieving EIA file failed', sep = '\t')); stop()}, max_try)
 ecycle(eia <- fread(cmd ="bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_eia),
-		   {logg(paste(year, '!', 'loading file failed', sep = '\t')); stop()}, max_try)
+		   {logg(paste('0000', '!', 'loading file failed', sep = '\t')); stop()}, max_try)
 eia <- subset(eia, eia$t %in% dates)
 eia_yr_max <- max(eia$t)
 setkeyv(eia, c('t','i','j'))
@@ -69,7 +72,7 @@ ecycle(save_object(object = obj_nm, bucket = in_bucket, file = 'tmp/tmp.csv.bz2'
 ecycle(output <- fread(cmd="bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_match),
 		   {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
 		   cond = is.data.table(output) && nrow(output)>10)
-setkeyv(output, c('i','j'))
+setkeyv(output, c('i','j','k'))
 output <- subset(output, output$v_X>0 & output$v_M>0)
 logg(paste(year, ':', 'non0v', sep = '\t'))
 logg(paste(year, '#', nrow(output), sep = '\t'))
@@ -104,9 +107,17 @@ logg(paste(year, ':', 'merged EIA', sep = '\t'))
 output <- na.omit(output)
 logg(paste(year, ':', 'nona_EIA', sep = '\t'))
 logg(paste(year, '#', nrow(output), sep = '\t'))
+output$p_X <- output$v_X / output$q_X
+tmp <- aggregate(output$p_X,list(output$k),median, na.rm=TRUE) ; colnames(tmp) <- c("k","uvmdn")
+output <- merge(x=output,y=tmp,by=c("k"),all.x=TRUE)
+output$ln_distw <- log(output$distw)
+output$ln_distw_squared <- output$ln_distw * output$ln_distw
+output$ln_uvmdn <- log(output$uvmdn)
+output$d_hs_diff <- as.integer(output$hs_ptn!=output$hs_rpt)
+logg(paste(year, ':', 'added model inputs', sep = '\t'))
 obj_nm <- paste('tmp/', sub('M_matched', 'input', obj_nm, fixed = T), sep = '')
-ecycle(write.csv(output, file = bzfile(obj_nm),row.names=FALSE,na=""), 
-             ecycle(s3write_using(output, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+ecycle(write.csv(subset(output, , cols_out), file = bzfile(obj_nm),row.names=FALSE,na=""), 
+             ecycle(s3write_using(subset(output, , cols_out), FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                                   bucket = out_bucket, object = basename(obj_nm)),
                      logg(paste(year, '!', paste('uploading', basename(obj_nm), 'failed', sep = ' '), sep = '\t')), max_try), 
              max_try,
