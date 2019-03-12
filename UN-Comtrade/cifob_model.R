@@ -9,7 +9,7 @@ for(i in pkgs)library(i, character.only = T)
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
-out_bucket <- 'gfi-work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
+out_bucket <- 'gfi-work' # save the results to this S3 bucket
 in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 oplog <- 'cifob_model.log' # progress report file

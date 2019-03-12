@@ -7,8 +7,8 @@ for(i in pkgs)library(i, character.only = T)
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
 yrs_model <- 2016:2001 # the years for cifob_model
-out_bucket <- 'gfi-work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
-in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
+out_bucket <- 'gfi-work' # save the results to this S3 bucket
+in_bucket <- 'gfi-work' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 oplog <- 'gaps.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
@@ -94,7 +94,8 @@ for(year in years){
   predicts[[year]] <- pred
   rm(m_in)
 }
-rm(cifob_Model)
+rm(cifob_model)
 predicts <- unlist(predicts)
 capture.output(summary(predicts), file= "data/Stats_Fitted_Exp_Values_Full.txt")
+logg(paste('0000', '|', 'summarized predictions', sep = '\t'))
 put_object(oplog, basename(oplog), bucket = out_bucket)
