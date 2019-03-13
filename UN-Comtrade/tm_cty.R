@@ -81,4 +81,4 @@ for(year in years){
 output <- do.call(rbind, output)
 
 outfile <- paste('data/', 'flow_agged_k', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
-write.csv(output, file= out_file,row.names = F)
+write.csv(output, file= outfile,row.names = F)

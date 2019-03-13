@@ -61,7 +61,7 @@ counter$n_TREAT <-  counter$n_SWISS <- counter$n_RAW
 out_names <- c('M_matched', 'X_matched', 'M_orphaned', 'M_lost')
 names(out_names) <- c('M.FALSE', 'X.FALSE', 'M.TRUE', 'X.TRUE') # M_lost == X_orphan
 tmp <- c('M_paired','X_paired', out_names)
-counter$n_pair <- matrix(nrow = n_dates, ncol = 10, dimnames = list(dates, paste('n_', tmp, sep = '')))
+counter$n_pair <- matrix(nrow = n_dates, ncol = 6, dimnames = list(dates, paste('n_', tmp, sep = '')))
 counter$n_pair <- as.data.frame(counter$n_pair)
 
 # read in 'treat' function for preliminary data treatments in TREAT module
@@ -256,8 +256,8 @@ for (t in 1:n_dates) {
 	    tmp <- colnames(mirror$X_matched)
 	    colnames(mirror$X_matched)[match(c("hs_rpt","hs_ptn","i","j"), tmp)] <- c("hs_ptn","hs_rpt","j","i")
 	    tmp <- duplicated(rbind(mirror$M_matched, mirror$X_matched))
-	    if(sum(tmp)!=counter$n_pair$n_M_matched)logg(paste(year, '!', 'MX nrow not identical', sep = '\t'))
-	    else{logg(paste(year, '|', 'identical', sep = '\t')); mirror$X_matched <-NULL}
+	    if(sum(tmp)!=counter$n_pair$n_M_matched[t])logg(paste(year, '!', 'MX nrow not identical', sep = '\t'))
+	    else{logg(paste(year, ':', 'identical', sep = '\t')); mirror$X_matched <-NULL}
 	  }else logg(paste(year, '!', 'MX not identical', sep = '\t'))
 	  
 	  # uploading results
