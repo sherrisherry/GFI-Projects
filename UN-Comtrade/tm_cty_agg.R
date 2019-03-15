@@ -18,10 +18,12 @@ oplog <- 'tm_cty.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 all_trade <- TRUE
-cty <- 170 # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
+cty <- 170
+k_digit <- 2
 cols_in <- c(rep('integer', 6),'character', rep('numeric',7))
 names(cols_in) <- c("t","j","i","q_code_M","d_dev_i","d_dev_j","k",
                     "v_M","v_X","q_M","q_X",'v_M_fob', 'a_wt', 'gap_wtd')
+k_len <- 6
 
 #===================================================================================================================================#
 
@@ -33,6 +35,8 @@ if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = g
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 options(stringsAsFactors= FALSE)
+agg_lv <- paste('k', k_digit, sep = '')
+k_digit <- k_len - k_digit
 
 output <- list()
 for(year in years){
@@ -51,17 +55,22 @@ for(year in years){
   setkeyv(input, c('i', 'j', 'k', 'f'))
   if(all_trade){
     tmp <- list()
-    tmp$M <- subset(input, input$i %in% cty, c('t','i','j','k','f','v_i','v_j','gap_wtd'))
-    tmp$X <- subset(input, input$j %in% cty, c('t','i','j','k','f','v_i','v_j','gap_wtd'))
+    tmp$M <- subset(input, input$i %in% cty); tmp$X <- subset(input, input$j %in% cty)
     logg(paste(year, ':', 'divided mx', sep = '\t'))
     rm(input)
-    tmp$M$mx <- 'm'
+    tmp <- lapply(tmp, function(x)aggregate(x[,c('v_M_fob','v_X','gap_wtd')],
+                                            list(x$i,x$j,x$k,x$f),sum, na.rm=TRUE))
+    logg(paste(year, ':', 'aggregated k', sep = '\t'))
+    colnames(tmp$M) <- c('i','j',agg_lv,'f','v_i','v_j','gap_wtd'); tmp$M$mx <- 'm'
     tmp$M$f <- c(p='mo', n='mu', x='ng')[tmp$M$f]
-    colnames(tmp$X) <- c('t','j','i','k','f','v_j','v_i','gap_wtd'); tmp$X$mx <- 'x'
+    colnames(tmp$X) <- c('j','i',agg_lv,'f','v_j','v_i','gap_wtd'); tmp$X$mx <- 'x'
     tmp$X$f <- c(p='xu', n='xo', x='ng')[tmp$X$f]
   }else{
-    tmp <- subset(tmp, tmp$d_dev_i+tmp$d_dev_j<2 & tmp$d_dev_i+tmp$d_dev_j>0,
-                  c('t','i','j','k','mx','f','v_i','v_j','gap_wtd'))
+    tmp <- tmp[tmp$d_dev_i+tmp$d_dev_j<2 & tmp$d_dev_i+tmp$d_dev_j>0, ]
+    tmp <- aggregate(tmp[,c('v_M_fob','v_X','gap_wtd')],
+                      list(tmp$i,tmp$j,tmp$k,tmp$d_dev_i,tmp$f),sum, na.rm=TRUE)
+    logg(paste(year, ':', 'aggregated k', sep = '\t'))
+    colnames(tmp) <- c('i','j',agg_lv,'mx','f','v_i','v_j','gap_wtd')
     tmp$mx <- ifelse(tmp$mx==1, 'm', 'x')
     tmp <- split(tmp, tmp$mx)
     tmp$M$f <- c(p='mo', n='mu', x='ng')[tmp$M$f]
@@ -69,11 +78,11 @@ for(year in years){
     colnames(tmp$X)[match(c('i','j','v_i','v_j'), colnames(tmp$X))] <- c('j','i','v_j','v_i')
   }
   tmp <- do.call(rbind, tmp)
+  tmp$t <- year
   output[[year]] <- tmp
   logg(paste(year, '|', 'processed flows', sep = '\t'))
 }
-
 output <- do.call(rbind, output)
 
-outfile <- paste('data/', 'flow_', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
+outfile <- paste('data/', 'flow_', agg_lv, paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
 write.csv(output, file= outfile,row.names = F)
