@@ -1,246 +1,246 @@
-"un_code","imf_code","imf_nm","unct_nm","d_gfi","d_dev","d_ssa","d_asia","d_deur","d_mena","d_whem","d_adv","un_nm_en","un_nm_en_full","un_nm_en_abbr","un_note","iso2_a","iso3_a","un_start","un_end"
-0,1,"World","World",0,NA,0,0,0,0,0,NA,"World","World","World",NA,"WL","WLD",1962,2061
-4,512,"Afghanistan, Islamic Republic of","Afghanistan",1,1,0,0,0,1,0,0,"Afghanistan","Afghanistan","Afghanistan",NA,"AF","AFG",1962,2061
-8,914,"Albania","Albania",1,1,0,0,1,0,0,0,"Albania","Albania","Albania",NA,"AL","ALB",1962,2061
-12,612,"Algeria","Algeria",1,1,0,0,0,1,0,0,"Algeria","Algeria","Algeria",NA,"DZ","DZA",1962,2061
-16,859,"American Samoa","American Samoa",0,NA,0,0,0,0,0,NA,"American Samoa","American Samoa","American Samoa",NA,"AS","ASM",1962,2061
-24,614,"Angola","Angola",1,1,1,0,0,0,0,0,"Angola","Angola","Angola",NA,"AO","AGO",1962,2061
-28,311,"Antigua and Barbuda","Antigua and Barbuda",1,1,0,0,0,0,1,0,"Antigua and Barbuda","Antigua and Barbuda","Antigua and Barbuda",NA,"AG","ATG",1962,2061
-31,912,"Azerbaijan, Republic of","Azerbaijan",1,1,0,0,1,0,0,0,"Azerbaijan","Azerbaijan","Azerbaijan",NA,"AZ","AZE",1992,2061
-32,213,"Argentina","Argentina",1,1,0,0,0,0,1,0,"Argentina","Argentina","Argentina",NA,"AR","ARG",1962,2061
-36,193,"Australia","Australia",1,0,0,0,0,0,0,1,"Australia","Australia","Australia",NA,"AU","AUS",1962,2061
-40,122,"Austria","Austria",1,0,0,0,0,0,0,1,"Austria","Austria","Austria",NA,"AT","AUT",1962,2061
-44,313,"Bahamas, The","Bahamas",1,1,0,0,0,0,1,0,"Bahamas","Bahamas","Bahamas",NA,"BS","BHS",1962,2061
-48,419,"Bahrain, Kingdom of","Bahrain",1,1,0,0,0,1,0,0,"Bahrain","Bahrain","Bahrain",NA,"BH","BHR",1962,2061
-50,513,"Bangladesh","Bangladesh",1,1,0,1,0,0,0,0,"Bangladesh","Bangladesh","Bangladesh",NA,"BD","BGD",1972,2061
-51,911,"Armenia, Republic of","Armenia",1,1,0,0,1,0,0,0,"Armenia","Armenia","Armenia",NA,"AM","ARM",1992,2061
-52,316,"Barbados","Barbados",1,1,0,0,0,0,1,0,"Barbados","Barbados","Barbados",NA,"BB","BRB",1962,2061
-56,124,"Belgium","Belgium",1,0,0,0,0,0,0,1,"Belgium","Belgium","Belgium",NA,"BE","BEL",1999,2061
-58,126,"Belgium-Luxembourg","Belgium-Luxembourg",0,NA,0,0,0,0,0,NA,"Belgium-Luxembourg","Belgium-Luxembourg","Belgium-Luxembourg",NA,"BE","BEL",1962,1998
-60,319,"Bermuda","Bermuda",0,NA,0,0,0,0,0,NA,"Bermuda","Bermuda","Bermuda",NA,"BM","BMU",1962,2061
-64,514,"Bhutan","Bhutan",1,1,0,1,0,0,0,0,"Bhutan","Bhutan","Bhutan",NA,"BT","BTN",1962,2061
-68,218,"Bolivia","Bolivia",1,1,0,0,0,0,1,0,"Bolivia (Plurinational State of)","Plurinational State of Bolivia","Bolivia",NA,"BO","BOL",1962,2061
-70,963,"Bosnia and Herzegovina","Bosnia Herzegovina",1,1,0,0,1,0,0,0,"Bosnia Herzegovina","Bosnia Herzegovina","Bosnia Herzegovina",NA,"BA","BIH",1992,2061
-72,616,"Botswana","Botswana",1,1,1,0,0,0,0,0,"Botswana","Botswana","Botswana",NA,"BW","BWA",2000,2061
-76,223,"Brazil","Brazil",1,1,0,0,0,0,1,0,"Brazil","Brazil","Brazil",NA,"BR","BRA",1962,2061
-84,339,"Belize","Belize",1,1,0,0,0,0,1,0,"Belize","Belize","Belize",NA,"BZ","BLZ",1962,2061
-90,813,"Solomon Islands","Solomon Isds",1,1,0,1,0,0,0,0,"Solomon Isds","Solomon Islands","Solomon Isds",NA,"SB","SLB",1962,2061
-96,516,"Brunei Darussalam","Brunei Darussalam",1,1,0,1,0,0,0,0,"Brunei Darussalam","Brunei Darussalam","Brunei Darussalam",NA,"BN","BRN",1962,2061
-100,918,"Bulgaria","Bulgaria",1,1,0,0,1,0,0,0,"Bulgaria","Bulgaria","Bulgaria",NA,"BG","BGR",1962,2061
-104,518,"Myanmar","Myanmar",1,1,0,1,0,0,0,0,"Myanmar","Myanmar","Myanmar",NA,"MM","MMR",1962,2061
-108,618,"Burundi","Burundi",1,1,1,0,0,0,0,0,"Burundi","Burundi","Burundi",NA,"BI","BDI",1962,2061
-112,913,"Belarus","Belarus",1,1,0,0,1,0,0,0,"Belarus","Belarus","Belarus",NA,"BY","BLR",1992,2061
-116,522,"Cambodia","Cambodia",1,1,0,1,0,0,0,0,"Cambodia","Cambodia","Cambodia",NA,"KH","KHM",1962,2061
-120,622,"Cameroon","Cameroon",1,1,1,0,0,0,0,0,"Cameroon","Cameroon","Cameroon",NA,"CM","CMR",1962,2061
-124,156,"Canada","Canada",1,0,0,0,0,0,0,1,"Canada","Canada","Canada",NA,"CA","CAN",1962,2061
-132,624,"Cabo Verde","Cape Verde",1,1,1,0,0,0,0,0,"Cabo Verde","Cabo Verde","Cabo Verde",NA,"CV","CPV",1962,2061
-140,626,"Central African Republic","Central African Rep.",1,1,1,0,0,0,0,0,"Central African Rep.","Central African Republic","Central African Rep.",NA,"CF","CAF",1962,2061
-144,524,"Sri Lanka","Sri Lanka",1,1,0,1,0,0,0,0,"Sri Lanka","Sri Lanka","Sri Lanka",NA,"LK","LKA",1962,2061
-148,628,"Chad","Chad",1,1,1,0,0,0,0,0,"Chad","Chad","Chad",NA,"TD","TCD",1962,2061
-152,228,"Chile","Chile",1,1,0,0,0,0,1,0,"Chile","Chile","Chile",NA,"CL","CHL",1962,2061
-156,924,"China, P.R.: Mainland","China",1,1,0,1,0,0,0,0,"China","China","China",NA,"CN","CHN",1962,2061
-170,233,"Colombia","Colombia",1,1,0,0,0,0,1,0,"Colombia","Colombia","Colombia",NA,"CO","COL",1962,2061
-174,632,"Comoros","Comoros",1,1,1,0,0,0,0,0,"Comoros","Comoros","Comoros",NA,"KM","COM",1962,2061
-178,634,"Congo, Republic of","Congo",1,1,1,0,0,0,0,0,"Congo","Congo","Congo",NA,"CG","COG",1962,2061
-180,636,"Congo, Democratic Republic of","Dem. Rep. of the Congo",1,1,1,0,0,0,0,0,"Dem. Rep. of the Congo","Democratic Republic of the Congo","Dem. Rep. of the Congo",NA,"CD","COD",1962,2061
-188,238,"Costa Rica","Costa Rica",1,1,0,0,0,0,1,0,"Costa Rica","Costa Rica","Costa Rica",NA,"CR","CRI",1962,2061
-191,960,"Croatia","Croatia",1,1,0,0,1,0,0,0,"Croatia","Croatia","Croatia",NA,"HR","HRV",1992,2061
-192,928,"Cuba","Cuba",0,NA,0,0,0,0,0,NA,"Cuba","Cuba","Cuba",NA,"CU","CUB",1962,2061
-196,423,"Cyprus","Cyprus",1,0,0,0,0,0,0,1,"Cyprus","Cyprus","Cyprus",NA,"CY","CYP",1962,2061
-200,934,"Czechoslovakia","Czechoslovakia",0,NA,0,0,0,0,0,NA,"Czechoslovakia","Czechoslovakia","Czechoslovakia",NA,"CS","CSK",1962,1992
-203,935,"Czech Republic","Czech Rep.",1,0,0,0,0,0,0,1,"Czech Rep.","Czech Republic","Czech Rep.",NA,"CZ","CZE",1993,2061
-204,638,"Benin","Benin",1,1,1,0,0,0,0,0,"Benin","Benin","Benin",NA,"BJ","BEN",1962,2061
-208,128,"Denmark","Denmark",1,0,0,0,0,0,0,1,"Denmark","Denmark","Denmark",NA,"DK","DNK",1962,2061
-212,321,"Dominica","Dominica",1,1,0,0,0,0,1,0,"Dominica","Dominica","Dominica",NA,"DM","DMA",1962,2061
-214,243,"Dominican Republic","Dominican Rep.",1,1,0,0,0,0,1,0,"Dominican Rep.","Dominican Republic","Dominican Rep.",NA,"DO","DOM",1962,2061
-218,248,"Ecuador","Ecuador",1,1,0,0,0,0,1,0,"Ecuador","Ecuador","Ecuador",NA,"EC","ECU",1962,2061
-222,253,"El Salvador","El Salvador",1,1,0,0,0,0,1,0,"El Salvador","El Salvador","El Salvador",NA,"SV","SLV",1962,2061
-226,642,"Equatorial Guinea","Equatorial Guinea",1,1,1,0,0,0,0,0,"Equatorial Guinea","Equatorial Guinea","Equatorial Guinea",NA,"GQ","GNQ",1962,2061
-231,644,"Ethiopia","Ethiopia",1,1,1,0,0,0,0,0,"Ethiopia","Ethiopia","Ethiopia",NA,"ET","ETH",1993,2061
-232,643,"Eritrea","Eritrea",1,1,1,0,0,0,0,0,"Eritrea","Eritrea","Eritrea",NA,"ER","ERI",1993,2061
-233,939,"Estonia","Estonia",1,0,0,0,0,0,0,1,"Estonia","Estonia","Estonia",NA,"EE","EST",1992,2061
-234,816,"Faroe Islands","Faeroe Isds",0,NA,0,0,0,0,0,NA,"Faeroe Isds","Faeroe Islands","Faeroe Isds",NA,"FO","FRO",1962,2061
-238,323,"Falkland Islands","Falkland Isds (Malvinas)",0,NA,0,0,0,0,0,NA,"Falkland Isds (Malvinas)","Falkland Islands (Malvinas)","Falkland Isds (Malvinas)",NA,"FK","FLK",1962,2061
-242,819,"Fiji","Fiji",1,1,0,1,0,0,0,0,"Fiji","Fiji","Fiji",NA,"FJ","FJI",1962,2061
-246,172,"Finland","Finland",1,0,0,0,0,0,0,1,"Finland","Finland","Finland",NA,"FI","FIN",1962,2061
-251,132,"France","France",1,0,0,0,0,0,0,1,"France","France, Monaco","France","Including Monaco","FR","FRA",1962,2061
-258,887,"French Territories: French Polynesia","French Polynesia",0,NA,0,0,0,0,0,NA,"French Polynesia","French Polynesia","French Polynesia",NA,"PF","PYF",1962,2061
-262,611,"Djibouti","Djibouti",1,1,0,0,0,1,0,0,"Djibouti","Djibouti","Djibouti",NA,"DJ","DJI",1962,2061
-266,646,"Gabon","Gabon",1,1,1,0,0,0,0,0,"Gabon","Gabon","Gabon",NA,"GA","GAB",1962,2061
-268,915,"Georgia","Georgia",1,1,0,0,1,0,0,0,"Georgia","Georgia","Georgia",NA,"GE","GEO",1992,2061
-270,648,"Gambia, The","Gambia",1,1,1,0,0,0,0,0,"Gambia","Gambia","Gambia",NA,"GM","GMB",1962,2061
-275,487,"West Bank and Gaza","Occ. Palestinian Terr.",0,NA,0,0,0,0,0,NA,"State of Palestine","State of Palestine","State of Palestine",NA,"PS","PSE",2000,2061
-276,134,"Germany","Germany",1,0,0,0,0,0,0,1,"Germany","Germany","Germany",NA,"DE","DEU",1991,2061
-278,938,"Eastern Germany","Fmr Dem. Rep. of Germany",0,NA,0,0,0,0,0,NA,"Fmr Dem. Rep. of Germany","Former Democratic Republic of Germany","Fmr Dem. Rep. of Germany",NA,"DD","DDR",1962,1990
-288,652,"Ghana","Ghana",1,1,1,0,0,0,0,0,"Ghana","Ghana","Ghana",NA,"GH","GHA",1962,2061
-292,823,"Gibraltar","Gibraltar",0,NA,0,0,0,0,0,NA,"Gibraltar","Gibraltar","Gibraltar",NA,"GI","GIB",1962,2061
-296,826,"Kiribati","Kiribati",1,1,0,1,0,0,0,0,"Kiribati","Kiribati","Kiribati",NA,"KI","KIR",1962,2061
-300,174,"Greece","Greece",1,0,0,0,0,0,0,1,"Greece","Greece","Greece",NA,"GR","GRC",1962,2061
-304,326,"Greenland","Greenland",0,NA,0,0,0,0,0,NA,"Greenland","Greenland","Greenland",NA,"GL","GRL",1962,2061
-308,328,"Grenada","Grenada",1,1,0,0,0,0,1,0,"Grenada","Grenada","Grenada",NA,"GD","GRD",1962,2061
-316,829,"Guam","Guam",0,NA,0,0,0,0,0,NA,"Guam","Guam","Guam",NA,"GU","GUM",1962,2061
-320,258,"Guatemala","Guatemala",1,1,0,0,0,0,1,0,"Guatemala","Guatemala","Guatemala",NA,"GT","GTM",1962,2061
-324,656,"Guinea","Guinea",1,1,1,0,0,0,0,0,"Guinea","Guinea","Guinea",NA,"GN","GIN",1962,2061
-328,336,"Guyana","Guyana",1,1,0,0,0,0,1,0,"Guyana","Guyana","Guyana",NA,"GY","GUY",1962,2061
-332,263,"Haiti","Haiti",1,1,0,0,0,0,1,0,"Haiti","Haiti","Haiti",NA,"HT","HTI",1962,2061
-340,268,"Honduras","Honduras",1,1,0,0,0,0,1,0,"Honduras","Honduras","Honduras",NA,"HN","HND",1962,2061
-344,532,"China, P.R.: Hong Kong","China, Hong Kong SAR",1,0,0,0,0,0,0,1,"China, Hong Kong SAR","China, Hong Kong Special Administrative Region","China, Hong Kong SAR",NA,"HK","HKG",1962,2061
-348,944,"Hungary","Hungary",1,1,0,0,1,0,0,0,"Hungary","Hungary","Hungary",NA,"HU","HUN",1962,2061
-352,176,"Iceland","Iceland",1,0,0,0,0,0,0,1,"Iceland","Iceland","Iceland",NA,"IS","ISL",1962,2061
-360,536,"Indonesia","Indonesia",1,1,0,1,0,0,0,0,"Indonesia","Indonesia","Indonesia",NA,"ID","IDN",1962,2061
-364,429,"Iran, Islamic Republic of","Iran",1,1,0,0,0,1,0,0,"Iran","Iran","Iran",NA,"IR","IRN",1962,2061
-366,187,"Vatican","Vatican",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-368,433,"Iraq","Iraq",1,1,0,0,0,1,0,0,"Iraq","Iraq","Iraq",NA,"IQ","IRQ",1962,2061
-372,178,"Ireland","Ireland",1,0,0,0,0,0,0,1,"Ireland","Ireland","Ireland",NA,"IE","IRL",1962,2061
-376,436,"Israel","Israel",1,0,0,0,0,0,0,1,"Israel","Israel","Israel",NA,"IL","ISR",1962,2061
-381,136,"Italy","Italy",1,0,0,0,0,0,0,1,"Italy","Italy","Italy",NA,"IT","ITA",1962,2061
-384,662,"Côte d'Ivoire       ","Côte d'Ivoire       ",1,1,1,0,0,0,0,0,"Côte d'Ivoire","Côte d'Ivoire","Côte d'Ivoire",NA,"CI","CIV",1962,2061
-388,343,"Jamaica","Jamaica",1,1,0,0,0,0,1,0,"Jamaica","Jamaica","Jamaica",NA,"JM","JAM",1962,2061
-392,158,"Japan","Japan",1,0,0,0,0,0,0,1,"Japan","Japan","Japan",NA,"JP","JPN",1962,2061
-398,916,"Kazakhstan","Kazakhstan",1,1,0,0,1,0,0,0,"Kazakhstan","Kazakhstan","Kazakhstan",NA,"KZ","KAZ",1992,2061
-400,439,"Jordan","Jordan",1,1,0,0,0,1,0,0,"Jordan","Jordan","Jordan",NA,"JO","JOR",1962,2061
-404,664,"Kenya","Kenya",1,1,1,0,0,0,0,0,"Kenya","Kenya","Kenya",NA,"KE","KEN",1962,2061
-408,954,"Korea, Democratic People's Rep. of","Dem. People's Rep. of Korea",0,NA,0,0,0,0,0,NA,"Dem. People's Rep. of Korea","Democratic People's Republic of Korea","Dem. People's Rep. of Korea",NA,"KP","PRK",1962,2061
-410,542,"Korea, Republic of","Rep. of Korea",1,0,0,0,0,0,0,1,"Rep. of Korea","Republic of Korea","Rep. of Korea",NA,"KR","KOR",1962,2061
-414,443,"Kuwait","Kuwait",1,1,0,0,0,1,0,0,"Kuwait","Kuwait","Kuwait",NA,"KW","KWT",1962,2061
-417,917,"Kyrgyz Republic","Kyrgyzstan",1,1,0,0,1,0,0,0,"Kyrgyzstan","Kyrgyzstan","Kyrgyzstan",NA,"KG","KGZ",1992,2061
-418,544,"Lao People's Democratic Republic","Lao People's Dem. Rep.",1,1,0,1,0,0,0,0,"Lao People's Dem. Rep.","Lao People's Dem. Rep.","Lao People's Dem. Rep.",NA,"LA","LAO",1962,2061
-422,446,"Lebanon","Lebanon",1,1,0,0,0,1,0,0,"Lebanon","Lebanon","Lebanon",NA,"LB","LBN",1962,2061
-426,666,"Lesotho","Lesotho",1,1,1,0,0,0,0,0,"Lesotho","Lesotho","Lesotho",NA,"LS","LSO",2000,2061
-428,941,"Latvia","Latvia",1,0,0,0,0,0,0,1,"Latvia","Latvia","Latvia",NA,"LV","LVA",1992,2061
-430,668,"Liberia","Liberia",1,1,1,0,0,0,0,0,"Liberia","Liberia","Liberia",NA,"LR","LBR",1962,2061
-434,672,"Libya","Libya",1,1,0,0,0,1,0,0,"Libya","Libya","Libya",NA,"LY","LBY",1962,2061
-440,946,"Lithuania","Lithuania",1,0,0,0,0,0,0,1,"Lithuania","Lithuania","Lithuania",NA,"LT","LTU",1992,2061
-442,137,"Luxembourg","Luxembourg",1,0,0,0,0,0,0,1,"Luxembourg","Luxembourg","Luxembourg",NA,"LU","LUX",1999,2061
-446,546,"China, P.R.: Macao","China, Macao SAR",0,NA,0,0,0,0,0,NA,"China, Macao SAR","China, Macao Special Administrative Region","China, Macao SAR",NA,"MO","MAC",1962,2061
-450,674,"Madagascar","Madagascar",1,1,1,0,0,0,0,0,"Madagascar","Madagascar","Madagascar",NA,"MG","MDG",1962,2061
-454,676,"Malawi","Malawi",1,1,1,0,0,0,0,0,"Malawi","Malawi","Malawi",NA,"MW","MWI",1965,2061
-458,548,"Malaysia","Malaysia",1,1,0,1,0,0,0,0,"Malaysia","Malaysia","Malaysia",NA,"MY","MYS",1964,2061
-462,556,"Maldives","Maldives",1,1,0,1,0,0,0,0,"Maldives","Maldives","Maldives",NA,"MV","MDV",1962,2061
-466,678,"Mali","Mali",1,1,1,0,0,0,0,0,"Mali","Mali","Mali",NA,"ML","MLI",1962,2061
-470,181,"Malta","Malta",1,0,0,0,0,0,0,1,"Malta","Malta","Malta",NA,"MT","MLT",1962,2061
-478,682,"Mauritania","Mauritania",1,1,0,0,0,1,0,0,"Mauritania","Mauritania","Mauritania",NA,"MR","MRT",1962,2061
-480,684,"Mauritius","Mauritius",1,1,1,0,0,0,0,0,"Mauritius","Mauritius","Mauritius",NA,"MU","MUS",1962,2061
-484,273,"Mexico","Mexico",1,1,0,0,0,0,1,0,"Mexico","Mexico","Mexico",NA,"MX","MEX",1962,2061
-490,598,"Asia not specified","Other Asia, nes",0,NA,0,0,0,0,0,NA,"Other Asia, nes","Other Asia, not elsewhere specified","Other Asia, nes",NA,NA,NA,1962,2061
-490,528,"Taiwan Province of China","Other Asia, nes",0,NA,0,0,0,0,0,NA,"Other Asia, nes","Other Asia, not elsewhere specified","Other Asia, nes",NA,NA,NA,1962,2061
-496,948,"Mongolia","Mongolia",1,1,0,1,0,0,0,0,"Mongolia","Mongolia","Mongolia",NA,"MN","MNG",1962,2061
-498,921,"Moldova","Rep. of Moldova",1,1,0,0,1,0,0,0,"Rep. of Moldova","Republic of Moldova","Rep. of Moldova",NA,"MD","MDA",1992,2061
-499,943,"Montenegro","Montenegro",1,1,0,0,1,0,0,0,"Montenegro","Montenegro","Montenegro",NA,"ME","MNE",2006,2061
-500,351,"Montserrat","Montserrat",0,NA,0,0,0,0,0,NA,"Montserrat","Montserrat","Montserrat",NA,"MS","MSR",1962,2061
-504,686,"Morocco","Morocco",1,1,0,0,0,1,0,0,"Morocco","Morocco","Morocco",NA,"MA","MAR",1962,2061
-508,688,"Mozambique","Mozambique",1,1,1,0,0,0,0,0,"Mozambique","Mozambique","Mozambique",NA,"MZ","MOZ",1962,2061
-512,449,"Oman","Oman",1,1,0,0,0,1,0,0,"Oman","Oman","Oman",NA,"OM","OMN",1962,2061
-516,728,"Namibia","Namibia",1,1,1,0,0,0,0,0,"Namibia","Namibia","Namibia",NA,"NA","NAM",2000,2061
-520,836,"Nauru","Nauru",0,NA,0,0,0,0,0,NA,"Nauru","Nauru","Nauru",NA,"NR","NRU",1962,2061
-524,558,"Nepal","Nepal",1,1,0,1,0,0,0,0,"Nepal","Nepal","Nepal",NA,"NP","NPL",1962,2061
-528,138,"Netherlands","Netherlands",1,0,0,0,0,0,0,1,"Netherlands","Netherlands","Netherlands",NA,"NL","NLD",1962,2061
-530,353,"Netherlands Antilles","Neth. Antilles",0,NA,0,0,0,0,0,NA,"Neth. Antilles","Netherlands Antilles","Neth. Antilles",NA,"AN","ANT",1988,2010
-531,354,"Curaçao","Curaçao",0,NA,0,0,0,0,0,NA,"Curaçao","Curaçao","Curaçao",NA,"CW","CUW",2010,2061
-533,314,"Aruba","Aruba",1,1,0,0,0,0,1,0,"Aruba","Aruba","Aruba",NA,"AW","ABW",1988,2061
-534,352,"Sint Maarten","Saint Maarten",0,NA,0,0,0,0,0,NA,"Saint Maarten","Saint Maarten (Dutch part)","Saint Maarten",NA,"SX","SXM",2010,2061
-540,839,"French Territories: New Caledonia","New Caledonia",0,NA,0,0,0,0,0,NA,"New Caledonia","New Caledonia","New Caledonia",NA,"NC","NCL",1962,2061
-548,846,"Vanuatu","Vanuatu",1,1,0,1,0,0,0,0,"Vanuatu","Vanuatu","Vanuatu",NA,"VU","VUT",1962,2061
-554,196,"New Zealand","New Zealand",1,0,0,0,0,0,0,1,"New Zealand","New Zealand","New Zealand",NA,"NZ","NZL",1962,2061
-558,278,"Nicaragua","Nicaragua",1,1,0,0,0,0,1,0,"Nicaragua","Nicaragua","Nicaragua",NA,"NI","NIC",1962,2061
-562,692,"Niger","Niger",1,1,1,0,0,0,0,0,"Niger","Niger","Niger",NA,"NE","NER",1962,2061
-566,694,"Nigeria","Nigeria",1,1,1,0,0,0,0,0,"Nigeria","Nigeria","Nigeria",NA,"NG","NGA",1962,2061
-579,142,"Norway","Norway",1,0,0,0,0,0,0,1,"Norway","Norway, Svalbard and Jan Mayen","Norway","Including Svalbard and Jan Mayen","NO","NOR",1962,2061
-583,868,"Micronesia, Federated States of","FS Micronesia",0,NA,0,0,0,0,0,NA,"FS Micronesia","Federated State of Micronesia","Micronesia",NA,"FM","FSM",1992,2061
-584,867,"Marshall Islands, Republic of","Marshall Isds",0,NA,0,0,0,0,0,NA,"Marshall Isds","Marshall Islands","Marshall Isds",NA,"MH","MHL",1992,2061
-585,565,"Palau","Palau",0,NA,0,0,0,0,0,NA,"Palau","Palau","Palau",NA,"PW","PLW",1992,2061
-586,564,"Pakistan","Pakistan",1,1,0,0,0,1,0,0,"Pakistan","Pakistan","Pakistan",NA,"PK","PAK",1972,2061
-591,283,"Panama","Panama",1,1,0,0,0,0,1,0,"Panama","Panama","Panama",NA,"PA","PAN",1978,2061
-598,853,"Papua New Guinea","Papua New Guinea",1,1,0,1,0,0,0,0,"Papua New Guinea","Papua New Guinea","Papua New Guinea",NA,"PG","PNG",1962,2061
-600,288,"Paraguay","Paraguay",1,1,0,0,0,0,1,0,"Paraguay","Paraguay","Paraguay",NA,"PY","PRY",1962,2061
-604,293,"Peru","Peru",1,1,0,0,0,0,1,0,"Peru","Peru","Peru",NA,"PE","PER",1962,2061
-608,566,"Philippines","Philippines",1,1,0,1,0,0,0,0,"Philippines","Philippines","Philippines",NA,"PH","PHL",1962,2061
-616,964,"Poland","Poland",1,1,0,0,1,0,0,0,"Poland","Poland","Poland",NA,"PL","POL",1962,2061
-620,182,"Portugal","Portugal",1,0,0,0,0,0,0,1,"Portugal","Portugal","Portugal",NA,"PT","PRT",1962,2061
-624,654,"Guinea-Bissau","Guinea-Bissau",1,1,1,0,0,0,0,0,"Guinea-Bissau","Guinea-Bissau","Guinea-Bissau",NA,"GW","GNB",1962,2061
-626,537,"Timor-Leste, Dem. Rep. of","Timor-Leste",1,1,0,1,0,0,0,0,"Timor-Leste","Timor-Leste","Timor-Leste",NA,"TL","TLS",1962,2061
-634,453,"Qatar","Qatar",1,1,0,0,0,1,0,0,"Qatar","Qatar","Qatar",NA,"QA","QAT",1962,2061
-642,968,"Romania","Romania",1,1,0,0,1,0,0,0,"Romania","Romania","Romania",NA,"RO","ROU",1962,2061
-643,922,"Russian Federation","Russian Federation",1,1,0,0,1,0,0,0,"Russian Federation","Russian Federation","Russian Federation",NA,"RU","RUS",1992,2061
-646,714,"Rwanda","Rwanda",1,1,1,0,0,0,0,0,"Rwanda","Rwanda","Rwanda",NA,"RW","RWA",1962,2061
-659,361,"St. Kitts and Nevis","Saint Kitts and Nevis",1,1,0,0,0,0,1,0,"Saint Kitts and Nevis","Saint Kitts and Nevis","Saint Kitts and Nevis",NA,"KN","KNA",1981,2061
-660,312,"Anguilla","Anguilla",0,NA,0,0,0,0,0,NA,"Anguilla","Anguilla","Anguilla",NA,"AI","AIA",1981,2061
-662,362,"St. Lucia","Saint Lucia",1,1,0,0,0,0,1,0,"Saint Lucia","Saint Lucia","Saint Lucia",NA,"LC","LCA",1962,2061
-670,364,"St. Vincent and the Grenadines","Saint Vincent and the Grenadines",1,1,0,0,0,0,1,0,"Saint Vincent and the Grenadines","Saint Vincent and the Grenadines","Saint Vincent and the Grenadines",NA,"VC","VCT",1962,2061
-674,135,"San Marino","San Marino",1,0,0,0,0,0,0,1,"San Marino","San Marino","San Marino",NA,"SM","SMR",2000,2061
-678,716,"São Tomé & Príncipe","Sao Tome and Principe",1,1,1,0,0,0,0,0,"Sao Tome and Principe","Sao Tome and Principe","Sao Tome and Principe",NA,"ST","STP",1962,2061
-682,456,"Saudi Arabia","Saudi Arabia",1,1,0,0,0,1,0,0,"Saudi Arabia","Saudi Arabia","Saudi Arabia",NA,"SA","SAU",1962,2061
-686,722,"Senegal","Senegal",1,1,1,0,0,0,0,0,"Senegal","Senegal","Senegal",NA,"SN","SEN",1962,2061
-688,942,"Serbia, Republic of","Serbia",1,1,0,0,1,0,0,0,"Serbia","Serbia","Serbia",NA,"RS","SRB",2006,2061
-690,718,"Seychelles","Seychelles",1,1,1,0,0,0,0,0,"Seychelles","Seychelles","Seychelles",NA,"SC","SYC",1962,2061
-694,724,"Sierra Leone","Sierra Leone",1,1,1,0,0,0,0,0,"Sierra Leone","Sierra Leone","Sierra Leone",NA,"SL","SLE",1962,2061
-699,534,"India","India",1,1,0,1,0,0,0,0,"India","India","India",NA,"IN","IND",1975,2061
-702,576,"Singapore","Singapore",1,0,0,0,0,0,0,1,"Singapore","Singapore","Singapore",NA,"SG","SGP",1962,2061
-703,936,"Slovak Republic","Slovakia",1,0,0,0,0,0,0,1,"Slovakia","Slovakia","Slovakia",NA,"SK","SVK",1993,2061
-704,582,"Vietnam","Viet Nam",1,1,0,1,0,0,0,0,"Viet Nam","Viet Nam","Viet Nam",NA,"VN","VNM",1975,2061
-705,961,"Slovenia","Slovenia",1,0,0,0,0,0,0,1,"Slovenia","Slovenia","Slovenia",NA,"SI","SVN",1992,2061
-706,726,"Somalia","Somalia",1,1,1,0,0,0,0,0,"Somalia","Somalia","Somalia",NA,"SO","SOM",1962,2061
-710,199,"South Africa","South Africa",1,1,1,0,0,0,0,0,"South Africa","South Africa","South Africa",NA,"ZA","ZAF",2000,2061
-716,698,"Zimbabwe","Zimbabwe",1,1,1,0,0,0,0,0,"Zimbabwe","Zimbabwe","Zimbabwe",NA,"ZW","ZWE",1965,2061
-720,459,"Yemen, P.D. Rep.","Fmr Dem. Yemen",0,NA,0,0,0,0,0,NA,"Fmr Dem. Yemen","Former Democratic Yemen","Fmr Dem. Yemen",NA,"YD","YMD",1962,1990
-724,184,"Spain","Spain",1,0,0,0,0,0,0,1,"Spain","Spain","Spain",NA,"ES","ESP",1962,2061
-728,733,"South Sudan","South Sudan",0,NA,0,0,0,0,0,NA,"South Sudan","South Sudan","South Sudan",NA,"SS","SSD",2012,2061
-729,732,"Sudan","Sudan",1,1,0,0,0,1,0,0,"Sudan","Sudan","Sudan","Refers to the new Sudan, now excluding the southern part.","SD","SDN",2012,2061
-740,366,"Suriname","Suriname",1,1,0,0,0,0,1,0,"Suriname","Suriname","Suriname",NA,"SR","SUR",1962,2061
-748,734,"Eswatini, Kingdom of","Swaziland",1,1,1,0,0,0,0,0,"Swaziland","Swaziland","Swaziland",NA,"SZ","SWZ",2000,2061
-752,144,"Sweden","Sweden",1,0,0,0,0,0,0,1,"Sweden","Sweden","Sweden",NA,"SE","SWE",1962,2061
-757,146,"Switzerland","Switzerland",1,0,0,0,0,0,0,1,"Switzerland","Switzerland, Liechtenstein","Switzerland","Liechtenstein","CH","CHE",1962,2061
-760,463,"Syrian Arab Republic","Syria",1,1,0,0,0,1,0,0,"Syria","Syria","Syria",NA,"SY","SYR",1962,2061
-762,923,"Tajikistan","Tajikistan",1,1,0,0,1,0,0,0,"Tajikistan","Tajikistan","Tajikistan",NA,"TJ","TJK",1992,2061
-764,578,"Thailand","Thailand",1,1,0,1,0,0,0,0,"Thailand","Thailand","Thailand",NA,"TH","THA",1962,2061
-768,742,"Togo","Togo",1,1,1,0,0,0,0,0,"Togo","Togo","Togo",NA,"TG","TGO",1962,2061
-776,866,"Tonga","Tonga",1,1,0,1,0,0,0,0,"Tonga","Tonga","Tonga",NA,"TO","TON",1962,2061
-780,369,"Trinidad and Tobago","Trinidad and Tobago",1,1,0,0,0,0,1,0,"Trinidad and Tobago","Trinidad and Tobago","Trinidad and Tobago",NA,"TT","TTO",1962,2061
-784,466,"United Arab Emirates","United Arab Emirates",1,1,0,0,0,1,0,0,"United Arab Emirates","United Arab Emirates","United Arab Emirates",NA,"AE","ARE",1962,2061
-788,744,"Tunisia","Tunisia",1,1,0,0,0,1,0,0,"Tunisia","Tunisia","Tunisia",NA,"TN","TUN",1962,2061
-792,186,"Turkey","Turkey",1,1,0,0,1,0,0,0,"Turkey","Turkey","Turkey",NA,"TR","TUR",1962,2061
-795,925,"Turkmenistan","Turkmenistan",1,1,0,0,1,0,0,0,"Turkmenistan","Turkmenistan","Turkmenistan",NA,"TM","TKM",1992,2061
-798,869,"Tuvalu","Tuvalu",0,NA,0,0,0,0,0,NA,"Tuvalu","Tuvalu","Tuvalu",NA,"TV","TUV",1962,2061
-800,746,"Uganda","Uganda",1,1,1,0,0,0,0,0,"Uganda","Uganda","Uganda",NA,"UG","UGA",1962,2061
-804,926,"Ukraine","Ukraine",1,1,0,0,1,0,0,0,"Ukraine","Ukraine","Ukraine",NA,"UA","UKR",1992,2061
-807,962,"Macedonia, FYR","TFYR of Macedonia",1,1,0,0,1,0,0,0,"TFYR of Macedonia","The Former Yugoslav Republic of Macedonia","TFYR of Macedonia",NA,"MK","MKD",1993,2061
-810,974,"U.S.S.R.","Fmr USSR",0,NA,0,0,0,0,0,NA,"Fmr USSR","Former USSR","Fmr USSR",NA,"SU","SUN",1962,1991
-818,469,"Egypt","Egypt",1,1,0,0,0,1,0,0,"Egypt","Egypt","Egypt",NA,"EG","EGY",1962,2061
-826,112,"United Kingdom","United Kingdom",1,0,0,0,0,0,0,1,"United Kingdom","United Kingdom","United Kingdom",NA,"GB","GBR",1962,2061
-834,738,"Tanzania","United Rep. of Tanzania",1,1,1,0,0,0,0,0,"United Rep. of Tanzania","United Republic of Tanzania","United Rep. of Tanzania",NA,"TZ","TZA",1965,2061
-839,899,"Special Categories","Special Categories",0,NA,0,0,0,0,0,NA,"Special Categories","Special Categories","Special Categories",NA,NA,NA,1962,2061
-842,111,"United States","USA",1,0,0,0,0,0,0,1,"USA","USA, Puerto Rico and US Virgin Islands","USA","Including Puerto Rico and US Virgin Islands","US","USA",1981,2061
-854,748,"Burkina Faso","Burkina Faso",1,1,1,0,0,0,0,0,"Burkina Faso","Burkina Faso","Burkina Faso",NA,"BF","BFA",1962,2061
-858,298,"Uruguay","Uruguay",1,1,0,0,0,0,1,0,"Uruguay","Uruguay","Uruguay",NA,"UY","URY",1962,2061
-860,927,"Uzbekistan","Uzbekistan",1,1,0,0,1,0,0,0,"Uzbekistan","Uzbekistan","Uzbekistan",NA,"UZ","UZB",1992,2061
-862,299,"Venezuela, Republica Bolivariana de","Venezuela",1,1,0,0,0,0,1,0,"Venezuela","Venezuela","Venezuela",NA,"VE","VEN",1962,2061
-882,862,"Samoa","Samoa",1,1,0,1,0,0,0,0,"Samoa","Samoa","Samoa",NA,"WS","WSM",1962,2061
-886,473,"Yemen Arab Rep.","Fmr Arab Rep. of Yemen",0,NA,0,0,0,0,0,NA,"Fmr Arab Rep. of Yemen","Former Arab Republic of Yemen","Fmr Arab Rep. of Yemen",NA,"YE","YEM",1962,1990
-887,474,"Yemen, Republic of","Yemen",1,1,0,0,0,1,0,0,"Yemen","Yemen","Yemen",NA,"YE","YEM",1991,2061
-890,188,"Yugoslavia, SFR","Fmr Yugoslavia",0,NA,0,0,0,0,0,NA,"Fmr Yugoslavia","Former Yugoslavia","Fmr Yugoslavia","In 1992 including TFYR of Macedonia","YU","YUG",1962,1991
-891,965,"Serbia and Montenegro","Serbia and Montenegro",0,NA,0,0,0,0,0,NA,"Serbia and Montenegro","Serbia and Montenegro","Serbia and Montenegro",NA,"CS","SCG",1992,2005
-894,754,"Zambia","Zambia",1,1,1,0,0,0,0,0,"Zambia","Zambia","Zambia",NA,"ZM","ZMB",1965,2061
-899,898,"Countries & Areas not specified","Areas, nes",0,NA,0,0,0,0,0,NA,"Areas, nes","Areas, not elsewhere specified","Areas, nes",NA,NA,NA,1962,2061
-899,910,"Other Countries not included elsewhere","Areas, nes",0,NA,0,0,0,0,0,NA,"Areas, nes","Areas, not elsewhere specified","Areas, nes",NA,NA,NA,1962,2061
-NA,110,"Advanced Economies","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,92,"Export earnings: nonfuel","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,605,"Africa","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,799,"Africa not specified","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,554,"Malaysia, West","Unknown",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,603,"Sub-Saharan Africa","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,901,"CIS","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,884,"Europe not specified","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,405,"Middle East","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,163,"Euro Area","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,170,"Europe","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,200,"Emerging and Developing Economies","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,903,"Emerging and Developing Europe","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,489,"Middle East not specified","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,505,"Emerging and Developing Asia","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,205,"Western Hemisphere","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,198,"South African Common Customs Area (SACCA)","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,998,"European Union","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,80,"Export earnings: fuel","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,967,"Kosovo, Republic of","Unknown",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,440,"Middle East, North Africa, Afghanistan, and Pakistan","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
-NA,399,"Western Hemisphere not specified","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"iso3","un_code","imf_code","imf_nm","un_nm","d_gfi","d_dev","d_ssa","d_asia","d_deur","d_mena","d_whem","d_adv","un_nm_en_full","un_nm_en_abbr","un_note","iso2","un_start","un_end","wb_code","wb_nm"
+"ABW",533,314,"Aruba","Aruba",1,1,0,0,0,0,1,0,"Aruba","Aruba",NA,"AW",1988,2061,533,"Aruba"
+"AFG",4,512,"Afghanistan, Islamic Republic of","Afghanistan",1,1,0,0,0,1,0,0,"Afghanistan","Afghanistan",NA,"AF",1962,2061,4,"Afghanistan"
+"AGO",24,614,"Angola","Angola",1,1,1,0,0,0,0,0,"Angola","Angola",NA,"AO",1962,2061,24,"Angola"
+"AIA",660,312,"Anguilla","Anguilla",0,NA,0,0,0,0,0,NA,"Anguilla","Anguilla",NA,"AI",1981,2061,660,"Anguila"
+"ALB",8,914,"Albania","Albania",1,1,0,0,1,0,0,0,"Albania","Albania",NA,"AL",1962,2061,8,"Albania"
+"ANT",530,353,"Netherlands Antilles","Neth. Antilles",0,NA,0,0,0,0,0,NA,"Netherlands Antilles","Neth. Antilles",NA,"AN",1988,2010,530,"Netherlands Antilles"
+"ARE",784,466,"United Arab Emirates","United Arab Emirates",1,1,0,0,0,1,0,0,"United Arab Emirates","United Arab Emirates",NA,"AE",1962,2061,784,"United Arab Emirates"
+"ARG",32,213,"Argentina","Argentina",1,1,0,0,0,0,1,0,"Argentina","Argentina",NA,"AR",1962,2061,32,"Argentina"
+"ARM",51,911,"Armenia, Republic of","Armenia",1,1,0,0,1,0,0,0,"Armenia","Armenia",NA,"AM",1992,2061,51,"Armenia"
+"ASM",16,859,"American Samoa","American Samoa",0,NA,0,0,0,0,0,NA,"American Samoa","American Samoa",NA,"AS",1962,2061,16,"American Samoa"
+"ATG",28,311,"Antigua and Barbuda","Antigua and Barbuda",1,1,0,0,0,0,1,0,"Antigua and Barbuda","Antigua and Barbuda",NA,"AG",1962,2061,28,"Antigua and Barbuda"
+"AUS",36,193,"Australia","Australia",1,0,0,0,0,0,0,1,"Australia","Australia",NA,"AU",1962,2061,36,"Australia"
+"AUT",40,122,"Austria","Austria",1,0,0,0,0,0,0,1,"Austria","Austria",NA,"AT",1962,2061,40,"Austria"
+"AZE",31,912,"Azerbaijan, Republic of","Azerbaijan",1,1,0,0,1,0,0,0,"Azerbaijan","Azerbaijan",NA,"AZ",1992,2061,31,"Azerbaijan"
+"BDI",108,618,"Burundi","Burundi",1,1,1,0,0,0,0,0,"Burundi","Burundi",NA,"BI",1962,2061,108,"Burundi"
+"BEL",56,124,"Belgium","Belgium",1,0,0,0,0,0,0,1,"Belgium","Belgium",NA,"BE",1999,2061,56,"Belgium"
+"BEL",58,126,"Belgium-Luxembourg","Belgium-Luxembourg",0,NA,0,0,0,0,0,NA,"Belgium-Luxembourg","Belgium-Luxembourg",NA,"BE",1962,1998,56,"Belgium"
+"BEN",204,638,"Benin","Benin",1,1,1,0,0,0,0,0,"Benin","Benin",NA,"BJ",1962,2061,204,"Benin"
+"BFA",854,748,"Burkina Faso","Burkina Faso",1,1,1,0,0,0,0,0,"Burkina Faso","Burkina Faso",NA,"BF",1962,2061,854,"Burkina Faso"
+"BGD",50,513,"Bangladesh","Bangladesh",1,1,0,1,0,0,0,0,"Bangladesh","Bangladesh",NA,"BD",1972,2061,50,"Bangladesh"
+"BGR",100,918,"Bulgaria","Bulgaria",1,1,0,0,1,0,0,0,"Bulgaria","Bulgaria",NA,"BG",1962,2061,100,"Bulgaria"
+"BHR",48,419,"Bahrain, Kingdom of","Bahrain",1,1,0,0,0,1,0,0,"Bahrain","Bahrain",NA,"BH",1962,2061,48,"Bahrain"
+"BHS",44,313,"Bahamas, The","Bahamas",1,1,0,0,0,0,1,0,"Bahamas","Bahamas",NA,"BS",1962,2061,44,"Bahamas, The"
+"BIH",70,963,"Bosnia and Herzegovina","Bosnia Herzegovina",1,1,0,0,1,0,0,0,"Bosnia Herzegovina","Bosnia Herzegovina",NA,"BA",1992,2061,70,"Bosnia and Herzegovina"
+"BLR",112,913,"Belarus","Belarus",1,1,0,0,1,0,0,0,"Belarus","Belarus",NA,"BY",1992,2061,112,"Belarus"
+"BLZ",84,339,"Belize","Belize",1,1,0,0,0,0,1,0,"Belize","Belize",NA,"BZ",1962,2061,84,"Belize"
+"BMU",60,319,"Bermuda","Bermuda",0,NA,0,0,0,0,0,NA,"Bermuda","Bermuda",NA,"BM",1962,2061,60,"Bermuda"
+"BOL",68,218,"Bolivia","Bolivia (Plurinational State of)",1,1,0,0,0,0,1,0,"Plurinational State of Bolivia","Bolivia",NA,"BO",1962,2061,68,"Bolivia"
+"BRA",76,223,"Brazil","Brazil",1,1,0,0,0,0,1,0,"Brazil","Brazil",NA,"BR",1962,2061,76,"Brazil"
+"BRB",52,316,"Barbados","Barbados",1,1,0,0,0,0,1,0,"Barbados","Barbados",NA,"BB",1962,2061,52,"Barbados"
+"BRN",96,516,"Brunei Darussalam","Brunei Darussalam",1,1,0,1,0,0,0,0,"Brunei Darussalam","Brunei Darussalam",NA,"BN",1962,2061,96,"Brunei"
+"BTN",64,514,"Bhutan","Bhutan",1,1,0,1,0,0,0,0,"Bhutan","Bhutan",NA,"BT",1962,2061,64,"Bhutan"
+"BWA",72,616,"Botswana","Botswana",1,1,1,0,0,0,0,0,"Botswana","Botswana",NA,"BW",2000,2061,72,"Botswana"
+"CAF",140,626,"Central African Republic","Central African Rep.",1,1,1,0,0,0,0,0,"Central African Republic","Central African Rep.",NA,"CF",1962,2061,140,"Central African Republic"
+"CAN",124,156,"Canada","Canada",1,0,0,0,0,0,0,1,"Canada","Canada",NA,"CA",1962,2061,124,"Canada"
+"CHE",757,146,"Switzerland","Switzerland",1,0,0,0,0,0,0,1,"Switzerland, Liechtenstein","Switzerland","Liechtenstein","CH",1962,2061,756,"Switzerland"
+"CHL",152,228,"Chile","Chile",1,1,0,0,0,0,1,0,"Chile","Chile",NA,"CL",1962,2061,152,"Chile"
+"CHN",156,924,"China, P.R.: Mainland","China",1,1,0,1,0,0,0,0,"China","China",NA,"CN",1962,2061,156,"China"
+"CIV",384,662,"Côte d'Ivoire       ","Côte d'Ivoire",1,1,1,0,0,0,0,0,"Côte d'Ivoire","Côte d'Ivoire",NA,"CI",1962,2061,384,"Cote d'Ivoire"
+"CMR",120,622,"Cameroon","Cameroon",1,1,1,0,0,0,0,0,"Cameroon","Cameroon",NA,"CM",1962,2061,120,"Cameroon"
+"COD",180,636,"Congo, Democratic Republic of","Dem. Rep. of the Congo",1,1,1,0,0,0,0,0,"Democratic Republic of the Congo","Dem. Rep. of the Congo",NA,"CD",1962,2061,NA,NA
+"COG",178,634,"Congo, Republic of","Congo",1,1,1,0,0,0,0,0,"Congo","Congo",NA,"CG",1962,2061,178,"Congo, Rep."
+"COL",170,233,"Colombia","Colombia",1,1,0,0,0,0,1,0,"Colombia","Colombia",NA,"CO",1962,2061,170,"Colombia"
+"COM",174,632,"Comoros","Comoros",1,1,1,0,0,0,0,0,"Comoros","Comoros",NA,"KM",1962,2061,174,"Comoros"
+"CPV",132,624,"Cabo Verde","Cabo Verde",1,1,1,0,0,0,0,0,"Cabo Verde","Cabo Verde",NA,"CV",1962,2061,132,"Cape Verde"
+"CRI",188,238,"Costa Rica","Costa Rica",1,1,0,0,0,0,1,0,"Costa Rica","Costa Rica",NA,"CR",1962,2061,188,"Costa Rica"
+"CSK",200,934,"Czechoslovakia","Czechoslovakia",0,NA,0,0,0,0,0,NA,"Czechoslovakia","Czechoslovakia",NA,"CS",1962,1992,200,"Czechoslovakia"
+"CUB",192,928,"Cuba","Cuba",0,NA,0,0,0,0,0,NA,"Cuba","Cuba",NA,"CU",1962,2061,192,"Cuba"
+"CUW",531,354,"Curaçao","Curaçao",0,NA,0,0,0,0,0,NA,"Curaçao","Curaçao",NA,"CW",2010,2061,NA,NA
+"CYP",196,423,"Cyprus","Cyprus",1,0,0,0,0,0,0,1,"Cyprus","Cyprus",NA,"CY",1962,2061,196,"Cyprus"
+"CZE",203,935,"Czech Republic","Czech Rep.",1,0,0,0,0,0,0,1,"Czech Republic","Czech Rep.",NA,"CZ",1993,2061,203,"Czech Republic"
+"DDR",278,938,"Eastern Germany","Fmr Dem. Rep. of Germany",0,NA,0,0,0,0,0,NA,"Former Democratic Republic of Germany","Fmr Dem. Rep. of Germany",NA,"DD",1962,1990,278,"German Democratic Republic"
+"DEU",276,134,"Germany","Germany",1,0,0,0,0,0,0,1,"Germany","Germany",NA,"DE",1991,2061,276,"Germany"
+"DJI",262,611,"Djibouti","Djibouti",1,1,0,0,0,1,0,0,"Djibouti","Djibouti",NA,"DJ",1962,2061,262,"Djibouti"
+"DMA",212,321,"Dominica","Dominica",1,1,0,0,0,0,1,0,"Dominica","Dominica",NA,"DM",1962,2061,212,"Dominica"
+"DNK",208,128,"Denmark","Denmark",1,0,0,0,0,0,0,1,"Denmark","Denmark",NA,"DK",1962,2061,208,"Denmark"
+"DOM",214,243,"Dominican Republic","Dominican Rep.",1,1,0,0,0,0,1,0,"Dominican Republic","Dominican Rep.",NA,"DO",1962,2061,214,"Dominican Republic"
+"DZA",12,612,"Algeria","Algeria",1,1,0,0,0,1,0,0,"Algeria","Algeria",NA,"DZ",1962,2061,12,"Algeria"
+"ECU",218,248,"Ecuador","Ecuador",1,1,0,0,0,0,1,0,"Ecuador","Ecuador",NA,"EC",1962,2061,218,"Ecuador"
+"EGY",818,469,"Egypt","Egypt",1,1,0,0,0,1,0,0,"Egypt","Egypt",NA,"EG",1962,2061,818,"Egypt, Arab Rep."
+"ERI",232,643,"Eritrea","Eritrea",1,1,1,0,0,0,0,0,"Eritrea","Eritrea",NA,"ER",1993,2061,232,"Eritrea"
+"ESP",724,184,"Spain","Spain",1,0,0,0,0,0,0,1,"Spain","Spain",NA,"ES",1962,2061,724,"Spain"
+"EST",233,939,"Estonia","Estonia",1,0,0,0,0,0,0,1,"Estonia","Estonia",NA,"EE",1992,2061,233,"Estonia"
+"ETH",231,644,"Ethiopia","Ethiopia",1,1,1,0,0,0,0,0,"Ethiopia","Ethiopia",NA,"ET",1993,2061,231,"Ethiopia(excludes Eritrea)"
+"FIN",246,172,"Finland","Finland",1,0,0,0,0,0,0,1,"Finland","Finland",NA,"FI",1962,2061,246,"Finland"
+"FJI",242,819,"Fiji","Fiji",1,1,0,1,0,0,0,0,"Fiji","Fiji",NA,"FJ",1962,2061,242,"Fiji"
+"FLK",238,323,"Falkland Islands","Falkland Isds (Malvinas)",0,NA,0,0,0,0,0,NA,"Falkland Islands (Malvinas)","Falkland Isds (Malvinas)",NA,"FK",1962,2061,238,"Falkland Island"
+"FRA",251,132,"France","France",1,0,0,0,0,0,0,1,"France, Monaco","France","Including Monaco","FR",1962,2061,250,"France"
+"FRO",234,816,"Faroe Islands","Faeroe Isds",0,NA,0,0,0,0,0,NA,"Faeroe Islands","Faeroe Isds",NA,"FO",1962,2061,234,"Faeroe Islands"
+"FSM",583,868,"Micronesia, Federated States of","FS Micronesia",0,NA,0,0,0,0,0,NA,"Federated State of Micronesia","Micronesia",NA,"FM",1992,2061,583,"Micronesia, Fed. Sts."
+"GAB",266,646,"Gabon","Gabon",1,1,1,0,0,0,0,0,"Gabon","Gabon",NA,"GA",1962,2061,266,"Gabon"
+"GBR",826,112,"United Kingdom","United Kingdom",1,0,0,0,0,0,0,1,"United Kingdom","United Kingdom",NA,"GB",1962,2061,826,"United Kingdom"
+"GEO",268,915,"Georgia","Georgia",1,1,0,0,1,0,0,0,"Georgia","Georgia",NA,"GE",1992,2061,268,"Georgia"
+"GHA",288,652,"Ghana","Ghana",1,1,1,0,0,0,0,0,"Ghana","Ghana",NA,"GH",1962,2061,288,"Ghana"
+"GIB",292,823,"Gibraltar","Gibraltar",0,NA,0,0,0,0,0,NA,"Gibraltar","Gibraltar",NA,"GI",1962,2061,292,"Gibraltar"
+"GIN",324,656,"Guinea","Guinea",1,1,1,0,0,0,0,0,"Guinea","Guinea",NA,"GN",1962,2061,324,"Guinea"
+"GMB",270,648,"Gambia, The","Gambia",1,1,1,0,0,0,0,0,"Gambia","Gambia",NA,"GM",1962,2061,270,"Gambia, The"
+"GNB",624,654,"Guinea-Bissau","Guinea-Bissau",1,1,1,0,0,0,0,0,"Guinea-Bissau","Guinea-Bissau",NA,"GW",1962,2061,624,"Guinea-Bissau"
+"GNQ",226,642,"Equatorial Guinea","Equatorial Guinea",1,1,1,0,0,0,0,0,"Equatorial Guinea","Equatorial Guinea",NA,"GQ",1962,2061,226,"Equatorial Guinea"
+"GRC",300,174,"Greece","Greece",1,0,0,0,0,0,0,1,"Greece","Greece",NA,"GR",1962,2061,300,"Greece"
+"GRD",308,328,"Grenada","Grenada",1,1,0,0,0,0,1,0,"Grenada","Grenada",NA,"GD",1962,2061,308,"Grenada"
+"GRL",304,326,"Greenland","Greenland",0,NA,0,0,0,0,0,NA,"Greenland","Greenland",NA,"GL",1962,2061,304,"Greenland"
+"GTM",320,258,"Guatemala","Guatemala",1,1,0,0,0,0,1,0,"Guatemala","Guatemala",NA,"GT",1962,2061,320,"Guatemala"
+"GUM",316,829,"Guam","Guam",0,NA,0,0,0,0,0,NA,"Guam","Guam",NA,"GU",1962,2061,316,"Guam"
+"GUY",328,336,"Guyana","Guyana",1,1,0,0,0,0,1,0,"Guyana","Guyana",NA,"GY",1962,2061,328,"Guyana"
+"HKG",344,532,"China, P.R.: Hong Kong","China, Hong Kong SAR",1,0,0,0,0,0,0,1,"China, Hong Kong Special Administrative Region","China, Hong Kong SAR",NA,"HK",1962,2061,344,"Hong Kong, China"
+"HND",340,268,"Honduras","Honduras",1,1,0,0,0,0,1,0,"Honduras","Honduras",NA,"HN",1962,2061,340,"Honduras"
+"HRV",191,960,"Croatia","Croatia",1,1,0,0,1,0,0,0,"Croatia","Croatia",NA,"HR",1992,2061,191,"Croatia"
+"HTI",332,263,"Haiti","Haiti",1,1,0,0,0,0,1,0,"Haiti","Haiti",NA,"HT",1962,2061,332,"Haiti"
+"HUN",348,944,"Hungary","Hungary",1,1,0,0,1,0,0,0,"Hungary","Hungary",NA,"HU",1962,2061,348,"Hungary"
+"IDN",360,536,"Indonesia","Indonesia",1,1,0,1,0,0,0,0,"Indonesia","Indonesia",NA,"ID",1962,2061,360,"Indonesia"
+"IND",699,534,"India","India",1,1,0,1,0,0,0,0,"India","India",NA,"IN",1975,2061,356,"India"
+"IRL",372,178,"Ireland","Ireland",1,0,0,0,0,0,0,1,"Ireland","Ireland",NA,"IE",1962,2061,372,"Ireland"
+"IRN",364,429,"Iran, Islamic Republic of","Iran",1,1,0,0,0,1,0,0,"Iran","Iran",NA,"IR",1962,2061,364,"Iran, Islamic Rep."
+"IRQ",368,433,"Iraq","Iraq",1,1,0,0,0,1,0,0,"Iraq","Iraq",NA,"IQ",1962,2061,368,"Iraq"
+"ISL",352,176,"Iceland","Iceland",1,0,0,0,0,0,0,1,"Iceland","Iceland",NA,"IS",1962,2061,352,"Iceland"
+"ISR",376,436,"Israel","Israel",1,0,0,0,0,0,0,1,"Israel","Israel",NA,"IL",1962,2061,376,"Israel"
+"ITA",381,136,"Italy","Italy",1,0,0,0,0,0,0,1,"Italy","Italy",NA,"IT",1962,2061,380,"Italy"
+"JAM",388,343,"Jamaica","Jamaica",1,1,0,0,0,0,1,0,"Jamaica","Jamaica",NA,"JM",1962,2061,388,"Jamaica"
+"JOR",400,439,"Jordan","Jordan",1,1,0,0,0,1,0,0,"Jordan","Jordan",NA,"JO",1962,2061,400,"Jordan"
+"JPN",392,158,"Japan","Japan",1,0,0,0,0,0,0,1,"Japan","Japan",NA,"JP",1962,2061,392,"Japan"
+"KAZ",398,916,"Kazakhstan","Kazakhstan",1,1,0,0,1,0,0,0,"Kazakhstan","Kazakhstan",NA,"KZ",1992,2061,398,"Kazakhstan"
+"KEN",404,664,"Kenya","Kenya",1,1,1,0,0,0,0,0,"Kenya","Kenya",NA,"KE",1962,2061,404,"Kenya"
+"KGZ",417,917,"Kyrgyz Republic","Kyrgyzstan",1,1,0,0,1,0,0,0,"Kyrgyzstan","Kyrgyzstan",NA,"KG",1992,2061,417,"Kyrgyz Republic"
+"KHM",116,522,"Cambodia","Cambodia",1,1,0,1,0,0,0,0,"Cambodia","Cambodia",NA,"KH",1962,2061,116,"Cambodia"
+"KIR",296,826,"Kiribati","Kiribati",1,1,0,1,0,0,0,0,"Kiribati","Kiribati",NA,"KI",1962,2061,296,"Kiribati"
+"KNA",659,361,"St. Kitts and Nevis","Saint Kitts and Nevis",1,1,0,0,0,0,1,0,"Saint Kitts and Nevis","Saint Kitts and Nevis",NA,"KN",1981,2061,659,"St. Kitts and Nevis"
+"KOR",410,542,"Korea, Republic of","Rep. of Korea",1,0,0,0,0,0,0,1,"Republic of Korea","Rep. of Korea",NA,"KR",1962,2061,410,"Korea, Rep."
+"KWT",414,443,"Kuwait","Kuwait",1,1,0,0,0,1,0,0,"Kuwait","Kuwait",NA,"KW",1962,2061,414,"Kuwait"
+"LAO",418,544,"Lao People's Democratic Republic","Lao People's Dem. Rep.",1,1,0,1,0,0,0,0,"Lao People's Dem. Rep.","Lao People's Dem. Rep.",NA,"LA",1962,2061,418,"Lao PDR"
+"LBN",422,446,"Lebanon","Lebanon",1,1,0,0,0,1,0,0,"Lebanon","Lebanon",NA,"LB",1962,2061,422,"Lebanon"
+"LBR",430,668,"Liberia","Liberia",1,1,1,0,0,0,0,0,"Liberia","Liberia",NA,"LR",1962,2061,430,"Liberia"
+"LBY",434,672,"Libya","Libya",1,1,0,0,0,1,0,0,"Libya","Libya",NA,"LY",1962,2061,434,"Libya"
+"LCA",662,362,"St. Lucia","Saint Lucia",1,1,0,0,0,0,1,0,"Saint Lucia","Saint Lucia",NA,"LC",1962,2061,662,"St. Lucia"
+"LKA",144,524,"Sri Lanka","Sri Lanka",1,1,0,1,0,0,0,0,"Sri Lanka","Sri Lanka",NA,"LK",1962,2061,144,"Sri Lanka"
+"LSO",426,666,"Lesotho","Lesotho",1,1,1,0,0,0,0,0,"Lesotho","Lesotho",NA,"LS",2000,2061,426,"Lesotho"
+"LTU",440,946,"Lithuania","Lithuania",1,0,0,0,0,0,0,1,"Lithuania","Lithuania",NA,"LT",1992,2061,440,"Lithuania"
+"LUX",442,137,"Luxembourg","Luxembourg",1,0,0,0,0,0,0,1,"Luxembourg","Luxembourg",NA,"LU",1999,2061,442,"Luxembourg"
+"LVA",428,941,"Latvia","Latvia",1,0,0,0,0,0,0,1,"Latvia","Latvia",NA,"LV",1992,2061,428,"Latvia"
+"MAC",446,546,"China, P.R.: Macao","China, Macao SAR",0,NA,0,0,0,0,0,NA,"China, Macao Special Administrative Region","China, Macao SAR",NA,"MO",1962,2061,446,"Macao"
+"MAR",504,686,"Morocco","Morocco",1,1,0,0,0,1,0,0,"Morocco","Morocco",NA,"MA",1962,2061,504,"Morocco"
+"MDA",498,921,"Moldova","Rep. of Moldova",1,1,0,0,1,0,0,0,"Republic of Moldova","Rep. of Moldova",NA,"MD",1992,2061,498,"Moldova"
+"MDG",450,674,"Madagascar","Madagascar",1,1,1,0,0,0,0,0,"Madagascar","Madagascar",NA,"MG",1962,2061,450,"Madagascar"
+"MDV",462,556,"Maldives","Maldives",1,1,0,1,0,0,0,0,"Maldives","Maldives",NA,"MV",1962,2061,462,"Maldives"
+"MEX",484,273,"Mexico","Mexico",1,1,0,0,0,0,1,0,"Mexico","Mexico",NA,"MX",1962,2061,484,"Mexico"
+"MHL",584,867,"Marshall Islands, Republic of","Marshall Isds",0,NA,0,0,0,0,0,NA,"Marshall Islands","Marshall Isds",NA,"MH",1992,2061,584,"Marshall Islands"
+"MKD",807,962,"Macedonia, FYR","TFYR of Macedonia",1,1,0,0,1,0,0,0,"The Former Yugoslav Republic of Macedonia","TFYR of Macedonia",NA,"MK",1993,2061,807,"Macedonia, FYR"
+"MLI",466,678,"Mali","Mali",1,1,1,0,0,0,0,0,"Mali","Mali",NA,"ML",1962,2061,466,"Mali"
+"MLT",470,181,"Malta","Malta",1,0,0,0,0,0,0,1,"Malta","Malta",NA,"MT",1962,2061,470,"Malta"
+"MMR",104,518,"Myanmar","Myanmar",1,1,0,1,0,0,0,0,"Myanmar","Myanmar",NA,"MM",1962,2061,104,"Myanmar"
+"MNE",499,943,"Montenegro","Montenegro",1,1,0,0,1,0,0,0,"Montenegro","Montenegro",NA,"ME",2006,2061,NA,NA
+"MNG",496,948,"Mongolia","Mongolia",1,1,0,1,0,0,0,0,"Mongolia","Mongolia",NA,"MN",1962,2061,496,"Mongolia"
+"MOZ",508,688,"Mozambique","Mozambique",1,1,1,0,0,0,0,0,"Mozambique","Mozambique",NA,"MZ",1962,2061,508,"Mozambique"
+"MRT",478,682,"Mauritania","Mauritania",1,1,0,0,0,1,0,0,"Mauritania","Mauritania",NA,"MR",1962,2061,478,"Mauritania"
+"MSR",500,351,"Montserrat","Montserrat",0,NA,0,0,0,0,0,NA,"Montserrat","Montserrat",NA,"MS",1962,2061,500,"Montserrat"
+"MUS",480,684,"Mauritius","Mauritius",1,1,1,0,0,0,0,0,"Mauritius","Mauritius",NA,"MU",1962,2061,480,"Mauritius"
+"MWI",454,676,"Malawi","Malawi",1,1,1,0,0,0,0,0,"Malawi","Malawi",NA,"MW",1965,2061,454,"Malawi"
+"MYS",458,548,"Malaysia","Malaysia",1,1,0,1,0,0,0,0,"Malaysia","Malaysia",NA,"MY",1964,2061,458,"Malaysia"
+"NAM",516,728,"Namibia","Namibia",1,1,1,0,0,0,0,0,"Namibia","Namibia",NA,NA,2000,2061,516,"Namibia"
+"NCL",540,839,"French Territories: New Caledonia","New Caledonia",0,NA,0,0,0,0,0,NA,"New Caledonia","New Caledonia",NA,"NC",1962,2061,540,"New Caledonia"
+"NER",562,692,"Niger","Niger",1,1,1,0,0,0,0,0,"Niger","Niger",NA,"NE",1962,2061,562,"Niger"
+"NGA",566,694,"Nigeria","Nigeria",1,1,1,0,0,0,0,0,"Nigeria","Nigeria",NA,"NG",1962,2061,566,"Nigeria"
+"NIC",558,278,"Nicaragua","Nicaragua",1,1,0,0,0,0,1,0,"Nicaragua","Nicaragua",NA,"NI",1962,2061,558,"Nicaragua"
+"NLD",528,138,"Netherlands","Netherlands",1,0,0,0,0,0,0,1,"Netherlands","Netherlands",NA,"NL",1962,2061,528,"Netherlands"
+"NOR",579,142,"Norway","Norway",1,0,0,0,0,0,0,1,"Norway, Svalbard and Jan Mayen","Norway","Including Svalbard and Jan Mayen","NO",1962,2061,578,"Norway"
+"NPL",524,558,"Nepal","Nepal",1,1,0,1,0,0,0,0,"Nepal","Nepal",NA,"NP",1962,2061,524,"Nepal"
+"NRU",520,836,"Nauru","Nauru",0,NA,0,0,0,0,0,NA,"Nauru","Nauru",NA,"NR",1962,2061,520,"Nauru"
+"NZL",554,196,"New Zealand","New Zealand",1,0,0,0,0,0,0,1,"New Zealand","New Zealand",NA,"NZ",1962,2061,554,"New Zealand"
+"OMN",512,449,"Oman","Oman",1,1,0,0,0,1,0,0,"Oman","Oman",NA,"OM",1962,2061,512,"Oman"
+"PAK",586,564,"Pakistan","Pakistan",1,1,0,0,0,1,0,0,"Pakistan","Pakistan",NA,"PK",1972,2061,586,"Pakistan"
+"PAN",591,283,"Panama","Panama",1,1,0,0,0,0,1,0,"Panama","Panama",NA,"PA",1978,2061,591,"Panama"
+"PER",604,293,"Peru","Peru",1,1,0,0,0,0,1,0,"Peru","Peru",NA,"PE",1962,2061,604,"Peru"
+"PHL",608,566,"Philippines","Philippines",1,1,0,1,0,0,0,0,"Philippines","Philippines",NA,"PH",1962,2061,608,"Philippines"
+"PLW",585,565,"Palau","Palau",0,NA,0,0,0,0,0,NA,"Palau","Palau",NA,"PW",1992,2061,585,"Palau"
+"PNG",598,853,"Papua New Guinea","Papua New Guinea",1,1,0,1,0,0,0,0,"Papua New Guinea","Papua New Guinea",NA,"PG",1962,2061,598,"Papua New Guinea"
+"POL",616,964,"Poland","Poland",1,1,0,0,1,0,0,0,"Poland","Poland",NA,"PL",1962,2061,616,"Poland"
+"PRK",408,954,"Korea, Democratic People's Rep. of","Dem. People's Rep. of Korea",0,NA,0,0,0,0,0,NA,"Democratic People's Republic of Korea","Dem. People's Rep. of Korea",NA,"KP",1962,2061,408,"Korea, Dem. Rep."
+"PRT",620,182,"Portugal","Portugal",1,0,0,0,0,0,0,1,"Portugal","Portugal",NA,"PT",1962,2061,620,"Portugal"
+"PRY",600,288,"Paraguay","Paraguay",1,1,0,0,0,0,1,0,"Paraguay","Paraguay",NA,"PY",1962,2061,600,"Paraguay"
+"PSE",275,487,"West Bank and Gaza","State of Palestine",0,NA,0,0,0,0,0,NA,"State of Palestine","State of Palestine",NA,"PS",2000,2061,275,"Occ.Pal.Terr"
+"PYF",258,887,"French Territories: French Polynesia","French Polynesia",0,NA,0,0,0,0,0,NA,"French Polynesia","French Polynesia",NA,"PF",1962,2061,258,"French Polynesia"
+"QAT",634,453,"Qatar","Qatar",1,1,0,0,0,1,0,0,"Qatar","Qatar",NA,"QA",1962,2061,634,"Qatar"
+"ROU",642,968,"Romania","Romania",1,1,0,0,1,0,0,0,"Romania","Romania",NA,"RO",1962,2061,NA,NA
+"RUS",643,922,"Russian Federation","Russian Federation",1,1,0,0,1,0,0,0,"Russian Federation","Russian Federation",NA,"RU",1992,2061,643,"Russian Federation"
+"RWA",646,714,"Rwanda","Rwanda",1,1,1,0,0,0,0,0,"Rwanda","Rwanda",NA,"RW",1962,2061,646,"Rwanda"
+"SAU",682,456,"Saudi Arabia","Saudi Arabia",1,1,0,0,0,1,0,0,"Saudi Arabia","Saudi Arabia",NA,"SA",1962,2061,682,"Saudi Arabia"
+"SCG",891,965,"Serbia and Montenegro","Serbia and Montenegro",0,NA,0,0,0,0,0,NA,"Serbia and Montenegro","Serbia and Montenegro",NA,"CS",1992,2005,NA,NA
+"SDN",729,732,"Sudan","Sudan",1,1,0,0,0,1,0,0,"Sudan","Sudan","Refers to the new Sudan, now excluding the southern part.","SD",2012,2061,736,"Sudan"
+"SEN",686,722,"Senegal","Senegal",1,1,1,0,0,0,0,0,"Senegal","Senegal",NA,"SN",1962,2061,686,"Senegal"
+"SGP",702,576,"Singapore","Singapore",1,0,0,0,0,0,0,1,"Singapore","Singapore",NA,"SG",1962,2061,702,"Singapore"
+"SLB",90,813,"Solomon Islands","Solomon Isds",1,1,0,1,0,0,0,0,"Solomon Islands","Solomon Isds",NA,"SB",1962,2061,90,"Solomon Islands"
+"SLE",694,724,"Sierra Leone","Sierra Leone",1,1,1,0,0,0,0,0,"Sierra Leone","Sierra Leone",NA,"SL",1962,2061,694,"Sierra Leone"
+"SLV",222,253,"El Salvador","El Salvador",1,1,0,0,0,0,1,0,"El Salvador","El Salvador",NA,"SV",1962,2061,222,"El Salvador"
+"SMR",674,135,"San Marino","San Marino",1,0,0,0,0,0,0,1,"San Marino","San Marino",NA,"SM",2000,2061,674,"San Marino"
+"SOM",706,726,"Somalia","Somalia",1,1,1,0,0,0,0,0,"Somalia","Somalia",NA,"SO",1962,2061,706,"Somalia"
+"SRB",688,942,"Serbia, Republic of","Serbia",1,1,0,0,1,0,0,0,"Serbia","Serbia",NA,"RS",2006,2061,NA,NA
+"SSD",728,733,"South Sudan","South Sudan",0,NA,0,0,0,0,0,NA,"South Sudan","South Sudan",NA,"SS",2012,2061,NA,NA
+"STP",678,716,"São Tomé & Príncipe","Sao Tome and Principe",1,1,1,0,0,0,0,0,"Sao Tome and Principe","Sao Tome and Principe",NA,"ST",1962,2061,678,"Sao Tome and Principe"
+"SUN",810,974,"U.S.S.R.","Fmr USSR",0,NA,0,0,0,0,0,NA,"Former USSR","Fmr USSR",NA,"SU",1962,1991,NA,NA
+"SUR",740,366,"Suriname","Suriname",1,1,0,0,0,0,1,0,"Suriname","Suriname",NA,"SR",1962,2061,740,"Suriname"
+"SVK",703,936,"Slovak Republic","Slovakia",1,0,0,0,0,0,0,1,"Slovakia","Slovakia",NA,"SK",1993,2061,703,"Slovak Republic"
+"SVN",705,961,"Slovenia","Slovenia",1,0,0,0,0,0,0,1,"Slovenia","Slovenia",NA,"SI",1992,2061,705,"Slovenia"
+"SWE",752,144,"Sweden","Sweden",1,0,0,0,0,0,0,1,"Sweden","Sweden",NA,"SE",1962,2061,752,"Sweden"
+"SWZ",748,734,"Eswatini, Kingdom of","Swaziland",1,1,1,0,0,0,0,0,"Swaziland","Swaziland",NA,"SZ",2000,2061,748,"Swaziland"
+"SXM",534,352,"Sint Maarten","Saint Maarten",0,NA,0,0,0,0,0,NA,"Saint Maarten (Dutch part)","Saint Maarten",NA,"SX",2010,2061,NA,NA
+"SYC",690,718,"Seychelles","Seychelles",1,1,1,0,0,0,0,0,"Seychelles","Seychelles",NA,"SC",1962,2061,690,"Seychelles"
+"SYR",760,463,"Syrian Arab Republic","Syria",1,1,0,0,0,1,0,0,"Syria","Syria",NA,"SY",1962,2061,760,"Syrian Arab Republic"
+"TCD",148,628,"Chad","Chad",1,1,1,0,0,0,0,0,"Chad","Chad",NA,"TD",1962,2061,148,"Chad"
+"TGO",768,742,"Togo","Togo",1,1,1,0,0,0,0,0,"Togo","Togo",NA,"TG",1962,2061,768,"Togo"
+"THA",764,578,"Thailand","Thailand",1,1,0,1,0,0,0,0,"Thailand","Thailand",NA,"TH",1962,2061,764,"Thailand"
+"TJK",762,923,"Tajikistan","Tajikistan",1,1,0,0,1,0,0,0,"Tajikistan","Tajikistan",NA,"TJ",1992,2061,762,"Tajikistan"
+"TKM",795,925,"Turkmenistan","Turkmenistan",1,1,0,0,1,0,0,0,"Turkmenistan","Turkmenistan",NA,"TM",1992,2061,795,"Turkmenistan"
+"TLS",626,537,"Timor-Leste, Dem. Rep. of","Timor-Leste",1,1,0,1,0,0,0,0,"Timor-Leste","Timor-Leste",NA,"TL",1962,2061,NA,NA
+"TON",776,866,"Tonga","Tonga",1,1,0,1,0,0,0,0,"Tonga","Tonga",NA,"TO",1962,2061,776,"Tonga"
+"TTO",780,369,"Trinidad and Tobago","Trinidad and Tobago",1,1,0,0,0,0,1,0,"Trinidad and Tobago","Trinidad and Tobago",NA,"TT",1962,2061,780,"Trinidad and Tobago"
+"TUN",788,744,"Tunisia","Tunisia",1,1,0,0,0,1,0,0,"Tunisia","Tunisia",NA,"TN",1962,2061,788,"Tunisia"
+"TUR",792,186,"Turkey","Turkey",1,1,0,0,1,0,0,0,"Turkey","Turkey",NA,"TR",1962,2061,792,"Turkey"
+"TUV",798,869,"Tuvalu","Tuvalu",0,NA,0,0,0,0,0,NA,"Tuvalu","Tuvalu",NA,"TV",1962,2061,798,"Tuvalu"
+"TZA",834,738,"Tanzania","United Rep. of Tanzania",1,1,1,0,0,0,0,0,"United Republic of Tanzania","United Rep. of Tanzania",NA,"TZ",1965,2061,834,"Tanzania"
+"UGA",800,746,"Uganda","Uganda",1,1,1,0,0,0,0,0,"Uganda","Uganda",NA,"UG",1962,2061,800,"Uganda"
+"UKR",804,926,"Ukraine","Ukraine",1,1,0,0,1,0,0,0,"Ukraine","Ukraine",NA,"UA",1992,2061,804,"Ukraine"
+"URY",858,298,"Uruguay","Uruguay",1,1,0,0,0,0,1,0,"Uruguay","Uruguay",NA,"UY",1962,2061,858,"Uruguay"
+"USA",842,111,"United States","USA",1,0,0,0,0,0,0,1,"USA, Puerto Rico and US Virgin Islands","USA","Including Puerto Rico and US Virgin Islands","US",1981,2061,840,"United States"
+"UZB",860,927,"Uzbekistan","Uzbekistan",1,1,0,0,1,0,0,0,"Uzbekistan","Uzbekistan",NA,"UZ",1992,2061,860,"Uzbekistan"
+"VCT",670,364,"St. Vincent and the Grenadines","Saint Vincent and the Grenadines",1,1,0,0,0,0,1,0,"Saint Vincent and the Grenadines","Saint Vincent and the Grenadines",NA,"VC",1962,2061,670,"St. Vincent and the Grenadines"
+"VEN",862,299,"Venezuela, Republica Bolivariana de","Venezuela",1,1,0,0,0,0,1,0,"Venezuela","Venezuela",NA,"VE",1962,2061,862,"Venezuela"
+"VNM",704,582,"Vietnam","Viet Nam",1,1,0,1,0,0,0,0,"Viet Nam","Viet Nam",NA,"VN",1975,2061,704,"Vietnam"
+"VUT",548,846,"Vanuatu","Vanuatu",1,1,0,1,0,0,0,0,"Vanuatu","Vanuatu",NA,"VU",1962,2061,548,"Vanuatu"
+"WLD",0,1,"World","World",0,NA,0,0,0,0,0,NA,"World","World",NA,"WL",1962,2061,0," World"
+"WSM",882,862,"Samoa","Samoa",1,1,0,1,0,0,0,0,"Samoa","Samoa",NA,"WS",1962,2061,882,"Samoa"
+"YEM",886,473,"Yemen Arab Rep.","Fmr Arab Rep. of Yemen",0,NA,0,0,0,0,0,NA,"Former Arab Republic of Yemen","Fmr Arab Rep. of Yemen",NA,"YE",1962,1990,887,"Yemen"
+"YEM",887,474,"Yemen, Republic of","Yemen",1,1,0,0,0,1,0,0,"Yemen","Yemen",NA,"YE",1991,2061,887,"Yemen"
+"YMD",720,459,"Yemen, P.D. Rep.","Fmr Dem. Yemen",0,NA,0,0,0,0,0,NA,"Former Democratic Yemen","Fmr Dem. Yemen",NA,"YD",1962,1990,NA,NA
+"YUG",890,188,"Yugoslavia, SFR","Fmr Yugoslavia",0,NA,0,0,0,0,0,NA,"Former Yugoslavia","Fmr Yugoslavia","In 1992 including TFYR of Macedonia","YU",1962,1991,890,"Yugoslavia, FR (Serbia/Montene"
+"ZAF",710,199,"South Africa","South Africa",1,1,1,0,0,0,0,0,"South Africa","South Africa",NA,"ZA",2000,2061,710,"South Africa"
+"ZMB",894,754,"Zambia","Zambia",1,1,1,0,0,0,0,0,"Zambia","Zambia",NA,"ZM",1965,2061,894,"Zambia"
+"ZWE",716,698,"Zimbabwe","Zimbabwe",1,1,1,0,0,0,0,0,"Zimbabwe","Zimbabwe",NA,"ZW",1965,2061,716,"Zimbabwe"
+"EUN",NA,998,"European Union","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,918,NA
+NA,NA,967,"Kosovo, Republic of","Unknown",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,490,528,"Taiwan Province of China","Other Asia, nes",0,NA,0,0,0,0,0,NA,"Other Asia, not elsewhere specified","Other Asia, nes",NA,NA,1962,2061,NA,NA
+NA,899,898,"Countries & Areas not specified","Areas, nes",0,NA,0,0,0,0,0,NA,"Areas, not elsewhere specified","Areas, nes",NA,NA,1962,2061,NA,NA
+NA,839,899,"Special Categories","Special Categories",0,NA,0,0,0,0,0,NA,"Special Categories","Special Categories",NA,NA,1962,2061,NA,NA
+NA,366,187,"Vatican","Vatican",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,92,"Export earnings: nonfuel","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,799,"Africa not specified","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,554,"Malaysia, West","Unknown",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,603,"Sub-Saharan Africa","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,901,"CIS","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,405,"Middle East","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,163,"Euro Area","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,170,"Europe","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,200,"Emerging and Developing Economies","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,899,910,"Other Countries not included elsewhere","Areas, nes",0,NA,0,0,0,0,0,NA,"Areas, not elsewhere specified","Areas, nes",NA,NA,1962,2061,NA,NA
+NA,NA,505,"Emerging and Developing Asia","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,198,"South African Common Customs Area (SACCA)","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,80,"Export earnings: fuel","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,884,"Europe not specified","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,399,"Western Hemisphere not specified","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,489,"Middle East not specified","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,110,"Advanced Economies","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,205,"Western Hemisphere","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,903,"Emerging and Developing Europe","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,440,"Middle East, North Africa, Afghanistan, and Pakistan","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,NA,605,"Africa","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+NA,490,598,"Asia not specified","Other Asia, nes",0,NA,0,0,0,0,0,NA,"Other Asia, not elsewhere specified","Other Asia, nes",NA,NA,1962,2061,NA,NA

@@ -29,19 +29,8 @@ if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = g
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
-if(is.null(cty)){
-  cols_bridge <- rep('NULL',20)
-  names(cols_bridge) <- c('un_code','imf_code','imf_nm','unct_nm','d_gfi','d_dev','d_ssa','d_asia','d_deur','d_mena','d_whem','d_adv','un_nm_en','un_nm_en_full','un_nm_en_abbr','un_note','iso2_a','iso3_a','un_start','un_end')
-  cols_bridge[c(1,5)] <- rep('integer',2)
-  ecycle(bridge <- s3read_using(FUN = function(x)read.csv(x, colClasses=cols_bridge, header=TRUE), 
-                                object = 'bridge.csv', bucket = sup_bucket),
-         {logg(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
-  bridge <- unique(bridge)
-  countries <- bridge$un_code[bridge$d_gfi==1]
-  rm(bridge, cols_bridge)
-}else countries <- cty
+if(is.null(cty))cty <- gfi_cty(logg)
 
-# start loop by country
 for(i in 1:length(in_nm)){
 	output <- list()
 	for(j in 1:length(years)){
@@ -57,7 +46,7 @@ for(i in 1:length(in_nm)){
 		unlink('tmp/tmp.csv.bz2')
     
     cat("... processing")
-		tmp <- subset(tmp, tmp$i %in% countries | tmp$j %in% countries)
+		tmp <- subset(tmp, tmp$i %in% cty | tmp$j %in% cty)
 		tmp$t <- year
 		output[[j]] <- tmp
 		logg(paste(year, ':', paste('processed', in_nm[i]), sep = '\t'))

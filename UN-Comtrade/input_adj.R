@@ -1,6 +1,7 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'data.table')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
+install_github("sherrisherry/GFI-Cloud", subdir="pkg")
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -18,9 +19,7 @@ cols_match <- c(rep("character",3),rep("integer",2),rep("numeric",4),rep("intege
 names(cols_match) <- c("hs_rpt","hs_ptn","k","i","j","v_M","v_X","q_M","q_X","q_code_M","q_code_X","v_rX","v_rM","q_kg_M","q_kg_X")
 cols_fob <- rep("integer",2)
 names(cols_fob) <- c("t","i")
-cols_bridge <- rep('NULL',20)
-names(cols_bridge) <- c('un_code','imf_code','imf_nm','unct_nm','d_gfi','d_dev','d_ssa','d_asia','d_deur','d_mena','d_whem','d_adv','un_nm_en','un_nm_en_full','un_nm_en_abbr','un_note','iso2_a','iso3_a','un_start','un_end')
-cols_bridge[c(1,6)] <- rep('integer',2)
+cols_bridge <- bridge_cols(c('un_code','d_dev'),rep('integer',2))
 cols_geo <- c(rep("integer",2),rep("NULL",2),"numeric",rep("integer",4))
 names(cols_geo) <- c("j","i","area_j","area_i","distw","d_landlocked_j","d_landlocked_i","d_contig","d_conti")
 cols_eia <- rep("integer",4)
@@ -39,8 +38,8 @@ options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
 ecycle(fob <- s3read_using(FUN = function(x)fread(x, colClasses=cols_fob, header=TRUE, na.strings=""), 
-                                 object = 'MFOB.csv', bucket = 'gfi-comtrade'),
-           {logg(paste('0000', '!', 'loading MFOB.csv failed', sep = '\t')); stop()}, max_try)
+                                 object = 'mfob.csv', bucket = 'gfi-comtrade'),
+           {logg(paste('0000', '!', 'loading mfob.csv failed', sep = '\t')); stop()}, max_try)
 fob <- subset(fob,fob$t %in% dates)
 fob$d_fob <- 1
 setkeyv(fob, c('t','i'))
@@ -116,7 +115,7 @@ output$d_hs_diff <- as.integer(output$hs_ptn!=output$hs_rpt)
 logg(paste(year, ':', 'added model inputs', sep = '\t'))
 obj_nm <- paste('tmp/', sub('M_matched', 'input', obj_nm, fixed = T), sep = '')
 ecycle(write.csv(subset(output, TRUE, cols_out), file = bzfile(obj_nm),row.names=FALSE,na=""), 
-             ecycle(s3write_using(subset(output, TRUE, cols_out), FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+             ecycle(s3write_using(subset(output, TRUE, cols_out), FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = F, na=""),
                                   bucket = out_bucket, object = basename(obj_nm)),
                      logg(paste(year, '!', paste('uploading', basename(obj_nm), 'failed', sep = ' '), sep = '\t')), max_try), 
              max_try,

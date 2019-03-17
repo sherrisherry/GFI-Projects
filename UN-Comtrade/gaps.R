@@ -1,6 +1,7 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'scripting', 'cleandata')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'scripting', 'cleandata', 'remotes')
 for(i in pkgs)library(i, character.only = T)
+install_github("sherrisherry/GFI-Cloud", subdir="pkg")
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -39,10 +40,7 @@ ecycle(cifob_model <- readRDS(pipe("bzip2 -dkc ./tmp/tmp.csv.bz2")),
 logg(paste('0000',':', 'loaded model', sep = '\t'))
 unlink('tmp/tmp.csv.bz2')
 
-if(is.null(cty)){
-  source('gfi_cty.R'); cty <- gfi_cty(logf = logg)
-  logg(paste('0000', ':', 'decided cty', sep = '\t'))
-}
+if(is.null(cty))cty <- gfi_cty(logf = logg)
 
 predicts <- list()
 for(year in years){
