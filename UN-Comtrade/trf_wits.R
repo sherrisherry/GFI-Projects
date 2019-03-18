@@ -27,6 +27,7 @@ cols_in <- c(rep('integer', 5),'character', rep('numeric',3), rep('NULL',5))
 names(cols_in) <- c("t","j","i","d_dev_i","d_dev_j","k","v_X",'v_M_fob','gap_wtd',
                     "q_code_M","q_M","q_X","v_M", 'a_wt')
 cols_bridge <- bridge_cols(c('un_code','wb_code'),rep('integer',2))
+cols_trf <- c('t', 'wb_code_i', 'wb_code_j', 'k', 'source', 'trf_wtd')
 k_len <- 6
 
 #===================================================================================================================================#
