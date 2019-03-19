@@ -3,14 +3,14 @@
 # 'eu' = export underinvoicing; 'eo' = export overinvoicing
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'remotes')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
 install_github("sherrisherry/GFI-Cloud", subdir="pkg")
 
 #=====================================modify the following parameters for each new run==============================================#
 
 usr <- 'aws00' # the user account for using AWS service
-years <- 2016:2001 # the years we want to download
+years <- 2016:2015 # the years we want to download
 out_bucket <- 'gfi-results' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-work' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
@@ -23,11 +23,11 @@ cty <- 170 # set to NULL to use all countries within GFI's consideration
 infile <- paste('data/', 'flow_k6_', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
 trfile <- paste('data/', 'trf_', paste(cty, collapse = '-'), '_', min(years), max(years), '.csv', sep = '')
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
-cols_in <- c(rep('integer', 5),'character', rep('numeric',3), rep('NULL',5))
-names(cols_in) <- c("t","j","i","d_dev_i","d_dev_j","k","v_X",'v_M_fob','gap_wtd',
-                    "q_code_M","q_M","q_X","v_M", 'a_wt')
+cols_in <- c(rep('integer', 3),rep('character',3), rep('numeric',3))
+names(cols_in) <- c('t','j','i','k','f','mx','v_j','v_i','gap_wtd')
 cols_bridge <- bridge_cols(c('un_code','wb_code'),rep('integer',2))
-cols_trf <- c('t', 'wb_code_i', 'wb_code_j', 'k', 'source', 'trf_wtd')
+cols_trf <- c(rep('integer', 3), rep('character',2), 'numeric')
+names(cols_trf) <- c('t', 'wb_code_i', 'wb_code_j', 'k', 'source', 'trf_wtd')
 k_len <- 6
 
 #===================================================================================================================================#
@@ -48,8 +48,8 @@ ecycle(bridge <- s3read_using(FUN = function(x)read.csv(x, colClasses=cols_bridg
        {logg(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
 bridge <- unique(bridge)
 
-tm <- read.csv(infile)
-trf <- read.csv(trfile)
+tm <- read.csv(infile, colClasses = cols_in)
+trf <- read.csv(trfile, colClasses = cols_trf)
 
 tm <- split(tm, tm$f=='mu')
 tm[['TRUE']] <- merge(x= tm[['TRUE']], y= bridge, by.x='j', by.y = 'un_code', all.x=T)
@@ -57,13 +57,12 @@ colnames(tm[['TRUE']])[match('wb_code',colnames(tm[['TRUE']]))]<-'wb_code_j'
 if(length(cty>1)){
   tm[['TRUE']] <- merge(x= tm[['TRUE']], y= bridge, by.x='i', by.y = 'un_code', all.x=T)
   colnames(tm[['TRUE']])[match('wb_code',colnames(tm[['TRUE']]))]<-'wb_code_i'
-  tm[['TRUE']] <- merge(x= tm[['TRUE']], y= trf, by=c('t', 'wb_code_i','wb_code_j'), all.x=T)
-  tm[['TRUE']][, c('wb_code_i','wb_code_j')] <- NULL
+  tm[['TRUE']] <- merge(x= tm[['TRUE']], y= trf, by=c('t', 'wb_code_i','wb_code_j', 'k'), all.x=T)
 }else{
-  tm[['TRUE']] <- merge(x= tm[['TRUE']], y= trf, by=c('t', 'wb_code_j'), all.x=T)
-  tm[['TRUE']][, 'wb_code_j'] <- NULL
+  tm[['TRUE']] <- merge(x= tm[['TRUE']], y= trf, by=c('t', 'wb_code_j', 'k'), all.x=T)
 }
-tm[['FALSE']][, 'trf_rate'] <- NA
+tm[['TRUE']][, c('wb_code_i','wb_code_j')] <- NULL
+tm[['FALSE']][, c('source','trf_wtd')] <- NA
 tm <- do.call(rbind, tm)
 
 outfile <- paste('tmp/', 'flowtrf_', paste(cty, collapse = '-'), '_', min(years), max(years), '.csv', sep = '')
