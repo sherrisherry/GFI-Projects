@@ -1,7 +1,7 @@
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'aws.ec2metadata', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
-install_github("sherrisherry/GFI-Cloud", subdir="pkg")
+install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -15,10 +15,7 @@ max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 tag <- 'Comtrade'
 cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
-in_nm <- c('input','M_matched','M_orphaned','M_lost'); names(in_nm) <- in_nm
-cols_in1 <- c(rep("integer",3),rep("character",3),rep("numeric",8),rep("integer",5), "numeric", rep("integer",5))
-names(cols_in1) <- c("t","j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X","d_fob","d_dev_i","d_dev_j",
-                    "distw","d_landlocked_j","d_landlocked_i","d_contig","d_conti","d_rta")
+in_nm <- c('M_matched','M_orphaned','M_lost'); names(in_nm) <- in_nm
 cols_in <- c(rep("integer",2),rep("character",3),rep("numeric",8),rep("integer",2))
 names(cols_in) <- c("j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")
 #===================================================================================================================================#
@@ -38,7 +35,7 @@ for(i in 1:length(in_nm)){
     cat("\n","...reading files for ",as.character(year)," ... ")
 		ecycle(save_object(object = in_nm[i], bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
 				{logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
-		ecycle(tmp <- fread(cmd="bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses = if(i == 1)cols_in1 else cols_in),
+		ecycle(tmp <- fread(cmd="bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_in),
 				{logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
 				cond = is.data.table(tmp))
 		logg(paste(year, ':', paste('opened', in_nm[i]), sep = '\t'))

@@ -7,7 +7,7 @@
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'jsonlite', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
-install_github("sherrisherry/GFI-Cloud", subdir="pkg")
+install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -23,9 +23,9 @@ dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 opcounter <- 'process_mirror_match.json'
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-cols_UN <- rep('NULL', 16)
+cols_UN <- rep('NULL', 15)
 names(cols_UN) <- c("classification","year","period","perioddesc","aggregatelevel","isleafcode","tradeflowcode",
-                  "tradeflow","reportercode","partnercode", "commoditycode","qtyunitcode","qty","netweightkg","tradevalues","flag")
+                  "reportercode","partnercode", "commoditycode","qtyunitcode","qty","netweightkg","tradevalues","flag")
 incol <- c("tradeflowcode","classification","reportercode","partnercode","commoditycode", "tradevalues", "qtyunitcode", "qty", "netweightkg")
 names(incol) <- c("tf","hs","i","j","k","v","q_code","q","q_kg")
 cols_UN[incol] <- c("integer","character","integer","integer","character","numeric","integer","numeric","numeric")
