@@ -2,8 +2,9 @@
 # produce cif-fob model coefficients: Margins Model Coefficients.csv
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'cleandata')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'cleandata', 'remotes')
 for(i in pkgs)library(i, character.only = T)
+install_github("sherrisherry/GFI-Cloud", subdir="pkg")
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -27,11 +28,9 @@ cols_model <- c('ln_v_margin', 'ln_distw', 'ln_distw_squared', 'ln_uvmdn', 'd_co
 cols_model <- append(cols_model, paste('d', years[-1], sep = '_'))
 #===================================================================================================================================#
 				  
-oplog <- paste('logs/', oplog, sep = '')
+oplog <- file.path('logs', oplog)
 logg <- function(x)mklog(x, path = oplog)
-Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
-           "AWS_SECRET_ACCESS_KEY" = keycache$Secret_access_key[keycache$service==usr])
-if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = gsub('.{1}$', '', metadata$availability_zone()))
+ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 

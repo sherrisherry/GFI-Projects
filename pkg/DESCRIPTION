@@ -7,5 +7,6 @@ Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 License: What license is it under?
+Imports: stats, aws.s3, aws.ec2metadata, scripting
 Encoding: UTF-8
 LazyData: true

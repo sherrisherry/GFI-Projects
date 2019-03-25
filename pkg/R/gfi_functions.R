@@ -5,13 +5,19 @@ bridge_cols <- function(nm, cl){
   return(cols)
 }
 
-gfi_cty <- function(logf){
+gfi_cty <- function(logf, max_try = 10){
   cols_bridge <- bridge_cols(c('un_code','d_gfi'), rep('integer',2))
   ecycle(bridge <- s3read_using(FUN = function(x)read.csv(x, colClasses=cols_bridge, header=TRUE),
-                                object = 'bridge.csv', bucket = sup_bucket),
-         {if(!missing(logf))logf(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
+                                object = 'bridge.csv', bucket = 'gfi-supplemental'),
+         {if(!missing(logf))logf(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); stop('loading bridge.csv failed')}, max_try)
   bridge <- unique(bridge)
   cty <- bridge$un_code[bridge$d_gfi==1]
-  logf(paste('0000', ':', 'decided cty', sep = '\t'))
+  if(!missing(logf))logf(paste('0000', ':', 'decided cty', sep = '\t'))
   return(cty)
+}
+
+ec2env <- function(keycache, usr){
+  Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
+             "AWS_SECRET_ACCESS_KEY" = keycache$Secret_access_key[keycache$service==usr])
+  if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = gsub('.{1}$', '', aws.ec2metadata::metadata$availability_zone()))
 }

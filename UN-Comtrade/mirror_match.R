@@ -5,8 +5,9 @@
 # 6. shutdown system after completion.
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'jsonlite', 'scripting', 'data.table')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'jsonlite', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
+install_github("sherrisherry/GFI-Cloud", subdir="pkg")
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -22,11 +23,10 @@ dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 opcounter <- 'process_mirror_match.json'
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-cols_UN <- rep('NULL', 19)
+cols_UN <- rep('NULL', 16)
 names(cols_UN) <- c("classification","year","period","perioddesc","aggregatelevel","isleafcode","tradeflowcode",
-                  "tradeflow","reportercode","reporteriso","partnercode","partneriso",
-                  "commoditycode","qtyunitcode","qtyunit","qty","netweightkg","tradevalueus","flag")
-incol <- c("tradeflowcode","classification","reportercode","partnercode","commoditycode", "tradevalueus", "qtyunitcode", "qty", "netweightkg")
+                  "tradeflow","reportercode","partnercode", "commoditycode","qtyunitcode","qty","netweightkg","tradevalues","flag")
+incol <- c("tradeflowcode","classification","reportercode","partnercode","commoditycode", "tradevalues", "qtyunitcode", "qty", "netweightkg")
 names(incol) <- c("tf","hs","i","j","k","v","q_code","q","q_kg")
 cols_UN[incol] <- c("integer","character","integer","integer","character","numeric","integer","numeric","numeric")
 cols_hk <- c(rep("integer",3),"character","numeric",rep("integer",2),rep("numeric",2))
@@ -38,13 +38,10 @@ names(tfn) <- c('1','4','2','3')
 
 #===================================================================================================================================#
 				  
-oplog <- paste('logs/', oplog, sep = '')
-dinfo <- paste('logs/', dinfo, sep = '')
+oplog <- file.path('logs', oplog); dinfo <- file.path('logs', dinfo)
 opcounter <- paste('data/', opcounter, sep = '')
 logg <- function(x)mklog(x, path = oplog)
-Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
-           "AWS_SECRET_ACCESS_KEY" = keycache$Secret_access_key[keycache$service==usr])
-if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = gsub('.{1}$', '', metadata$availability_zone()))
+ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 dinfo <- read.delim(dinfo); dyears <- unique(dinfo[dinfo$Status=='uploaded', 'Year'])
@@ -64,9 +61,6 @@ tmp <- c('M_paired','X_paired', out_names)
 counter$n_pair <- matrix(nrow = n_dates, ncol = 6, dimnames = list(dates, paste('n_', tmp, sep = '')))
 counter$n_pair <- as.data.frame(counter$n_pair)
 
-# read in 'treat' function for preliminary data treatments in TREAT module
-source("prox-treat.R")
-
 # Prepare for SWISS module
     # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data
       ecycle(M_swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
@@ -84,8 +78,6 @@ source("prox-treat.R")
       M_swiss <- subset(M_swiss,M_swiss$k==710812)
       X_swiss <- subset(X_swiss,X_swiss$k==710812)
       setkeyv(M_swiss, c('i', 'j', 'k')); setkeyv(X_swiss, c('i', 'j', 'k'))
-      # read in "swiss.r" a procedure to make adjustments for each tradeflow matrix
-      source("prox-swiss.R")
 
 # Loop by date
 for (t in 1:n_dates) {

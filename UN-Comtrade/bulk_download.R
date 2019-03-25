@@ -5,8 +5,9 @@
 # 5. shutdown system after completion.
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'jsonlite', 'scripting', 'data.table')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'jsonlite', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
+install_github("sherrisherry/GFI-Cloud", subdir="pkg")
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -19,22 +20,19 @@ oplog <- 'bulk_download.log' # progress report file
 dinfo <- 'download.log' # file of the information of the downloaded data
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-excol <- c('reporter', 'partner', 'commodity')
+excol <- c('reporter', 'reporteriso', 'partner', 'partneriso', 'commodity', 'qtyunit')
 colc_UN <- c("character","integer","integer","character","integer","integer","integer",
                     "character","character","character","character","character","character",
                     "character","character","character","character","character","numeric",
                     "numeric","numeric","integer")
 coln_UN <- c("classification","year","period","perioddesc","aggregatelevel","isleafcode","tradeflowcode",
                   "tradeflow","reportercode","reporter","reporteriso","partnercode","partner","partneriso",
-                  "commoditycode","commodity","qtyunitcode","qtyunit","qty","netweightkg","tradevalueus","flag")
+                  "commoditycode","commodity","qtyunitcode","qtyunit","qty","netweightkg","tradevalues","flag")
 # don't use named vector because 'read' tries to match input colnames with vector names even with header=F
-# check nc match
-# rbind(coln_UN, colc_UN)
 
 #===================================================================================================================================#
 				  
-oplog <- paste('logs/', oplog, sep = '')
-dinfo <- paste('logs/', dinfo, sep = '')
+oplog <- file.path('logs', oplog); dinfo <- file.path('logs', dinfo)
 excol <- match(excol, coln_UN)
 coln_UN <- coln_UN[-excol]
 colc_UN[excol] <- 'NULL'
@@ -45,25 +43,14 @@ token <- function(){
   fromJSON(url)
 }
 logg <- function(x)mklog(x, path = oplog)
-Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
-           "AWS_SECRET_ACCESS_KEY" = keycache$Secret_access_key[keycache$service==usr])
-if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = gsub('.{1}$', '', metadata$availability_zone()))
+ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 dlog <- read.csv(dinfo, header = TRUE)
 
 for(t in years){
-  info <- NULL
-  trycount <- 0
-  while(is.null(info)&&trycount <= max_try){
-    try(info <- fromJSON(paste('http://comtrade.un.org/api//refs/da/bulk?r=ALL&freq=A&type=C&px=HS&ps=',t,'&token=',token(),sep='')))
-    trycount <- trycount + 1
-  }
-  if(!is.list(info)){
-    logg(paste(t, '!', 'failed to obtain info', sep = '\t'))
-    next
-  }
-  trycount <- 0
+  ecycle(info <- fromJSON(paste('http://comtrade.un.org/api//refs/da/bulk?r=ALL&freq=A&type=C&px=HS&ps=',t,'&token=',token(),sep='')),
+         {logg(paste(t, '!', 'failed to obtain info', sep = '\t')); next}, max_try, cond = is.list(info))
   if(length(info)<1){
     logg(paste(t, '!', 'not yet available', sep = '\t'))
     next
@@ -76,28 +63,18 @@ for(t in years){
     logg(paste(t, '|', 'already the newest', sep = '\t'))
     next
   }
-  msg <- 1
-  while(msg != 0 && trycount <= max_try){
-    try(msg <- download.file(paste('http://comtrade.un.org',info$downloadUri,'?token=',token(), sep = ''), 
-                             destfile = 'tmp/tmp.zip'))
-    trycount <- trycount + 1
-  }
-  if(msg!=0){
-    logg(paste(t, '!', 'download failed', sep = '\t'))
-    next
-  }
-  trycount <- 0
+  ecycle(msg <- download.file(paste('http://comtrade.un.org',info$downloadUri,'?token=',token(), sep = ''), destfile = 'tmp/tmp.zip'),
+         {logg(paste(t, '!', 'download failed', sep = '\t')); next}, max_try, cond = msg == 0)
+  logg(paste(t, ':', 'downloaded', sep = '\t'))
   rdata <- FALSE
 #  try(rdata <- read.csv(pipe('./prepd.sh'), header = F, colClasses = colc_UN))
   try(rdata <- fread(cmd = "./prepd.sh", header=F, colClasses = colc_UN))
-  # add a blank line to the end output or fread fails:
-  # Avoidable 73.574 seconds. This file is very unusual: it ends abruptly without a final newline, and also its size is a multiple of 4096 bytes.
-  # pipe stream usually strippes out the final blank line.
+  # pipe stream usually stripes out the final blank line; add a blank line to the end output or fread fails:
+  # unz() the whole file is extremely IO intensive, thus slow.
   if(!is.data.frame(rdata) || nrow(rdata)<10){
     logg(paste(t, '!', 'reading file failed', sep = '\t'))
     next
   }
-  trycount <- 0
   logg(paste(t, ':', 'opened', sep = '\t'))
   tmp <- nrow(rdata)
   logg(paste(t, '#', tmp, sep = '\t'))
@@ -109,39 +86,19 @@ for(t in years){
   rdata <- rdata[rdata$aggregatelevel==6, ] # double check
   logg(paste(t, ':', 'subseted', sep = '\t'))
   if(nrow(rdata)!=tmp){
-    logg(paste(t, '!', '# of rows mismatched', sep = '\t'))
+    logg(paste(t, '!', '# of rows mismatched', sep = '\t')); stop('# of rows mismatched')
   }
   bak <- paste('tmp/', t, '.csv.bz2', sep = '')
-  class(msg) <- 'try-error'
-  while(class(msg)=='try-error' && trycount <= max_try){
-    tmp <- bzfile(bak, open = 'wb')
-    msg <- try(write.csv(rdata, file=tmp, row.names = FALSE))
-    close(tmp)
-    trycount <- trycount + 1
-  }
-  trycount <- 0
-  if(class(msg)=='try-error'){
-    logg(paste(t, '!', 'saving file failed', sep = '\t'))
-    msg <- FALSE
-    while(!msg && trycount <= max_try){
-      try(msg <- s3write_using(rdata, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
-                           bucket = bucket,
-                           object = paste(t, '.csv.bz2', sep = '')))
-      trycount <- trycount + 1
-    }
-  }else{
-    msg <- FALSE
-    while(!msg && trycount <= max_try){
-      try(msg <- put_object(bak, paste(t, '.csv.bz2', sep = ''), bucket = bucket))
-      trycount <- trycount + 1
-    }
-  }
-  if(!msg){
-    logg(paste(t, '!', 'uploading file failed', sep = '\t'))
-    next
-  }
+  ecycle(write.csv(rdata, file=bzfile(bak), row.names = FALSE),
+         ecycle(s3write_using(rdata, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+                           bucket = bucket, object = basename(bak)),
+                {logg(paste(t, '!', 'uploading file failed', sep = '\t')); next}, max_try),
+         max_try,
+         ecycle(msg <- put_object(bak, paste(t, '.csv.bz2', sep = ''), bucket = bucket),
+                {logg(paste(t, '!', 'uploading file failed', sep = '\t')); next},
+                max_try,
+                unlink(bak), cond = msg))
   logg(paste(t, '|', 'uploaded', sep = '\t'))
-  unlink(bak)
   if(sum(dlog$Year==t)>0){
     dlog[dlog$Year==t, c('extractDate','publicationDate')]<-c(info$extractDate,info$publicationDate)
   }else{dlog <- rbind(dlog,c(t,info$extractDate,info$publicationDate))}
@@ -155,4 +112,4 @@ put_object(dinfo, basename(dinfo), bucket = bucket)
 unlink('tmp/tmp.zip')
 
 rm(list=ls())
-# system('sudo shutdown')
+system('sudo shutdown')

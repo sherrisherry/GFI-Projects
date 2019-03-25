@@ -37,7 +37,7 @@
 "CHE",757,146,"Switzerland","Switzerland",1,0,0,0,0,0,0,1,"Switzerland, Liechtenstein","Switzerland","Liechtenstein","CH",1962,2061,756,"Switzerland"
 "CHL",152,228,"Chile","Chile",1,1,0,0,0,0,1,0,"Chile","Chile",NA,"CL",1962,2061,152,"Chile"
 "CHN",156,924,"China, P.R.: Mainland","China",1,1,0,1,0,0,0,0,"China","China",NA,"CN",1962,2061,156,"China"
-"CIV",384,662,"Côte d'Ivoire       ","Côte d'Ivoire",1,1,1,0,0,0,0,0,"Côte d'Ivoire","Côte d'Ivoire",NA,"CI",1962,2061,384,"Cote d'Ivoire"
+"CIV",384,662,"Côte d'Ivoire","Côte d'Ivoire",1,1,1,0,0,0,0,0,"Côte d'Ivoire","Côte d'Ivoire",NA,"CI",1962,2061,384,"Cote d'Ivoire"
 "CMR",120,622,"Cameroon","Cameroon",1,1,1,0,0,0,0,0,"Cameroon","Cameroon",NA,"CM",1962,2061,120,"Cameroon"
 "COD",180,636,"Congo, Democratic Republic of","Dem. Rep. of the Congo",1,1,1,0,0,0,0,0,"Democratic Republic of the Congo","Dem. Rep. of the Congo",NA,"CD",1962,2061,NA,NA
 "COG",178,634,"Congo, Republic of","Congo",1,1,1,0,0,0,0,0,"Congo","Congo",NA,"CG",1962,2061,178,"Congo, Rep."
@@ -216,7 +216,7 @@
 "ZAF",710,199,"South Africa","South Africa",1,1,1,0,0,0,0,0,"South Africa","South Africa",NA,"ZA",2000,2061,710,"South Africa"
 "ZMB",894,754,"Zambia","Zambia",1,1,1,0,0,0,0,0,"Zambia","Zambia",NA,"ZM",1965,2061,894,"Zambia"
 "ZWE",716,698,"Zimbabwe","Zimbabwe",1,1,1,0,0,0,0,0,"Zimbabwe","Zimbabwe",NA,"ZW",1965,2061,716,"Zimbabwe"
-"EUN",NA,998,"European Union","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,918,NA
+"EUN",NA,998,"European Union","Aggregation of countries",0,NA,0,0,0,0,0,NA,NA,NA,NA,"EU",NA,NA,918,"European Union"
 NA,NA,967,"Kosovo, Republic of","Unknown",0,NA,0,0,0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
 NA,490,528,"Taiwan Province of China","Other Asia, nes",0,NA,0,0,0,0,0,NA,"Other Asia, not elsewhere specified","Other Asia, nes",NA,NA,1962,2061,NA,NA
 NA,899,898,"Countries & Areas not specified","Areas, nes",0,NA,0,0,0,0,0,NA,"Areas, not elsewhere specified","Areas, nes",NA,NA,1962,2061,NA,NA

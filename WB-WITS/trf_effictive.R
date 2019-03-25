@@ -1,12 +1,13 @@
 options(stringsAsFactors = FALSE)
-trains <- read.csv('data/train.csv'); wto <- read.csv('data/wto.csv')
+cols <- rep('NULL', 22); cols[c(10,3,7,5,11,14)] <- c(rep(NA, 3), rep("character", 2), NA)
+trains <- read.csv('data/train.csv', colClasses = cols); wto <- read.csv('data/wto.csv', colClasses = cols)
 cols <- c("Trade.Year","Reporter","Partner","Product","Trade.Source","Weighted.Average")
-names(cols) <- c('t', 'wb_code_i', 'wb_code_j', 'k', 'source', 'trf_wtd')
-trains <- trains[, cols]; wto <- wto[, cols]
+if(!setequal(colnames(trains), cols) | !setequal(colnames(wto), cols))stop('input structure changed')
 trains <- na.omit(trains); wto <- na.omit(wto)
 trf <- merge(x=trains, y=wto, by=c("Trade.Year","Reporter","Partner","Product"))
 if(sum(trf$Weighted.Average.x!=trf$Weighted.Average.y)!=0)stop('overlap not equal')
 trf <- rbind(trains, wto)
 trf <- trf[!duplicated(trf[, -match('Trade.Source', colnames(trf))]), ]
-colnames(trf) <- names(cols)
+names(cols) <- c('t', 'wb_code_i', 'wb_code_j', 'k', 'source', 'trf_wtd')
+colnames(trf)[match(cols, colnames(trf))] <- names(cols)
 write.csv(trf, 'data/trf.csv', row.names = F)

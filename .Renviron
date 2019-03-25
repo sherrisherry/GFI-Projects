@@ -1,0 +1,2 @@
+TMPDIR = '/home/gfi/temp'
+# have to use absolute path, not '~'

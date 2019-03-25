@@ -29,11 +29,9 @@ cols_out <- c('t',"k","i","j","v_M","v_X","q_M","q_X","q_code_M","q_code_X", 'ln
 
 #===================================================================================================================================#
 
-oplog <- paste('logs/', oplog, sep = '')
+oplog <- file.path('logs', oplog)
 logg <- function(x)mklog(x, path = oplog)
-Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
-           "AWS_SECRET_ACCESS_KEY" = keycache$Secret_access_key[keycache$service==usr])
-if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = gsub('.{1}$', '', metadata$availability_zone()))
+ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 

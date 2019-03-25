@@ -1,6 +1,7 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'scripting', 'data.table')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
+install_github("sherrisherry/GFI-Cloud", subdir="pkg")
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -21,11 +22,9 @@ names(cols_in1) <- c("t","j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X"
 cols_in <- c(rep("integer",2),rep("character",3),rep("numeric",8),rep("integer",2))
 names(cols_in) <- c("j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")
 #===================================================================================================================================#
-oplog <- paste('logs/', oplog, sep = '')
+oplog <- file.path('logs', oplog)
 logg <- function(x)mklog(x, path = oplog)
-Sys.setenv("AWS_ACCESS_KEY_ID" = keycache$Access_key_ID[keycache$service==usr],
-           "AWS_SECRET_ACCESS_KEY" = keycache$Secret_access_key[keycache$service==usr])
-if(is.na(Sys.getenv()["AWS_DEFAULT_REGION"]))Sys.setenv("AWS_DEFAULT_REGION" = gsub('.{1}$', '', metadata$availability_zone()))
+ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 

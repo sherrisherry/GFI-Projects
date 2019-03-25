@@ -16,10 +16,13 @@ At this stage, we use a data lake rather than a database strategy to manage data
   * 9G root, gp2
   * 21G swap, gp2
 
-* Storage: AWS S3
-  * gfi-comtrade: downsized Comtrade datasets
-  * gfi-supplemental: supplemental files
-  * gfi-mirror-analysis: matched data for mirror analysis
+* Storage: AWS S3 + EFS
+  * S3
+    * gfi-comtrade: downsized Comtrade datasets
+    * gfi-supplemental: supplemental files
+    * gfi-mirror-analysis: matched data for mirror analysis
+  * EFS
+    * mounted to /efs
 
 * Supplement: Google Drive
   * work progress reports
