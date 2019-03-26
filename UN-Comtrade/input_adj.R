@@ -112,8 +112,8 @@ output$ln_uvmdn <- log(output$uvmdn)
 output$d_hs_diff <- as.integer(output$hs_ptn!=output$hs_rpt)
 logg(paste(year, ':', 'added model inputs', sep = '\t'))
 obj_nm <- paste('tmp/', sub('M_matched', 'input', obj_nm, fixed = T), sep = '')
-ecycle(write.csv(subset(output, TRUE, cols_out), file = bzfile(obj_nm),row.names=FALSE,na=""), 
-             ecycle(s3write_using(subset(output, TRUE, cols_out), FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = F, na=""),
+ecycle(write.csv(subset(output, select = cols_out), file = bzfile(obj_nm),row.names=FALSE,na=""), 
+             ecycle(s3write_using(subset(output, select = cols_out), FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = F, na=""),
                                   bucket = out_bucket, object = basename(obj_nm)),
                      logg(paste(year, '!', paste('uploading', basename(obj_nm), 'failed', sep = ' '), sep = '\t')), max_try), 
              max_try,

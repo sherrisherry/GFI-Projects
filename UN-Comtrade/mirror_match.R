@@ -31,7 +31,8 @@ names(incol) <- c("tf","hs","i","j","k","v","q_code","q","q_kg")
 cols_UN[incol] <- c("integer","character","integer","integer","character","numeric","integer","numeric","numeric")
 cols_hk <- c(rep("integer",3),"character","numeric",rep("integer",2),rep("numeric",2))
 names(cols_hk) <- c("t","origin_hk","consig_hk","k","vrx_hkd","origin_un","consig_un","usd_per_hkd","vrx_usd")
-cols_swiss <- c("integer","integer","character","integer",rep("numeric",2))
+cols_swiss <- c("character","integer","character","integer",rep("numeric",2))
+names(cols_swiss) <- c('mx','j','k','t','v','q_kg')
 # use "character" for k or codes like '9999AA' messes up
 tfn <- c('M','rM','X','rX')
 names(tfn) <- c('1','4','2','3')
@@ -63,21 +64,13 @@ counter$n_pair <- as.data.frame(counter$n_pair)
 
 # Prepare for SWISS module
     # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data
-      ecycle(M_swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
+      ecycle(swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
                                      object = "Swiss_trade_m.csv", bucket = sup_bucket),
-             {tmp <- paste('0000', '!', 'loading Swiss M failed', sep = '\t'); logg(tmp); stop(tmp)},
+             {tmp <- paste('0000', '!', 'loading Swiss failed', sep = '\t'); logg(tmp); stop(tmp)},
              max_try)
-      ecycle(X_swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
-                                     object = "Swiss_trade_x.csv", bucket = sup_bucket),
-             {tmp <- paste('0000', '!', 'loading Swiss X failed', sep = '\t'); logg(tmp); stop(tmp)}, 
-             max_try)
-      colnames(M_swiss) <- c("i","j","k","t","v_M_swiss","q_kg_M_swiss")
-      colnames(X_swiss) <- c("i","j","k","t","v_X_swiss","q_kg_X_swiss")
       # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
       #     (NB, monetary gold trade flows should not be included in UN-Comtrade dataset for any country)
-      M_swiss <- subset(M_swiss,M_swiss$k==710812)
-      X_swiss <- subset(X_swiss,X_swiss$k==710812)
-      setkeyv(M_swiss, c('i', 'j', 'k')); setkeyv(X_swiss, c('i', 'j', 'k'))
+      swiss <- subset(swiss,swiss$k=='710812'); swiss <- split(swiss, swiss$mx)
 
 # Loop by date
 for (t in 1:n_dates) {
@@ -124,8 +117,7 @@ for (t in 1:n_dates) {
 
 #   Implement SWISS module
     cat("\n","   (3) SWISS module")
-    cat("\n","        ...making Swiss adjustments for M...") ; rdata$M  <- swiss(rdata$M,M_swiss,t)
-    cat("\n","        ...making Swiss adjustments for X...") ; rdata$X  <- swiss(rdata$X,X_swiss,t)
+    rdata$M  <- unct_swiss(rdata$M,swiss$m,t); rdata$X  <- unct_swiss(rdata$X,swiss$x,t)
    # counts
    counter$n_SWISS[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
     logg(paste(year, ':', 'swiss-adjusted', sep = '\t'))
