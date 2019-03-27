@@ -5,6 +5,26 @@ bridge_cols <- function(nm, cl){
   return(cols)
 }
 
+hkrx_cols <- function(nm, cl){
+  cols <- rep('NULL',9)
+  names(cols) <- c("t","origin_hk","consig_hk","k","vrx_hkd","origin_un","consig_un","usd_per_hkd","vrx_usd")
+  if(missing(cl))
+    cl <- c(rep("integer",3),"character","numeric",rep("integer",2),rep("numeric",2))[match(nm, names(cols))]
+  cols[match(nm, names(cols))] <- cl
+  return(cols)
+}
+
+in_hkrx <- function(yr, nm, cl, logf, max_try = 10){
+  cols <- hkrx_cols(nm, cl)
+  tmp <- tempfile()
+  ecycle(save_object(object = paste('HK_trade', yr, 'rx.csv.bz2', sep = '_'), bucket = 'gfi-supplemental', file = tmp, overwrite = TRUE),
+         {if(!missing(logf))logf(paste(year, '!', 'retrieving hkrx file failed', sep = '\t')); return(NULL)}, max_try) 
+  ecycle(hk <- read.csv(pipe(paste("bzip2 -dc ", tmp, sep = '')), header=T, colClasses=cols, na.strings="", stringsAsFactors = F),
+         {if(!missing(logf))logf(paste(year, '!', 'loading hkrx file failed', sep = '\t')); return(NULL)}, 
+         max_try, cond = is.data.frame(hk) && nrow(hk)>10)
+  return(hk)
+}
+
 gfi_cty <- function(logf, max_try = 10){
   cols_bridge <- bridge_cols(c('un_code','d_gfi'), rep('integer',2))
   ecycle(bridge <- s3read_using(FUN = function(x)read.csv(x, colClasses=cols_bridge, header=TRUE),

@@ -1,5 +1,5 @@
 #  procedure to adjust treated UN-Comtrade data for Swiss trade in non-monetary gold [710812] prior to 2012
-unct_swiss <- function(unct,df_swiss,t_in) {
+unct_swiss <- function(unct,df_swiss,t_in){
   # colnames(unct) is given by c("hs",i","j","k","v_?","q_code_?","q_?","q_kg_?") (where ?={M,X,rX,rM})
   # colnames(df_swiss) is given by c("mx","j","k","t","v","q_kg")
   # program replaces/appends Swiss data to UN-Comtrade dataset, excluding OECD balance adjustments for Germany (2005-2008), and UK (2007-2014)
@@ -28,6 +28,39 @@ unct_swiss <- function(unct,df_swiss,t_in) {
   return(unct)
 }
 
+unct_hk <- function(unct,hk,t_in){
+  cols_hk <- c("i","j","k","v_rx_hk")
+  names(cols_hk) <- c("origin_un","consig_un","k","vrx_usd")
+  tmp <- colnames(hk)
+  if(!setequal(tmp, names(cols_hk)))stop('colnames mismatching')
+  colnames(hk) <- cols_hk[tmp]
+  hk <- data.table::data.table(hk, key = c('i', 'j', 'k'))
+  
+  tmp <- mirror$M
+  colnames(hk) <- c("j","i","k","v_rx_hk")
+  setkeyv(hk, c('i', 'j', 'k'))
+  mirror$M <- merge(x=mirror$M,y=hk,by=c("i","j","k"),all.x=TRUE)
+  hk_344 <- hk[,c("i","k","v_rx_hk")]
+  colnames(hk_344) <- c("i","k","adj_344")
+  hk_344 <- aggregate(hk_344$adj_344,list(hk_344$i,hk_344$k),sum) ; colnames(hk_344) <- c("i","k","adj_344")
+  hk_344 <- data.table(hk_344, key = c('i','k'))
+  mirror$M <- merge(x=mirror$M,y=hk_344,by=c("i","k"),all.x=TRUE)
+  mirror$M[is.na(mirror$M$v_rx_hk),"v_rx_hk"] <- 0
+  mirror$M[is.na(mirror$M$adj_344),"adj_344"] <- 0
+  tmp <- mirror$M
+  mirror$M[!mirror$M$j==344,"v_M"] <- mirror$M[!mirror$M$j==344,"v_M"] - mirror$M[!mirror$M$j==344,"v_rx_hk"]
+  mirror$M[ mirror$M$j==344,"v_M"] <- mirror$M[ mirror$M$j==344,"v_M"] + mirror$M[ mirror$M$j==344,"adj_344"]
+  mirror$M <- mirror$M[,c("hs_rpt","hs_ptn","i","j","k","v_M","v_X","v_rX","v_rM","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")]
+  junk <- subset(mirror$M,mirror$M$v_M<0)
+  mirror$M[mirror$M$v_M<0,"v_M"] <- tmp[mirror$M$v_M<0,"v_M"]  ;   # undo the adjustment for negative values
+  mirror$M[mirror$M$i==752,"v_M"] <- tmp[mirror$M$i==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
+  mirror$M[mirror$M$i==348,"v_M"] <- tmp[mirror$M$i==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
+  logg(paste(year, ':', 'HK M-adjusted', sep = '\t'))
+  ecycle(s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+                       bucket = out_bucket,
+                       object = paste(tag, year, 'M-junked-HK-adj.csv.bz2', sep = '-')),
+         logg(paste(year, '.', 'junked M HK-adj not uploaded', sep = '\t')), 3)
+}
 #  procedure to treat UN-Comtrade data for know country and commodity quirks (as noted)
 treat <- function(df_in,t_in) {
   # Eliminate redundant country categories

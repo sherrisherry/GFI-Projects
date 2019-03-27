@@ -29,8 +29,6 @@ names(cols_UN) <- c("classification","year","period","perioddesc","aggregateleve
 incol <- c("tradeflowcode","classification","reportercode","partnercode","commoditycode", "tradevalues", "qtyunitcode", "qty", "netweightkg")
 names(incol) <- c("tf","hs","i","j","k","v","q_code","q","q_kg")
 cols_UN[incol] <- c("integer","character","integer","integer","character","numeric","integer","numeric","numeric")
-cols_hk <- c(rep("integer",3),"character","numeric",rep("integer",2),rep("numeric",2))
-names(cols_hk) <- c("t","origin_hk","consig_hk","k","vrx_hkd","origin_un","consig_un","usd_per_hkd","vrx_usd")
 cols_swiss <- c("character","integer","character","integer",rep("numeric",2))
 names(cols_swiss) <- c('mx','j','k','t','v','q_kg')
 # use "character" for k or codes like '9999AA' messes up
@@ -65,7 +63,7 @@ counter$n_pair <- as.data.frame(counter$n_pair)
 # Prepare for SWISS module
     # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data
       ecycle(swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
-                                     object = "Swiss_trade_m.csv", bucket = sup_bucket),
+                                     object = "Swiss_mx_71-72.csv", bucket = sup_bucket),
              {tmp <- paste('0000', '!', 'loading Swiss failed', sep = '\t'); logg(tmp); stop(tmp)},
              max_try)
       # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
@@ -157,14 +155,9 @@ for (t in 1:n_dates) {
     # operate on X-paired and M-paired and then redo the matching etc
     if (year %in% hk_years) {
     # use normalized hkrx data
-    ecycle(save_object(object = paste('HK_trade', year, 'rx.csv.bz2', sep = '_'), bucket = sup_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
-		       {logg(paste(year, '!', 'retrieving hkrx file failed', sep = '\t')); next}, max_try) 
-	  ecycle(hk <- fread(cmd = "bzip2 -dc ./tmp/tmp.csv.bz2", header=T, colClasses=cols_hk,na.strings=""),
-		              {logg(paste(year, '!', 'loading hkrx file failed', sep = '\t')); next}, 
-		              max_try, cond = is.data.table(hk) && nrow(hk)>10)
-    hk <- hk[,c("origin_un","consig_un","k","vrx_usd")]
+    hk <- in_hkrx(year, c("origin_un","consig_un","k","vrx_usd"), logf = logg, max_try = max_try)
+	if(is.null(hk))next
     colnames(hk) <- c("i","j","k","v_rx_hk")
-        logg(paste(year, ':', 'HK prepared', sep = '\t'))
         # adjusting M variables
         tmp <- mirror$M
         colnames(hk) <- c("j","i","k","v_rx_hk")
