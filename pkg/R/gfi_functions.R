@@ -27,9 +27,9 @@ in_hkrx <- function(yr, nm, cl, logf, max_try = 10){
   cols <- hkrx_cols(nm, cl)
   tmp <- tempfile()
   scripting::ecycle(save_object(object = paste('HK', yr, 'rx.csv.bz2', sep = '_'), bucket = 'gfi-supplemental', file = tmp, overwrite = TRUE),
-                    {if(!missing(logf))logf(paste(year, '!', 'retrieving hkrx file failed', sep = '\t')); return(NULL)}, max_try) 
+                    {if(!missing(logf))logf(paste(yr, '!', 'retrieving hkrx file failed', sep = '\t')); return(NULL)}, max_try) 
   scripting::ecycle(hk <- read.csv(pipe(paste("bzip2 -dc ", tmp, sep = '')), header=T, colClasses=cols, na.strings="", stringsAsFactors = F),
-                    {if(!missing(logf))logf(paste(year, '!', 'loading hkrx file failed', sep = '\t')); return(NULL)}, 
+                    {if(!missing(logf))logf(paste(yr, '!', 'loading hkrx file failed', sep = '\t')); return(NULL)}, 
                     max_try, cond = is.data.frame(hk) && nrow(hk)>10)
   return(hk)
 }
