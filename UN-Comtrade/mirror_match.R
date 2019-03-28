@@ -31,6 +31,8 @@ names(incol) <- c("tf","hs","i","j","k","v","q_code","q","q_kg")
 cols_UN[incol] <- c("integer","character","integer","integer","character","numeric","integer","numeric","numeric")
 cols_swiss <- c("character","integer","character","integer",rep("numeric",2))
 names(cols_swiss) <- c('mx','j','k','t','v','q_kg')
+cols_hk <- c(rep('integer', 2), 'character', 'numeric')
+names(cols_hk) <- c("origin_un","consig_un","k","vrx_un")
 # use "character" for k or codes like '9999AA' messes up
 tfn <- c('M','rM','X','rX')
 names(tfn) <- c('1','4','2','3')
@@ -107,7 +109,7 @@ for (t in 1:n_dates) {
 
 #   Implement TREAT module 
     cat("\n","   (2) TREAT module")
-	rdata <- lapply(rdata, function(x)treat(x,t))
+	rdata <- lapply(rdata, function(x)unct_treat(x, year))
 	counter$n_TREAT[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
 	logg(paste(year, ':', 'treated', sep = '\t'))
 
@@ -115,7 +117,7 @@ for (t in 1:n_dates) {
 
 #   Implement SWISS module
     cat("\n","   (3) SWISS module")
-    rdata$M  <- unct_swiss(rdata$M,swiss$m,t); rdata$X  <- unct_swiss(rdata$X,swiss$x,t)
+    rdata$M  <- unct_swiss(rdata$M,swiss$m,year); rdata$X  <- unct_swiss(rdata$X,swiss$x,year)
    # counts
    counter$n_SWISS[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
     logg(paste(year, ':', 'swiss-adjusted', sep = '\t'))
@@ -153,61 +155,11 @@ for (t in 1:n_dates) {
 # Start Hong Kong module
     cat("\n","   (5) Hong Kong module","\n")
     # operate on X-paired and M-paired and then redo the matching etc
-    if (year %in% hk_years) {
     # use normalized hkrx data
-    hk <- in_hkrx(year, c("origin_un","consig_un","k","vrx_usd"), logf = logg, max_try = max_try)
-	if(is.null(hk))next
-    colnames(hk) <- c("i","j","k","v_rx_hk")
-        # adjusting M variables
-        colnames(hk) <- c("j","i","k","v_rx_hk")
-        setkeyv(hk, c('i', 'j', 'k'))
-        mirror$M <- merge(x=mirror$M,y=hk,by=c("i","j","k"),all.x=TRUE)
-        hk_344 <- hk[,c("i","k","v_rx_hk")]
-        colnames(hk_344) <- c("i","k","adj_344")
-        hk_344 <- aggregate(hk_344$adj_344,list(hk_344$i,hk_344$k),sum) ; colnames(hk_344) <- c("i","k","adj_344")
-        hk_344 <- data.table(hk_344, key = c('i','k'))
-        mirror$M <- merge(x=mirror$M,y=hk_344,by=c("i","k"),all.x=TRUE)
-        mirror$M[is.na(mirror$M$v_rx_hk),"v_rx_hk"] <- 0
-        mirror$M[is.na(mirror$M$adj_344),"adj_344"] <- 0
-        tmp <- mirror$M
-        mirror$M[!mirror$M$j==344,"v_M"] <- mirror$M[!mirror$M$j==344,"v_M"] - mirror$M[!mirror$M$j==344,"v_rx_hk"]
-        mirror$M[ mirror$M$j==344,"v_M"] <- mirror$M[ mirror$M$j==344,"v_M"] + mirror$M[ mirror$M$j==344,"adj_344"]
-        mirror$M <- mirror$M[,c("hs_rpt","hs_ptn","i","j","k","v_M","v_X","v_rX","v_rM","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")]
-        junk <- subset(mirror$M,mirror$M$v_M<0)
-        mirror$M[mirror$M$v_M<0,"v_M"] <- tmp[mirror$M$v_M<0,"v_M"]  ;   # undo the adjustment for negative values
-        mirror$M[mirror$M$i==752,"v_M"] <- tmp[mirror$M$i==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
-        mirror$M[mirror$M$i==348,"v_M"] <- tmp[mirror$M$i==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
-        logg(paste(year, ':', 'HK M-adjusted', sep = '\t'))
-        ecycle(s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
-                               bucket = out_bucket,
-                               object = paste('Comtrade', year, 'M-junked-HK-adj.csv.bz2', sep = '-')),
-                logg(paste(year, '.', 'junked M HK-adj not uploaded', sep = '\t')), 3)
-        # adjusting X variables
-        colnames(hk) <- c("i","j","k","v_rx_hk")
-        setkeyv(hk, c('i', 'j', 'k'))
-        mirror$X <- merge(x=mirror$X,y=hk,by=c("i","j","k"),all.x=TRUE)
-        hk_344 <- hk[,c("j","k","v_rx_hk")]
-        colnames(hk_344) <- c("j","k","adj_344")
-        hk_344 <- aggregate(hk_344$adj_344,list(hk_344$j,hk_344$k),sum) ; colnames(hk_344) <- c("j","k","adj_344")
-        hk_344 <- data.table(hk_344, key = c('j','k'))
-        mirror$X <- merge(x=mirror$X,y=hk_344,by=c("j","k"),all.x=TRUE)
-        mirror$X[is.na(mirror$X$v_rx_hk),"v_rx_hk"] <- 0
-        mirror$X[is.na(mirror$X$adj_344),"adj_344"] <- 0
-        tmp <- mirror$X
-        mirror$X[!mirror$X$i==344,"v_M"] <- mirror$X[!mirror$X$i==344,"v_M"] - mirror$X[!mirror$X$i==344,"v_rx_hk"]
-        mirror$X[ mirror$X$i==344,"v_M"] <- mirror$X[ mirror$X$i==344,"v_M"] + mirror$X[ mirror$X$i==344,"adj_344"]
-        mirror$X <- mirror$X[,c("hs_rpt","hs_ptn","i","j","k","v_X","v_M","v_rM","v_rX","q_X","q_M","q_kg_X","q_kg_M","q_code_X","q_code_M")]
-        junk <- subset(mirror$X,mirror$X$v_M<0)
-        mirror$X[mirror$X$v_M<0,"v_M"] <- tmp[mirror$X$v_M<0,"v_M"]  ; # undo the adjustment for negative values
-        mirror$X[mirror$X$j==752,"v_M"] <- tmp[mirror$X$j==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
-        mirror$X[mirror$X$j==348,"v_M"] <- tmp[mirror$X$j==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
-        logg(paste(year, ':', 'HK X-adjusted', sep = '\t'))
-        ecycle(s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
-                               bucket = out_bucket,
-                               object = paste(tag, year, 'X-junked-HK-adj.csv.bz2', sep = '-')),
-                 logg(paste(year, '.', 'junked X HK-adj not uploaded', sep = '\t')), 3)
-        remove(tmp,junk, hk, hk_344)
-    }
+    hk <- in_hkrx(year, names(cols_hk), cols_hk, logf = logg, max_try = max_try)
+    if(is.null(hk))next
+    mirror$M <- unct_hk(mirror$M, hk, year, 'm', logg, max_try); if(is.null(mirror$M))next
+    mirror$X <- unct_hk(mirror$X, hk, year, 'x', logg, max_try); if(is.null(mirror$X))next
     # end Hong Kong module
 
 	counter$n_pair[t, c('n_M_paired', 'n_X_paired')] <- as.data.frame(lapply(mirror, nrow))[c('M', 'X')]

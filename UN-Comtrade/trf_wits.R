@@ -25,7 +25,6 @@ trfile <- paste('data/', 'trf_', paste(cty, collapse = '-'), '_', min(years), ma
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
 cols_in <- c(rep('integer', 3),rep('character',3), rep('numeric',3))
 names(cols_in) <- c('t','j','i','k','f','mx','v_j','v_i','gap_wtd')
-cols_bridge <- bridge_cols(c('un_code','wb_code'),rep('integer',2))
 cols_trf <- c(rep('integer', 3), rep('character',2), 'numeric')
 names(cols_trf) <- c('t', 'wb_code_i', 'wb_code_j', 'k', 'source', 'trf_wtd')
 k_len <- 6
@@ -41,9 +40,8 @@ options(stringsAsFactors= FALSE)
 agg_lv <- paste('k', k_digit, sep = '')
 k_digit <- k_len - k_digit
 
-ecycle(bridge <- s3read_using(FUN = function(x)read.csv(x, colClasses=cols_bridge, header=TRUE), 
-                              object = 'bridge.csv', bucket = sup_bucket),
-       {logg(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
+bridge <- in_bridge(c('un_code','wb_code'), rep('integer',2), logg, max_try)
+if(is.null(bridge))stop()
 bridge <- unique(bridge)
 
 tm <- read.csv(infile, colClasses = cols_in)
