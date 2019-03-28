@@ -159,7 +159,6 @@ for (t in 1:n_dates) {
 	if(is.null(hk))next
     colnames(hk) <- c("i","j","k","v_rx_hk")
         # adjusting M variables
-        tmp <- mirror$M
         colnames(hk) <- c("j","i","k","v_rx_hk")
         setkeyv(hk, c('i', 'j', 'k'))
         mirror$M <- merge(x=mirror$M,y=hk,by=c("i","j","k"),all.x=TRUE)
@@ -181,7 +180,7 @@ for (t in 1:n_dates) {
         logg(paste(year, ':', 'HK M-adjusted', sep = '\t'))
         ecycle(s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                                bucket = out_bucket,
-                               object = paste(tag, year, 'M-junked-HK-adj.csv.bz2', sep = '-')),
+                               object = paste('Comtrade', year, 'M-junked-HK-adj.csv.bz2', sep = '-')),
                 logg(paste(year, '.', 'junked M HK-adj not uploaded', sep = '\t')), 3)
         # adjusting X variables
         colnames(hk) <- c("i","j","k","v_rx_hk")
