@@ -22,7 +22,7 @@ unct_swiss <- function(unct,df_swiss,t_in){
                              q = df_swiss$q_kg,      # q=q_kg
                              q_kg = df_swiss$q_kg )
     colnames(swiss_out) <- cols_out[colnames(swiss_out)]
-    unct <- subset(unct,!((unct$i=757)&(unct$k="710812")))  # eliminate any existing rows on Swiss reported trade in 710812
+    unct <- subset(unct, unct$i!=757 | unct$k!="710812")  # eliminate any existing rows on Swiss reported trade in 710812
     unct <- rbind(unct,swiss_out)
     if(data.table::is.data.table(unct))setkeyv(unct, c('i', 'j', 'k'))
   }
