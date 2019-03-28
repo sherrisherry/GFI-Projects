@@ -29,7 +29,7 @@ unct_swiss <- function(unct,df_swiss,t_in){
   return(unct)
 }
 
-unct_hk <- function(unct, hk, yr, mx, logf, max_try = 10){
+unct_hk <- function(unct, hk, yr, mx, logf, max_try = 10, out_bucket){
   ij <- switch(mx, m = c('j', 'i'), x = c('i', 'j'))
   cols_hk <- c(ij,"k","v_rx_hk")
   names(cols_hk) <- c("origin_un","consig_un","k","vrx_un")
