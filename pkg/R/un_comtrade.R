@@ -53,9 +53,12 @@ unct_hk <- function(unct, hk, yr, mx, logf, max_try = 10, out_bucket){
   unct[getElement(unct, ij[1])==344,"v_M"] <- unct[getElement(unct, ij[1])==344,"v_M"] + unct[getElement(unct, ij[1])==344,"adj_344"]
   unct <- subset(unct, select = cols_out)
   junk <- subset(unct,unct$v_M<0)
-  unct[unct$v_M<0,"v_M"] <- tmp[unct$v_M<0,"v_M"]  ; # undo the adjustment for negative values
-  unct[getElement(unct, ij[2])==752,"v_M"] <- tmp[getElement(unct, ij[2])==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
-  unct[getElement(unct, ij[2])==348,"v_M"] <- tmp[getElement(unct, ij[2])==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
+  unct[unct$v_M<0 & !is.na(unct$v_M),"v_M"] <- tmp[unct$v_M<0 & !is.na(unct$v_M),"v_M"] # undo the adjustment for negative values
+  # is.na() to secure this step for export-side operation
+  ## or Error in `[<-.data.frame`(x, i, j, value) : missing values are not allowed in subscripted assignments of data frames
+  ### no error if directly in using env
+  unct[getElement(unct, ij[2])==752,"v_M"] <- tmp[getElement(unct, ij[2])==752,"v_M"] # undo the adjustment for Sweden  (OECD[2016], p. 19)
+  unct[getElement(unct, ij[2])==348,"v_M"] <- tmp[getElement(unct, ij[2])==348,"v_M"] # undo the adjustment for Hungary (OECD[2016], p. 19)
   if(!missing(logf))logf(paste(yr, ':', paste(mx, 'HK adjusted'), sep = '\t'))
   scripting::ecycle(aws.s3::s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                                           bucket = out_bucket,
@@ -102,9 +105,9 @@ unct_treat <- function(unct,t_in) {
              473,   #         South America, nes
              879    #         Western Asia, nes
   )
-
   unct <- subset(unct,!(unct$i %in% x_cty) & !(unct$j %in% x_cty))
-
+  # NEC commodity exclusions
+  unct <- unct[unct$k!='999999' & unct$k!="9999AA",]
   # Special country treatments
   # (1) Beginning in 2000, exclude San Marino[674] & Vatican[381] (already included in Italy[381])
   if (t_in >= 2000) {
@@ -149,8 +152,6 @@ unct_treat <- function(unct,t_in) {
       unct <- rbind(unct,s_891)
     } # end if (n_891>0)
   } # end if (t>=2006) ...Slovakia treatment
-  # NEC commodity exclusions
-  unct <- unct[unct$k!='999999' & unct$k!="9999AA",]
   if(data.table::is.data.table(unct))setkeyv(unct, c('i', 'j', 'k'))
   return(unct)
 }

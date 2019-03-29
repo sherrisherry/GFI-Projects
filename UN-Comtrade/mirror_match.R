@@ -13,7 +13,6 @@ install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
 usr <- 'aws00' # the user account for using AWS service
 dates <- 2005:2001 # the years we want to download
-hk_years <- 2016:2000 # years HK re-export data is available
 out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-comtrade' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
