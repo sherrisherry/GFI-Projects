@@ -6,7 +6,7 @@ bridge_cols <- function(nm, cl){
 }
 
 hkrx_cols <- function(nm, cl){
-  cols <- rep('NULL',9)
+  cols <- rep('NULL',8)
   names(cols) <- c("t","origin_hk","consig_hk","k","vrx_hkd","origin_un","consig_un","vrx_un")
   if(missing(cl))
     cl <- c(rep("integer",3),"character","numeric",rep("integer",2),"numeric")[match(nm, names(cols))]

@@ -158,8 +158,8 @@ for (t in 1:n_dates) {
     # use normalized hkrx data
     hk <- in_hkrx(year, names(cols_hk), cols_hk, logf = logg, max_try = max_try)
     if(is.null(hk))next
-    mirror$M <- unct_hk(mirror$M, hk, year, 'm', logg, max_try, out_bucket); if(is.null(mirror$M))next
-    mirror$X <- unct_hk(mirror$X, hk, year, 'x', logg, max_try, out_bucket); if(is.null(mirror$X))next
+    mirror$M <- unct_hk(mirror$M, hk, year, 'M', logg, max_try, out_bucket); if(is.null(mirror$M))next
+    mirror$X <- unct_hk(mirror$X, hk, year, 'X', logg, max_try, out_bucket); if(is.null(mirror$X))next
     # end Hong Kong module
 
 	counter$n_pair[t, c('n_M_paired', 'n_X_paired')] <- as.data.frame(lapply(mirror, nrow))[c('M', 'X')]

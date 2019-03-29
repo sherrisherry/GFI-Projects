@@ -30,7 +30,7 @@ unct_swiss <- function(unct,df_swiss,t_in){
 }
 
 unct_hk <- function(unct, hk, yr, mx, logf, max_try = 10, out_bucket){
-  ij <- switch(mx, m = c('j', 'i'), x = c('i', 'j'))
+  ij <- switch(mx, M = c('j', 'i'), X = c('i', 'j'))
   cols_hk <- c(ij,"k","v_rx_hk")
   names(cols_hk) <- c("origin_un","consig_un","k","vrx_un")
   cols_out <- c("hs_rpt","hs_ptn",ij,"k","v_X","v_M","v_rM","v_rX","q_X","q_M","q_kg_X","q_kg_M","q_code_X","q_code_M")
@@ -41,21 +41,21 @@ unct_hk <- function(unct, hk, yr, mx, logf, max_try = 10, out_bucket){
   colnames(hk) <- cols_hk[colnames(hk)]
   if(data.table::is.data.table(unct))hk <- data.table::data.table(hk, key = c(ij, 'k'))
   unct <- merge(x=unct,y=hk,by=c(ij,"k"),all.x=TRUE)
-  hk_344 <- hk[,c(ij[2],"k","v_rx_hk")]
+  hk_344 <- subset(hk, select = c(ij[2],"k","v_rx_hk"))
   colnames(hk_344) <- c(ij[2],"k","adj_344")
-  hk_344 <- aggregate(hk_344$adj_344,list(hk_344[, ij[2]],hk_344$k),sum) ; colnames(hk_344) <- c(ij[2],"k","adj_344")
+  hk_344 <- aggregate(hk_344$adj_344,list(getElement(hk_344, ij[2]),hk_344$k),sum) ; colnames(hk_344) <- c(ij[2],"k","adj_344")
   if(data.table::is.data.table(unct))hk_344 <- data.table::data.table(hk_344, key = c(ij[2],'k'))
   unct <- merge(x=unct,y=hk_344,by=c(ij[2],"k"),all.x=TRUE)
   unct[is.na(unct$v_rx_hk),"v_rx_hk"] <- 0
   unct[is.na(unct$adj_344),"adj_344"] <- 0
   tmp <- unct
-  unct[unct[, ij[1]]!=344,"v_M"] <- unct[unct[, ij[1]]!=344,"v_M"] - unct[unct[, ij[1]]!=344,"v_rx_hk"]
-  unct[unct[, ij[1]]==344,"v_M"] <- unct[unct[, ij[1]]==344,"v_M"] + unct[unct[, ij[1]]==344,"adj_344"]
+  unct[getElement(unct, ij[1])!=344,"v_M"] <- unct[getElement(unct, ij[1])!=344,"v_M"] - unct[getElement(unct, ij[1])!=344,"v_rx_hk"]
+  unct[getElement(unct, ij[1])==344,"v_M"] <- unct[getElement(unct, ij[1])==344,"v_M"] + unct[getElement(unct, ij[1])==344,"adj_344"]
   unct <- subset(unct, select = cols_out)
   junk <- subset(unct,unct$v_M<0)
   unct[unct$v_M<0,"v_M"] <- tmp[unct$v_M<0,"v_M"]  ; # undo the adjustment for negative values
-  unct[unct[, ij[2]]==752,"v_M"] <- tmp[unct[, ij[2]]==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
-  unct[unct[, ij[2]]==348,"v_M"] <- tmp[unct[, ij[2]]==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
+  unct[getElement(unct, ij[2])==752,"v_M"] <- tmp[getElement(unct, ij[2])==752,"v_M"]  ; # undo the adjustment for Sweden  (OECD[2016], p. 19)
+  unct[getElement(unct, ij[2])==348,"v_M"] <- tmp[getElement(unct, ij[2])==348,"v_M"]  ; # undo the adjustment for Hungary (OECD[2016], p. 19)
   if(!missing(logf))logf(paste(yr, ':', paste(mx, 'HK adjusted'), sep = '\t'))
   scripting::ecycle(aws.s3::s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
                                           bucket = out_bucket,
