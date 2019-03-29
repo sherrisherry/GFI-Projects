@@ -79,7 +79,7 @@ for (t in 1:n_dates) {
 # Start RAW module
     cat("\n","   (1) RAW module")
     cat("\n","        ...reading data file downloaded from UN-COMTRADE...","\n")
-    ecycle(save_object(object = paste(year, '.csv.bz2', sep = ''), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
+  ecycle(save_object(object = paste(year, '.csv.bz2', sep = ''), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
 		   {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
 	ecycle(rdata <- fread(cmd = "bzip2 -dkc ./tmp/tmp.csv.bz2", header=T, colClasses = cols_UN),
 		   {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
@@ -179,7 +179,7 @@ for (t in 1:n_dates) {
 	  cat("\n","   (7) updating counts")
 	  counter$n_pair[t, paste('n_', names(mirror), sep = '')] <- as.data.frame(lapply(mirror, nrow))
 	  # verify matched M==X
-	  if(counter$n_pair$n_M_matched==counter$n_pair$n_X_matched){
+	  if(counter$n_pair$n_M_matched[t]==counter$n_pair$n_X_matched[t]){
 	    tmp <- colnames(mirror$X_matched)
 	    colnames(mirror$X_matched)[match(c("hs_rpt","hs_ptn","i","j"), tmp)] <- c("hs_ptn","hs_rpt","j","i")
 	    tmp <- duplicated(rbind(mirror$M_matched, mirror$X_matched))

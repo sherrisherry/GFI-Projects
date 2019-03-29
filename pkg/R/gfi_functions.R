@@ -31,6 +31,7 @@ in_hkrx <- function(yr, nm, cl, logf, max_try = 10){
   scripting::ecycle(hk <- read.csv(pipe(paste("bzip2 -dc ", tmp, sep = '')), header=T, colClasses=cols, na.strings="", stringsAsFactors = F),
                     {if(!missing(logf))logf(paste(yr, '!', 'loading hkrx file failed', sep = '\t')); return(NULL)}, 
                     max_try, cond = is.data.frame(hk) && nrow(hk)>10)
+  if(!missing(logf))logf(paste(yr, ':', 'loaded hkrx', sep = '\t'))
   return(hk)
 }
 

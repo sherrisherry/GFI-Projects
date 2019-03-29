@@ -41,9 +41,7 @@ ecycle(fob <- s3read_using(FUN = function(x)fread(x, colClasses=cols_fob, header
 fob <- subset(fob,fob$t %in% dates)
 fob$d_fob <- 1
 setkeyv(fob, c('t','i'))
-ecycle(bridge <- s3read_using(FUN = function(x)fread(x, colClasses=cols_bridge, header=TRUE), 
-                                 object = 'bridge.csv', bucket = sup_bucket),
-           {logg(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); stop()}, max_try)
+bridge <- in_bridge(c('un_code','d_dev'), rep('integer',2), logg, max_try)
 tmp <- colnames(bridge); colnames(bridge)[match('un_code', tmp)] <- 'i'
 bridge <- unique(bridge)
 setkey(bridge, 'i')
