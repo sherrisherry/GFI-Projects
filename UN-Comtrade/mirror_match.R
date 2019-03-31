@@ -5,7 +5,7 @@
 # 6. shutdown system after completion.
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'jsonlite', 'scripting', 'remotes', 'data.table')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
 install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
@@ -19,7 +19,6 @@ sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
 oplog <- 'mirror_match.log' # progress report file
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
-opcounter <- 'process_mirror_match.json'
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 cols_UN <- rep('NULL', 15)
@@ -35,31 +34,21 @@ names(cols_hk) <- c("origin_un","consig_un","k","vrx_un")
 # use "character" for k or codes like '9999AA' messes up
 tfn <- c('M','rM','X','rX')
 names(tfn) <- c('1','4','2','3')
+out_names <- c('M_matched', 'X_matched', 'M_orphaned', 'M_lost')
+names(out_names) <- c('M.FALSE', 'X.FALSE', 'M.TRUE', 'X.TRUE') # M_lost == X_orphan
 
 #===================================================================================================================================#
 				  
 oplog <- file.path('logs', oplog); dinfo <- file.path('logs', dinfo)
-opcounter <- paste('data/', opcounter, sep = '')
 logg <- function(x)mklog(x, path = oplog)
 ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 dinfo <- read.delim(dinfo); dyears <- unique(dinfo[dinfo$Status=='uploaded', 'Year'])
 dates <- intersect(dates, dyears)
-n_dates <- length(dates); stopifnot(length(n_dates)>0)
+stopifnot(length(dates)>0)
 dinfo <- dinfo[dinfo$Mark == '#', c('Year', 'Status')]
 rm(dyears)
-
-# Set up counters to collect for multiple years
-
-counter <- list()
-counter$n_RAW <- data.frame(Year = dates, M = NA, X = NA, rX = NA, rM = NA)
-counter$n_TREAT <-  counter$n_SWISS <- counter$n_RAW
-out_names <- c('M_matched', 'X_matched', 'M_orphaned', 'M_lost')
-names(out_names) <- c('M.FALSE', 'X.FALSE', 'M.TRUE', 'X.TRUE') # M_lost == X_orphan
-tmp <- c('M_paired','X_paired', out_names)
-counter$n_pair <- matrix(nrow = n_dates, ncol = 6, dimnames = list(dates, paste('n_', tmp, sep = '')))
-counter$n_pair <- as.data.frame(counter$n_pair)
 
 # Prepare for SWISS module
     # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data
@@ -72,8 +61,7 @@ counter$n_pair <- as.data.frame(counter$n_pair)
       swiss <- subset(swiss,swiss$k=='710812'); swiss <- split(swiss, swiss$mx)
 
 # Loop by date
-for (t in 1:n_dates) {
-  year <- dates[t]
+for (year in dates) {
   cat("\n","\n","PROCESSING DATA FOR ",as.character(year))
 
 # Start RAW module
@@ -102,24 +90,23 @@ for (t in 1:n_dates) {
 	rdata <- lapply(rdata, function(x){cols <- colnames(x); nm <- c("v","q_code","q","q_kg"); lsn <- tfn[as.character(x$tf[1])]
 										colnames(x)[match(nm, cols)] <- paste(nm, lsn, sep = '_'); x$tf <- NULL
 										return(x)})
-    counter$n_RAW[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
-	logg(paste(year, ':', 'divided', sep = '\t'))
+  counter <- sapply(rdata, nrow); names(counter) <- paste('raw', names(counter), sep = '_')
+	logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
 #   End RAW module
 
 #   Implement TREAT module 
     cat("\n","   (2) TREAT module")
 	rdata <- lapply(rdata, function(x)unct_treat(x, year))
-	counter$n_TREAT[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
-	logg(paste(year, ':', 'treated', sep = '\t'))
+	counter <- sapply(rdata, nrow); names(counter) <- paste('treat', names(counter), sep = '_')
+	logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
 
     #   End TREAT module
 
 #   Implement SWISS module
     cat("\n","   (3) SWISS module")
     rdata$M  <- unct_swiss(rdata$M,swiss$m,year); rdata$X  <- unct_swiss(rdata$X,swiss$x,year)
-   # counts
-   counter$n_SWISS[t, tfn] <- as.data.frame(lapply(rdata, nrow))[tfn]
-    logg(paste(year, ':', 'swiss-adjusted', sep = '\t'))
+    counter <- sapply(rdata, nrow); names(counter) <- paste('swiss', names(counter), sep = '_')
+    logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
     # End SWISS module
    
 #   Start PAIR module 
@@ -160,8 +147,9 @@ for (t in 1:n_dates) {
     mirror$M <- unct_hk(mirror$M, hk, year, 'M', logg, max_try, out_bucket); if(is.null(mirror$M))next
     mirror$X <- unct_hk(mirror$X, hk, year, 'X', logg, max_try, out_bucket); if(is.null(mirror$X))next
     # end Hong Kong module
-
-	counter$n_pair[t, c('n_M_paired', 'n_X_paired')] <- as.data.frame(lapply(mirror, nrow))[c('M', 'X')]
+    
+    counter <- sapply(mirror, nrow); names(counter) <- paste(names(counter), 'pair', sep = '_')
+    logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
     
 # Start MATCH module 
     cat("\n","   (6) MATCH module")
@@ -174,16 +162,16 @@ for (t in 1:n_dates) {
       stopifnot(setequal(names(mirror),names(out_names)))
       names(mirror) <- out_names[names(mirror)]
       # renamed mirror to match out_names
+      counter <- sapply(mirror, nrow)
+      logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
   # end MATCH module
-	  # update counts   
-	  cat("\n","   (7) updating counts")
-	  counter$n_pair[t, paste('n_', names(mirror), sep = '')] <- as.data.frame(lapply(mirror, nrow))
+	  
 	  # verify matched M==X
-	  if(counter$n_pair$n_M_matched[t]==counter$n_pair$n_X_matched[t]){
+	  if(counter['M_matched']==counter['X_matched']){
 	    tmp <- colnames(mirror$X_matched)
 	    colnames(mirror$X_matched)[match(c("hs_rpt","hs_ptn","i","j"), tmp)] <- c("hs_ptn","hs_rpt","j","i")
 	    tmp <- duplicated(rbind(mirror$M_matched, mirror$X_matched))
-	    if(sum(tmp)!=counter$n_pair$n_M_matched[t])logg(paste(year, '!', 'MX nrow not identical', sep = '\t'))
+	    if(sum(tmp)!=counter['M_matched'])logg(paste(year, '!', 'MX nrow not identical', sep = '\t'))
 	    else{logg(paste(year, ':', 'identical', sep = '\t')); mirror$X_matched <-NULL}
 	  }else logg(paste(year, '!', 'MX not identical', sep = '\t'))
 	  
@@ -201,14 +189,9 @@ for (t in 1:n_dates) {
                     max_try,
                     {logg(paste(year, '|', paste('uploaded', basename(tmp[i]), sep = ' '), sep = '\t')); unlink(tmp[i])}))
 	  }
-      
-    # Cache counts
-	writeLines(toJSON(counter), opcounter)
-
     # cleanup some
     rm(mirror)
 } # end t loop
 #
 put_object(oplog, basename(oplog), bucket = out_bucket)
-put_object(opcounter, basename(opcounter), bucket = out_bucket)
 # system('sudo shutdown')
