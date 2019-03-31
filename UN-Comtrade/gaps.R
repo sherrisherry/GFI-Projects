@@ -8,6 +8,7 @@ install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
 yrs_model <- 2016:2001 # the years for cifob_model
+in_dir <- '/efs/unct'
 out_bucket <- 'gfi-work' # save the results to this S3 bucket
 in_bucket <- 'gfi-work' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
@@ -42,10 +43,8 @@ if(is.null(cty))cty <- gfi_cty(logf = logg)
 
 predicts <- list()
 for(year in years){
-  ecycle(save_object(object = paste(tag, year,"input.csv.bz2",sep="-"), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
-         {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); stop()}, max_try)
-  ecycle(m_in <- read.csv(bzfile('tmp/tmp.csv.bz2'), colClasses=cols_in, na.strings="", header = T),
-         {logg(paste(year, '!', 'loading file failed', sep = '\t')); stop()}, max_try)
+  ecycle(m_in <- read.csv(bzfile(file.path(in_dir, paste(tag, year,"input.csv.bz2",sep="-"))), colClasses=cols_in, na.strings="", header = T),
+         {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try)
   logg(paste(year, ':', 'loaded data', sep = '\t'))
   unlink('tmp/tmp.csv.bz2')
   m_in <- subset(m_in, m_in$i %in% cty | m_in$j %in% cty) # subset cty

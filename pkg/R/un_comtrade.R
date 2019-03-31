@@ -60,10 +60,10 @@ unct_hk <- function(unct, hk, yr, mx, logf, max_try = 10, out_bucket){
   unct[getElement(unct, ij[2])==752,"v_M"] <- tmp[getElement(unct, ij[2])==752,"v_M"] # undo the adjustment for Sweden  (OECD[2016], p. 19)
   unct[getElement(unct, ij[2])==348,"v_M"] <- tmp[getElement(unct, ij[2])==348,"v_M"] # undo the adjustment for Hungary (OECD[2016], p. 19)
   if(!missing(logf))logf(paste(yr, ':', paste(mx, 'HK adjusted'), sep = '\t'))
-  scripting::ecycle(aws.s3::s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+  scripting::ecycle(aws.s3::s3write_using(junk, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = F, na=''),
                                           bucket = out_bucket,
                                           object = paste('Comtrade', yr, mx, 'junked-HK-adj.csv.bz2', sep = '-')),
-                    if(!missing(logf))logf(paste(yr, '.', paste('junked', mx, 'HK-adj not uploaded'), sep = '\t')), 
+                    if(!missing(logf))logf(paste(yr, '.', paste('junked', mx, 'HK-adj not uploaded'), sep = '\t')),
                     ceiling(max_try/3))
   return(unct)
 }

@@ -11,10 +11,10 @@ install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
 out_bucket <- 'gfi-work' # save the results to this S3 bucket
-in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
-sup_bucket <- 'gfi-supplemental' # supplemental files
+in_dir <- '/efs/unct' # read in raw data from this bucket
 oplog <- 'cifob_model.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
+tag <- "Comtrade"
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 # parameter spex
 q_crit    <- 0.025  # threshold for quantity-based exclusions
@@ -36,29 +36,21 @@ cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
 model_train <- list()
 for (year in years) {
-    obj_nm <- paste("Comtrade",year,"input.csv.bz2",sep="-")
-    cat("\n","...reading input for",year,"\n")
-ecycle(save_object(object = obj_nm, bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
-		   {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
-ecycle(x_in <- read.csv(pipe("bzip2 -dkc ./tmp/tmp.csv.bz2"), header=T, colClasses = cols_in),
-		   {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
-		   cond = is.data.frame(x_in))
-	logg(paste(year, ':', 'opened', sep = '\t'))
-	logg(paste(year, '#', nrow(x_in), sep = '\t'))
-	unlink('tmp/tmp.csv.bz2')
+  ecycle(x_in <- read.csv(bzfile(file.path(in_dir, paste(tag, year,"input.csv.bz2",sep="-"))), header=T, colClasses = cols_in),
+         {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
+         cond = is.data.frame(x_in))
+	logg(paste(year, '#', paste('opened', nrow(x_in), sep = ':'), sep = '\t'))
     # exclude :(1) records with different quantity units (should be none)
     #          (2) records where the differences in quantities exceeds q_crit
     #          (3) the ratio between import unit values and export unit values exceeds 2 or is less than 1
     x_in <- subset(x_in, d_fob == 0, -match('d_fob',colnames(x_in))) # this handles NAs
-    logg(paste(year, ':', 'm_cif', sep = '\t'))
-    logg(paste(year, '#', nrow(x_in), sep = '\t'))
+    logg(paste(year, '#', paste('m_cif', nrow(x_in), sep = ':'), sep = '\t'))
     x_in <- subset(x_in,(abs(x_in$q_M - x_in$q_X) / x_in$q_M) < q_crit)
     x_in$p_M <- x_in$v_M / x_in$q_M
     x_in$p_X <- x_in$v_X / x_in$q_X
     x_in <- subset(x_in, (x_in$p_M / x_in$p_X) < p_crit_hi)
     x_in <- subset(x_in, (x_in$p_M / x_in$p_X) > p_crit_lo)
-    logg(paste(year, ':', 'inlim', sep = '\t'))
-    logg(paste(year, '#', nrow(x_in), sep = '\t'))
+    logg(paste(year, '#', paste('inlim', nrow(x_in), sep = ':'), sep = '\t'))
     x_in$ln_v_margin <- log(x_in$v_M/x_in$v_X) # target
     x_in$d <- factor(x_in$t, levels = years); tmp <- encode_onehot(x_in[,'d', drop=FALSE], drop1st = T)
     x_in$d <- NULL; x_in <- cbind(x_in, tmp)

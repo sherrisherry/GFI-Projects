@@ -191,8 +191,8 @@ for (t in 1:n_dates) {
 	  tmp <- paste(tag, year, names(mirror), sep = '-'); tmp <- paste('tmp/', tmp, '.csv.bz2', sep = '')
 	  names(tmp) <- names(mirror)
 	  for(i in names(mirror)){
-	  ecycle(write.csv(mirror[[i]], file = bzfile(tmp[i]),row.names=FALSE,na=""), 
-             ecycle(s3write_using(mirror[[i]], FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
+	  ecycle(write.csv(mirror[[i]], file = bzfile(tmp[i]), row.names=F, na=""), 
+             ecycle(s3write_using(mirror[[i]], FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = F, na=''),
                                   bucket = out_bucket, object = basename(tmp[i])),
                      logg(paste(year, '!', paste('uploading', basename(tmp[i]), 'failed', sep = ' '), sep = '\t')), max_try), 
              max_try,
