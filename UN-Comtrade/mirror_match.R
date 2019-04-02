@@ -5,9 +5,9 @@
 # 6. shutdown system after completion.
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'sparklyr', 'scripting', 'remotes')
+pkgs <- c('aws.s3', 'sparklyr', 'scripting')
 for(i in pkgs)library(i, character.only = T)
-install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
+remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -15,6 +15,7 @@ usr <- 'aws00' # the user account for using AWS service
 dates <- 2005:2001 # the years we want to download
 out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 oplog <- 'mirror_match.log' # progress report file
+opcounter <- 'mirror_match.csv'
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 
@@ -23,26 +24,29 @@ keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors =
 ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 log_head <- 'Time\tZone\tYear\tMark\tStatus\n'
+if(!file.exists('/efs/logs'))system('sudo mkdir -m777 /efs/logs')
+oplog <- paste('/efs/logs/', oplog, sep = '')
 config <- spark_config()
 config$sparklyr.apply.env.AWS_ACCESS_KEY_ID <- Sys.getenv('AWS_ACCESS_KEY_ID')
 config$sparklyr.apply.env.AWS_SECRET_ACCESS_KEY <- Sys.getenv('AWS_SECRET_ACCESS_KEY')
 config$sparklyr.apply.env.AWS_DEFAULT_REGION <- Sys.getenv('AWS_DEFAULT_REGION')
 config$sparklyr.apply.env.log_head <- log_head
 config$sparklyr.apply.env.out_bucket <- out_bucket
+config$sparklyr.apply.env.oplog <- oplog
 
 sc <- spark_connect(master="local", config = config)
-oplog <- file.path('logs', oplog)
 logg <- function(x)mklog(x, path = oplog)
 cat(log_head, file = oplog, append = FALSE)
+opcounter <- file.path('data', opcounter)
 dinfo <- file.path('logs', dinfo); dinfo <- read.delim(dinfo)
 dinfo <- dinfo[dinfo$Mark == '#' & dinfo$Year %in% dates, c('Year', 'Status')]
 dinfo <- unique(dinfo); n_d <- nrow(dinfo)
 stopifnot(n_d > 0 & !any(duplicated(dinfo$Year)))
 
 dist_codes <- function(in_df){
-  pkgs <- c('aws.s3', 'sparklyr', 'stats', 'scripting', 'remotes', 'data.table')
+  pkgs <- c('aws.s3', 'sparklyr', 'stats', 'scripting', 'data.table')
   for(i in pkgs)library(i, character.only = T)
-  install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
+  remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
   #===================================================================================================================================#
   max_try <- 10 # the maximum number of attempts for a failed process
   in_bucket <- 'gfi-comtrade' # read in raw data from this bucket
@@ -65,7 +69,7 @@ dist_codes <- function(in_df){
   names(out_names) <- c('M.FALSE', 'X.FALSE', 'M.TRUE', 'X.TRUE') # M_lost == X_orphan
   #===================================================================================================================================#
   out_bucket <- Sys.getenv('out_bucket')
-  oplog <- paste(in_df$Year, collapse = '')
+  oplog <- Sys.getenv('oplog')
   logg <- function(x)mklog(x, path = oplog)
   options(stringsAsFactors= FALSE)
   cat(Sys.getenv('log_head'), file = oplog, append = FALSE)
@@ -78,9 +82,10 @@ dist_codes <- function(in_df){
   # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
   #     (NB, monetary gold trade flows should not be included in UN-Comtrade dataset for any country)
   swiss <- subset(swiss,swiss$k=='710812'); swiss <- split(swiss, swiss$mx)
-  
+  opcounter <- list() # setup counter
   # Loop by date
-  for (year in in_df$Year) {
+  for (year in in_df$Year){
+    counter <- c(year = year)
     # Start RAW module
     ecycle(save_object(object = paste(year, '.csv.bz2', sep = ''), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
            {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
@@ -104,21 +109,24 @@ dist_codes <- function(in_df){
     rdata <- lapply(rdata, function(x){cols <- colnames(x); nm <- c("v","q_code","q","q_kg"); lsn <- tfn[as.character(x$tf[1])]
     colnames(x)[match(nm, cols)] <- paste(nm, lsn, sep = '_'); x$tf <- NULL
     return(x)})
-    counter <- sapply(rdata, nrow); names(counter) <- paste('raw', names(counter), sep = '_')
-    logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
+    tmp <- sapply(rdata, nrow); names(tmp) <- paste('raw', names(tmp), sep = '_')
+    counter <- append(counter, tmp)
+    logg(paste(year, '#', paste(paste(names(tmp), tmp, sep = ':'), collapse = ','), sep = '\t'))
     #   End RAW module
     
     #   Implement TREAT module 
     rdata <- lapply(rdata, function(x)unct_treat(x, year))
-    counter <- sapply(rdata, nrow); names(counter) <- paste('treat', names(counter), sep = '_')
-    logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
+    tmp <- sapply(rdata, nrow); names(tmp) <- paste('treat', names(tmp), sep = '_')
+    counter <- append(counter, tmp)
+    logg(paste(year, '#', paste(paste(names(tmp), tmp, sep = ':'), collapse = ','), sep = '\t'))
     
     #   End TREAT module
     
     #   Implement SWISS module
     rdata$M  <- unct_swiss(rdata$M,swiss$m,year); rdata$X  <- unct_swiss(rdata$X,swiss$x,year)
-    counter <- sapply(rdata, nrow); names(counter) <- paste('swiss', names(counter), sep = '_')
-    logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
+    tmp <- sapply(rdata, nrow); names(tmp) <- paste('swiss', names(tmp), sep = '_')
+    counter <- append(counter, tmp)
+    logg(paste(year, '#', paste(paste(names(tmp), tmp, sep = ':'), collapse = ','), sep = '\t'))
     # End SWISS module
     
     #   Start PAIR module
@@ -155,8 +163,9 @@ dist_codes <- function(in_df){
     mirror$X <- unct_hk(mirror$X, hk, year, 'X', logg, max_try, out_bucket); if(is.null(mirror$X))next
     # end Hong Kong module
     
-    counter <- sapply(mirror, nrow); names(counter) <- paste(names(counter), 'pair', sep = '_')
-    logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
+    tmp <- sapply(mirror, nrow); names(tmp) <- paste(names(tmp), 'pair', sep = '_')
+    counter <- append(counter, tmp)
+    logg(paste(year, '#', paste(paste(names(tmp), tmp, sep = ':'), collapse = ','), sep = '\t'))
     
     # Start MATCH module
     # Matching M
@@ -167,8 +176,9 @@ dist_codes <- function(in_df){
     stopifnot(setequal(names(mirror),names(out_names)))
     names(mirror) <- out_names[names(mirror)]
     # renamed mirror to match out_names
-    counter <- sapply(mirror, nrow)
-    logg(paste(year, '#', paste(paste(names(counter), counter, sep = ':'), collapse = ','), sep = '\t'))
+    tmp <- sapply(mirror, nrow)
+    counter <- append(counter, tmp)
+    logg(paste(year, '#', paste(paste(names(tmp), tmp, sep = ':'), collapse = ','), sep = '\t'))
     # end MATCH module
     
     # verify matched M==X
@@ -195,18 +205,18 @@ dist_codes <- function(in_df){
                     {logg(paste(year, '|', paste('uploaded', basename(tmp[i]), sep = ' '), sep = '\t')); unlink(tmp[i])}))
     }
     rm(mirror)
+    opcounter[[year]] <- counter
   }
-  logs <- read.delim(oplog)
-  return(logs)
+  opcounter <- do.call(rbind, opcounter)
+  return(opcounter)
 }
 
 logg(paste('0000', '|', 'cluster started', sep = '\t'))
 tbl_dinfo <- sdf_copy_to(sc, dinfo, repartition = ceiling(n_d/2))
-dist_logs <- spark_apply(tbl_dinfo, dist_codes, packages = F)
+dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = F) %>% collect()
 logg(paste('0000', '|', 'cluster ended', sep = '\t'))
-logs <- read.delim(oplog)
-logs <- rbind(logs, dist_logs)
-write.table(logs, file = oplog, sep = '\t', row.names = F)
+write.csv(dist_counter, file = opcounter, row.names = F)
 spark_disconnect(sc)
 put_object(oplog, basename(oplog), bucket = out_bucket)
+put_object(opcounter, basename(opcounter), bucket = out_bucket)
 # system('sudo shutdown')
