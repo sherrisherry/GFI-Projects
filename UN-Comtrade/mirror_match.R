@@ -205,7 +205,7 @@ dist_codes <- function(in_df){
                     {logg(paste(year, '|', paste('uploaded', basename(tmp[i]), sep = ' '), sep = '\t')); unlink(tmp[i])}))
     }
     rm(mirror)
-    opcounter[[year]] <- counter
+    opcounter[[as.character(year)]] <- counter
   }
   opcounter <- do.call(rbind, opcounter)
   return(opcounter)
