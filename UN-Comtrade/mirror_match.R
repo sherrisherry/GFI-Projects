@@ -18,10 +18,11 @@ oplog <- 'mirror_match.log' # progress report file
 opcounter <- 'mirror_match.csv'
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
+spark_home <- '/home/gfi/spark/spark-2.4.0-bin-hadoop2.7' # SPARK_HOME isn't required with 'local' master
 
 #===================================================================================================================================#
 
-ec2env(keycache,usr)
+ec2env(keycache,usr); Sys.setenv('SPARK_HOME' = spark_home)
 options(stringsAsFactors= FALSE)
 log_head <- 'Time\tZone\tYear\tMark\tStatus\n'
 if(!file.exists('/efs/logs'))system('sudo mkdir -m777 /efs/logs')
@@ -33,6 +34,7 @@ config$sparklyr.apply.env.AWS_DEFAULT_REGION <- Sys.getenv('AWS_DEFAULT_REGION')
 config$sparklyr.apply.env.log_head <- log_head
 config$sparklyr.apply.env.out_bucket <- out_bucket
 config$sparklyr.apply.env.oplog <- oplog
+config$sparklyr.apply.env.SPARK_HOME <- spark_home
 
 sc <- spark_connect(master="local", config = config)
 logg <- function(x)mklog(x, path = oplog)
