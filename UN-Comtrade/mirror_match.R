@@ -27,7 +27,7 @@ ec2env(keycache,usr); Sys.setenv('SPARK_HOME' = spark_home)
 options(stringsAsFactors= FALSE)
 log_head <- 'Time\tZone\tYear\tMark\tStatus\n'
 if(!file.exists('/efs/logs'))system('sudo mkdir -m777 /efs/logs')
-oplog <- paste('/efs/logs/', oplog, sep = '')
+oplog <- paste('/efs/logs', oplog, sep = '/')
 dinfo <- file.path('logs', dinfo); dinfo <- read.delim(dinfo)
 dinfo <- dinfo[dinfo$Mark == '#' & dinfo$Year %in% dates, c('Year', 'Status')]
 dinfo <- unique(dinfo); n_d <- nrow(dinfo)

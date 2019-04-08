@@ -36,29 +36,29 @@ cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 
 model_train <- list()
 for (year in years) {
-  ecycle(x_in <- read.csv(bzfile(file.path(in_dir, paste(tag, year,"input.csv.bz2",sep="-"))), header=T, colClasses = cols_in),
+  ecycle(in_x <- read.csv(bzfile(file.path(in_dir, paste(tag, year,"input.csv.bz2",sep="-"))), header=T, colClasses = cols_in),
          {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try,
-         cond = is.data.frame(x_in))
-	logg(paste(year, '#', paste('opened', nrow(x_in), sep = ':'), sep = '\t'))
+         cond = is.data.frame(in_x))
+	logg(paste(year, '#', paste('opened', nrow(in_x), sep = ':'), sep = '\t'))
     # exclude :(1) records with different quantity units (should be none)
     #          (2) records where the differences in quantities exceeds q_crit
     #          (3) the ratio between import unit values and export unit values exceeds 2 or is less than 1
-    x_in <- subset(x_in, d_fob == 0, -match('d_fob',colnames(x_in))) # this handles NAs
-    logg(paste(year, '#', paste('m_cif', nrow(x_in), sep = ':'), sep = '\t'))
-    x_in <- subset(x_in,(abs(x_in$q_M - x_in$q_X) / x_in$q_M) < q_crit)
-    x_in$p_M <- x_in$v_M / x_in$q_M
-    x_in$p_X <- x_in$v_X / x_in$q_X
-    x_in <- subset(x_in, (x_in$p_M / x_in$p_X) < p_crit_hi)
-    x_in <- subset(x_in, (x_in$p_M / x_in$p_X) > p_crit_lo)
-    logg(paste(year, '#', paste('inlim', nrow(x_in), sep = ':'), sep = '\t'))
-    x_in$ln_v_margin <- log(x_in$v_M/x_in$v_X) # target
-    x_in$d <- factor(x_in$t, levels = years); tmp <- encode_onehot(x_in[,'d', drop=FALSE], drop1st = T)
-    x_in$d <- NULL; x_in <- cbind(x_in, tmp)
-	model_train[[as.character(year)]] <- x_in[, cols_model]
+    in_x <- subset(in_x, d_fob == 0, -match('d_fob',colnames(in_x))) # this handles NAs
+    logg(paste(year, '#', paste('m_cif', nrow(in_x), sep = ':'), sep = '\t'))
+    in_x <- subset(in_x,(abs(in_x$q_M - in_x$q_X) / in_x$q_M) < q_crit)
+    in_x$p_M <- in_x$v_M / in_x$q_M
+    in_x$p_X <- in_x$v_X / in_x$q_X
+    in_x <- subset(in_x, (in_x$p_M / in_x$p_X) < p_crit_hi)
+    in_x <- subset(in_x, (in_x$p_M / in_x$p_X) > p_crit_lo)
+    logg(paste(year, '#', paste('inlim', nrow(in_x), sep = ':'), sep = '\t'))
+    in_x$ln_v_margin <- log(in_x$v_M/in_x$v_X) # target
+    in_x$d <- factor(in_x$t, levels = years); tmp <- encode_onehot(in_x[,'d', drop=FALSE], drop1st = T)
+    in_x$d <- NULL; in_x <- cbind(in_x, tmp)
+	model_train[[as.character(year)]] <- in_x[, cols_model]
 	logg(paste(year, '|', 'processed', sep = '\t'))
 }
 
-rm(x_in)
+rm(in_x)
 
 model_train <- do.call('rbind', model_train)
 

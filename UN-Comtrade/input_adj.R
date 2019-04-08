@@ -24,7 +24,7 @@ cols_out <- c('t',"k","i","j","v_M","v_X","q_M","q_X","q_code_M","q_code_X", 'ln
 
 #===================================================================================================================================#
 
-dir.create(out_dir)
+if(!file.exists(out_dir))system(paste('sudo mkdir -m777', out_dir))
 oplog <- file.path('logs', oplog)
 logg <- function(x)mklog(x, path = oplog)
 ec2env(keycache,usr)

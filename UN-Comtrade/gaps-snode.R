@@ -9,7 +9,7 @@ usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
 yrs_model <- 2016:2001 # the years for cifob_model
 in_dir <- '/efs/unct'
-out_bucket <- 'gfi-work' # save the results to this S3 bucket
+out_dir <- '/efs/work' # save the results to this S3 bucket
 in_bucket <- 'gfi-work' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 oplog <- 'gaps.log' # progress report file
@@ -25,8 +25,9 @@ cols_out <- c("t","j","i","k","v_M","v_X","q_M","q_X","q_code_M","d_dev_i","d_de
 cols_model <- c('ln_distw', 'ln_distw_squared', 'ln_uvmdn', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
 cols_model <- append(cols_model, paste('d', years[-1], sep = '_'))
 #===================================================================================================================================#
-				  
-oplog <- file.path('logs', oplog)
+
+if(!file.exists(out_dir))system(paste('sudo mkdir -m777', out_dir))
+oplog <- file.path('logs', paste(min(years), max(years), cty, oplog, sep = '_'))
 logg <- function(x)mklog(x, path = oplog)
 ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
@@ -41,7 +42,6 @@ unlink('tmp/tmp.csv.bz2')
 
 if(is.null(cty))cty <- gfi_cty(logf = logg)
 
-predicts <- list()
 for(year in years){
   ecycle(tinv <- read.csv(bzfile(file.path(in_dir, paste(tag, year,"input.csv.bz2",sep="-"))), colClasses=cols_in, na.strings="", header = T),
          {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try)
@@ -55,10 +55,10 @@ for(year in years){
   logg(paste(year, ':', 'prepared data', sep = '\t'))
   tinv$v_M_fob <- 0 
   tinv[tinv$d_fob == 1,'v_M_fob'] <- tinv[tinv$d_fob == 1,'v_M']
-  pred <- predict(cifob_model, tinv[tinv$d_fob == 0, cols_model],type='response')
+  tinv[tinv$d_fob == 0, 'v_M_fob'] <- predict(cifob_model, tinv[tinv$d_fob == 0, cols_model],type='response')
   logg(paste(year, ':', 'applied model', sep = '\t'))
-  pred <- exp(pred)
-  tinv[(tinv$d_fob == 0),"v_M_fob"] <- tinv[(tinv$d_fob == 0),"v_M"] / pred 
+  tinv[tinv$d_fob == 0, 'v_M_fob'] <- exp(tinv[tinv$d_fob == 0, 'v_M_fob'])
+  tinv[(tinv$d_fob == 0),"v_M_fob"] <- tinv[(tinv$d_fob == 0),"v_M"] / tinv[tinv$d_fob == 0, 'v_M_fob']
   tinv[(tinv$v_M_fob>tinv$v_M),"v_M_fob"] <- tinv[(tinv$v_M_fob>tinv$v_M),"v_M"]# DEFAULT: when fob>cif set FOB = CIF
   # calculate weights & gaps
   tinv$a_wt <- 1
@@ -67,21 +67,9 @@ for(year in years){
   tinv$gap <- tinv$v_M_fob - tinv$v_X
   tinv$gap_wtd <- tinv$gap * tinv$a_wt
   logg(paste(year, ':', 'weighted gaps', sep = '\t'))
-  file_out <- paste('tmp/', paste(tag, year, 'gaps.csv.bz2', sep = '-'), sep = '')
+  file_out <- paste(out_dir, paste(tag, year, 'gaps.csv.bz2', sep = '-'), sep = '/')
   ecycle(write.csv(tinv[, cols_out], file = bzfile(file_out),row.names=FALSE,na=""), 
-         ecycle(s3write_using(tinv[, cols_out], FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
-                              bucket = out_bucket, object = basename(file_out)),
-                logg(paste(year, '!', paste('uploading', basename(file_out), 'failed', sep = ' '), sep = '\t')), max_try), 
-         max_try,
-         ecycle(put_object(file_out, basename(file_out), bucket = out_bucket), 
-                logg(paste(year, '!', paste('uploading', basename(file_out), 'failed', sep = ' '), sep = '\t')),
-                max_try,
-                {logg(paste(year, '|', paste('uploaded', basename(file_out), sep = ' '), sep = '\t')); unlink(file_out)}))
-  predicts[[year]] <- pred
+         logg(paste(year, '!', paste('uploading', basename(file_out), 'failed', sep = ' '), sep = '\t')), 
+         max_try)
   rm(tinv)
 }
-rm(cifob_model)
-predicts <- unlist(predicts)
-capture.output(summary(predicts), file= "data/Stats_Fitted_Exp_Values_Full.txt")
-logg(paste('0000', '|', 'summarized predictions', sep = '\t'))
-put_object(oplog, basename(oplog), bucket = out_bucket)
