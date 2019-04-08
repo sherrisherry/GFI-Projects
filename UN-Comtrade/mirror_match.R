@@ -18,7 +18,8 @@ oplog <- 'mirror_match.log' # progress report file
 opcounter <- 'mirror_match.csv'
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-spark_home <- '/home/gfi/spark/spark-2.4.0-bin-hadoop2.7' # SPARK_HOME isn't required with 'local' master
+spark_home <- '/home/gfi/spark/spark-2.3.2-bin-hadoop2.7' # SPARK_HOME isn't required with 'local' master
+master_node <- 'spark://ip-172-31-91-141.ec2.internal:7077'
 
 #===================================================================================================================================#
 
@@ -27,23 +28,23 @@ options(stringsAsFactors= FALSE)
 log_head <- 'Time\tZone\tYear\tMark\tStatus\n'
 if(!file.exists('/efs/logs'))system('sudo mkdir -m777 /efs/logs')
 oplog <- paste('/efs/logs/', oplog, sep = '')
-config <- spark_config()
-config$sparklyr.apply.env.AWS_ACCESS_KEY_ID <- Sys.getenv('AWS_ACCESS_KEY_ID')
-config$sparklyr.apply.env.AWS_SECRET_ACCESS_KEY <- Sys.getenv('AWS_SECRET_ACCESS_KEY')
-config$sparklyr.apply.env.AWS_DEFAULT_REGION <- Sys.getenv('AWS_DEFAULT_REGION')
-config$sparklyr.apply.env.log_head <- log_head
-config$sparklyr.apply.env.out_bucket <- out_bucket
-config$sparklyr.apply.env.oplog <- oplog
-config$sparklyr.apply.env.SPARK_HOME <- spark_home
-
-sc <- spark_connect(master="local", config = config)
-logg <- function(x)mklog(x, path = oplog)
-cat(log_head, file = oplog, append = FALSE)
-opcounter <- file.path('data', opcounter)
 dinfo <- file.path('logs', dinfo); dinfo <- read.delim(dinfo)
 dinfo <- dinfo[dinfo$Mark == '#' & dinfo$Year %in% dates, c('Year', 'Status')]
 dinfo <- unique(dinfo); n_d <- nrow(dinfo)
 stopifnot(n_d > 0 & !any(duplicated(dinfo$Year)))
+conf <- spark_config()
+conf$sparklyr.apply.env.AWS_ACCESS_KEY_ID <- Sys.getenv('AWS_ACCESS_KEY_ID')
+conf$sparklyr.apply.env.AWS_SECRET_ACCESS_KEY <- Sys.getenv('AWS_SECRET_ACCESS_KEY')
+conf$sparklyr.apply.env.AWS_DEFAULT_REGION <- Sys.getenv('AWS_DEFAULT_REGION')
+conf$sparklyr.apply.env.TMPDIR <- '/home/gfi/temp'
+conf$spark.executor.memory <- "11GB" # the memory to request from each executor, workers having less memory are not used
+conf$spark.executor.instances <- ceiling(n_d/2)
+conf$spark.dynamicAllocation.enabled <- "false"
+
+sc <- spark_connect(master= master_node, config = conf)
+logg <- function(x)mklog(x, path = oplog)
+cat(log_head, file = oplog, append = FALSE)
+opcounter <- file.path('data', opcounter)
 
 dist_codes <- function(in_df){
   pkgs <- c('aws.s3', 'sparklyr', 'stats', 'scripting', 'data.table')
@@ -74,7 +75,6 @@ dist_codes <- function(in_df){
   oplog <- Sys.getenv('oplog')
   logg <- function(x)mklog(x, path = oplog)
   options(stringsAsFactors= FALSE)
-  cat(Sys.getenv('log_head'), file = oplog, append = FALSE)
   # Prepare for SWISS module
   # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data
   ecycle(swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
@@ -214,11 +214,11 @@ dist_codes <- function(in_df){
 }
 
 logg(paste('0000', '|', 'cluster started', sep = '\t'))
-tbl_dinfo <- sdf_copy_to(sc, dinfo, repartition = ceiling(n_d/2))
-dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = F) %>% collect()
+tbl_dinfo <- sdf_copy_to(sc, dinfo, repartition = n_d)
+dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = F, rdd = T, env = list(out_bucket = out_bucket, oplog = oplog)) # %>% sdf_collect()
 logg(paste('0000', '|', 'cluster ended', sep = '\t'))
-write.csv(dist_counter, file = opcounter, row.names = F)
+# write.csv(dist_counter, file = opcounter, row.names = F)
 spark_disconnect(sc)
 put_object(oplog, basename(oplog), bucket = out_bucket)
-put_object(opcounter, basename(opcounter), bucket = out_bucket)
+# put_object(opcounter, basename(opcounter), bucket = out_bucket)
 # system('sudo shutdown')
