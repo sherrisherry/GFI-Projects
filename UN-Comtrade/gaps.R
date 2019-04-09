@@ -23,7 +23,7 @@ names(cols_in) <- c('k','t',"i","j","v_M","v_X","q_M","q_X", 'ln_distw', 'ln_dis
                     'd_fob', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
 cols_out <- c("t","j","i","k","v_M","v_X","q_M","q_X","q_code_M","d_dev_i","d_dev_j", 'v_M_fob', 'a_wt', 'gap_wtd')
 cols_model <- c('ln_distw', 'ln_distw_squared', 'ln_uvmdn', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
-cols_model <- append(cols_model, paste('d', years[-1], sep = '_'))
+cols_model <- append(cols_model, paste('d', yrs_model[-1], sep = '_'))
 #===================================================================================================================================#
 				  
 oplog <- file.path('logs', oplog)

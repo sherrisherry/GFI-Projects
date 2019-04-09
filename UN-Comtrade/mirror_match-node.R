@@ -1,3 +1,5 @@
+# no more than 2 years
+
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'stats', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
@@ -176,5 +178,5 @@ for(year in dates){
 #
 opcounter <- do.call(rbind, opcounter)
 write.csv(dist_counter, file = opcounter, row.names = F)
-put_object(oplog, basename(oplog), bucket = out_bucket)
+# put_object(oplog, basename(oplog), bucket = out_bucket)
 # system('sudo shutdown')

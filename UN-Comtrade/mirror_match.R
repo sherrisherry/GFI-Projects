@@ -19,8 +19,8 @@ opcounter <- 'mirror_match.csv'
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 sup_bucket <- 'gfi-supplemental' # supplemental files
-nload <- 2
-max_try <- 10 # the maximum number of attempts for a failed process
+nload <- 2 # years for a worker
+max_try <- 10L # the maximum number of attempts for a failed process
 spark_home <- '/home/gfi/spark/spark-2.3.2-bin-hadoop2.7' # SPARK_HOME isn't required with 'local' master
 master_node <- 'spark://ip-172-31-91-141.ec2.internal:7077'
 cols_swiss <- c("character","integer","character","integer",rep("numeric",2))
@@ -43,6 +43,7 @@ conf$sparklyr.apply.env.AWS_SECRET_ACCESS_KEY <- Sys.getenv('AWS_SECRET_ACCESS_K
 conf$sparklyr.apply.env.AWS_DEFAULT_REGION <- Sys.getenv('AWS_DEFAULT_REGION')
 conf$sparklyr.apply.env.TMPDIR <- '/home/gfi/temp'
 conf$sparklyr.apply.env.max_try <- as.character(max_try)
+conf$sparklyr.apply.schema.infer <- 2
 conf$spark.executor.memory <- "11GB" # the memory to request from each executor, workers having less memory are not used
 conf$spark.executor.instances <- ceiling(n_d/nload)
 conf$spark.dynamicAllocation.enabled <- "false"
@@ -62,7 +63,7 @@ opcounter <- file.path('data', opcounter)
   swiss <- subset(swiss,swiss$k=='710812')
 
 dist_codes <- function(in_df, swiss){
-  pkgs <- c('aws.s3', 'sparklyr', 'stats', 'scripting', 'data.table')
+  pkgs <- c('aws.s3', 'stats', 'scripting', 'data.table')
   for(i in pkgs)library(i, character.only = T)
   remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
   #===================================================================================================================================#
@@ -213,11 +214,13 @@ dist_codes <- function(in_df, swiss){
 
 logg(paste('0000', '|', 'cluster started', sep = '\t'))
 tbl_dinfo <- sdf_copy_to(sc, dinfo, repartition = n_d)
+# spark_apply takes a partition per time; if partitioned less than nrow, more than one row is taken into function.
+# function is excuted by a partition once if without sdf_collect()
 dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = F, context = swiss, rdd = T, 
-                            env = list(out_bucket = out_bucket, oplog = oplog)) # %>% sdf_collect()
+                            env = list(out_bucket = out_bucket, oplog = oplog)) %>% sdf_collect()
 logg(paste('0000', '|', 'cluster ended', sep = '\t'))
-# write.csv(dist_counter, file = opcounter, row.names = F)
+write.csv(dist_counter, file = opcounter, row.names = F)
 spark_disconnect(sc)
 put_object(oplog, basename(oplog), bucket = out_bucket)
-# put_object(opcounter, basename(opcounter), bucket = out_bucket)
+put_object(opcounter, basename(opcounter), bucket = out_bucket)
 # system('sudo shutdown')
