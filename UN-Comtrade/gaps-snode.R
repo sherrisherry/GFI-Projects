@@ -11,13 +11,12 @@ yrs_model <- 2016:2001 # the years for cifob_model
 in_dir <- '/efs/unct'
 out_dir <- '/efs/work' # save the results to this S3 bucket
 in_bucket <- 'gfi-work' # read in raw data from this bucket
-sup_bucket <- 'gfi-supplemental' # supplemental files
-oplog <- 'gaps.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
 cifob_model <- 'cifob_model.rds.bz2'
 tag <- "Comtrade"
+oplog <- paste('gaps', min(years), max(years), '_', paste(cty, collapse = '-'), '_', '.log', sep = '') # progress report file
 cols_in <- c('character', rep("integer",3),rep("numeric",7),rep("integer",11)) 
 names(cols_in) <- c('k','t',"i","j","v_M","v_X","q_M","q_X", 'ln_distw', 'ln_distw_squared', 'ln_uvmdn', "q_code_M","q_code_X",
                     'd_fob', 'd_contig', 'd_conti', 'd_rta', 'd_landlocked_i', 'd_landlocked_j', 'd_dev_i', 'd_dev_j', 'd_hs_diff')
@@ -27,7 +26,7 @@ cols_model <- append(cols_model, paste('d', years[-1], sep = '_'))
 #===================================================================================================================================#
 
 if(!file.exists(out_dir))system(paste('sudo mkdir -m777', out_dir))
-oplog <- file.path('logs', paste(min(years), max(years), cty, oplog, sep = '_'))
+oplog <- file.path('logs', oplog)
 logg <- function(x)mklog(x, path = oplog)
 ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)

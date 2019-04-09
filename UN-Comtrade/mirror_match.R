@@ -18,8 +18,13 @@ oplog <- 'mirror_match.log' # progress report file
 opcounter <- 'mirror_match.csv'
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
+sup_bucket <- 'gfi-supplemental' # supplemental files
+nload <- 2
+max_try <- 10 # the maximum number of attempts for a failed process
 spark_home <- '/home/gfi/spark/spark-2.3.2-bin-hadoop2.7' # SPARK_HOME isn't required with 'local' master
 master_node <- 'spark://ip-172-31-91-141.ec2.internal:7077'
+cols_swiss <- c("character","integer","character","integer",rep("numeric",2))
+names(cols_swiss) <- c('mx','j','k','t','v','q_kg')
 
 #===================================================================================================================================#
 
@@ -37,8 +42,9 @@ conf$sparklyr.apply.env.AWS_ACCESS_KEY_ID <- Sys.getenv('AWS_ACCESS_KEY_ID')
 conf$sparklyr.apply.env.AWS_SECRET_ACCESS_KEY <- Sys.getenv('AWS_SECRET_ACCESS_KEY')
 conf$sparklyr.apply.env.AWS_DEFAULT_REGION <- Sys.getenv('AWS_DEFAULT_REGION')
 conf$sparklyr.apply.env.TMPDIR <- '/home/gfi/temp'
+conf$sparklyr.apply.env.max_try <- as.character(max_try)
 conf$spark.executor.memory <- "11GB" # the memory to request from each executor, workers having less memory are not used
-conf$spark.executor.instances <- ceiling(n_d/2)
+conf$spark.executor.instances <- ceiling(n_d/nload)
 conf$spark.dynamicAllocation.enabled <- "false"
 
 sc <- spark_connect(master= master_node, config = conf)
@@ -46,14 +52,21 @@ logg <- function(x)mklog(x, path = oplog)
 cat(log_head, file = oplog, append = FALSE)
 opcounter <- file.path('data', opcounter)
 
-dist_codes <- function(in_df){
+# Prepare for SWISS module
+  # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data
+  ecycle(swiss <- s3read_using(FUN = function(x)read.csv(x, header=T, na.strings="", colClasses = cols_swiss), 
+                               object = "Swiss_mx_71-72.csv", bucket = sup_bucket),
+         {tmp <- paste('0000', '!', 'loading Swiss failed', sep = '\t'); logg(tmp); stop(tmp)}, max_try)
+  # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
+  #     (NB, monetary gold trade flows should not be included in UN-Comtrade dataset for any country)
+  swiss <- subset(swiss,swiss$k=='710812')
+
+dist_codes <- function(in_df, swiss){
   pkgs <- c('aws.s3', 'sparklyr', 'stats', 'scripting', 'data.table')
   for(i in pkgs)library(i, character.only = T)
   remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
   #===================================================================================================================================#
-  max_try <- 10 # the maximum number of attempts for a failed process
   in_bucket <- 'gfi-comtrade' # read in raw data from this bucket
-  sup_bucket <- 'gfi-supplemental' # supplemental files
   tag <- "Comtrade"
   cols_UN <- rep('NULL', 15)
   names(cols_UN) <- c("classification","year","period","perioddesc","aggregatelevel","isleafcode","tradeflowcode",
@@ -61,8 +74,6 @@ dist_codes <- function(in_df){
   incol <- c("tradeflowcode","classification","reportercode","partnercode","commoditycode", "tradevalues", "qtyunitcode", "qty", "netweightkg")
   names(incol) <- c("tf","hs","i","j","k","v","q_code","q","q_kg")
   cols_UN[incol] <- c("integer","character","integer","integer","character","numeric","integer","numeric","numeric")
-  cols_swiss <- c("character","integer","character","integer",rep("numeric",2))
-  names(cols_swiss) <- c('mx','j','k','t','v','q_kg')
   cols_hk <- c(rep('integer', 2), 'character', 'numeric')
   names(cols_hk) <- c("origin_un","consig_un","k","vrx_un")
   # use "character" for k or codes like '9999AA' messes up
@@ -71,23 +82,14 @@ dist_codes <- function(in_df){
   out_names <- c('M_matched', 'X_matched', 'M_orphaned', 'M_lost')
   names(out_names) <- c('M.FALSE', 'X.FALSE', 'M.TRUE', 'X.TRUE') # M_lost == X_orphan
   #===================================================================================================================================#
+  max_try <- as.integer(Sys.getenv('max_try'))
   out_bucket <- Sys.getenv('out_bucket')
   oplog <- Sys.getenv('oplog')
   logg <- function(x)mklog(x, path = oplog)
   options(stringsAsFactors= FALSE)
-  # Prepare for SWISS module
-  # Data M_swiss and X_swiss compiled by Joe Spanjers from Swiss source data
-  ecycle(swiss <- s3read_using(FUN = function(x)fread(x, header=T, na.strings="", colClasses = cols_swiss), 
-                               object = "Swiss_mx_71-72.csv", bucket = sup_bucket),
-         {tmp <- paste('0000', '!', 'loading Swiss failed', sep = '\t'); logg(tmp); stop(tmp)},
-         max_try)
-  # # keep only records for commodity 710812 which comprises 98% of Swiss trade in non-monetary gold
-  #     (NB, monetary gold trade flows should not be included in UN-Comtrade dataset for any country)
-  swiss <- subset(swiss,swiss$k=='710812'); swiss <- split(swiss, swiss$mx)
-  opcounter <- list() # setup counter
-  # Loop by date
-  for (year in in_df$Year){
-    counter <- c(year = year)
+  swiss <- split(swiss, swiss$mx)
+  year <- in_df$Year
+    counter <- c(year = year) # initize counter
     # Start RAW module
     ecycle(save_object(object = paste(year, '.csv.bz2', sep = ''), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
            {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
@@ -206,16 +208,13 @@ dist_codes <- function(in_df){
                     max_try,
                     {logg(paste(year, '|', paste('uploaded', basename(tmp[i]), sep = ' '), sep = '\t')); unlink(tmp[i])}))
     }
-    rm(mirror)
-    opcounter[[as.character(year)]] <- counter
-  }
-  opcounter <- do.call(rbind, opcounter)
-  return(opcounter)
+  return(counter)
 }
 
 logg(paste('0000', '|', 'cluster started', sep = '\t'))
 tbl_dinfo <- sdf_copy_to(sc, dinfo, repartition = n_d)
-dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = F, rdd = T, env = list(out_bucket = out_bucket, oplog = oplog)) # %>% sdf_collect()
+dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = F, context = swiss, rdd = T, 
+                            env = list(out_bucket = out_bucket, oplog = oplog)) # %>% sdf_collect()
 logg(paste('0000', '|', 'cluster ended', sep = '\t'))
 # write.csv(dist_counter, file = opcounter, row.names = F)
 spark_disconnect(sc)
