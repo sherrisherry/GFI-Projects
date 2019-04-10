@@ -1,3 +1,4 @@
+#!/bin/bash
 # Spark
 spk="/home/gfi/spark/spark-2.3.2-bin-hadoop2.7"
 sudo $spk/sbin/start-master.sh
