@@ -48,8 +48,8 @@ for(year in years){
   if(!is.null(cty)){
     input <- subset(input, input$i %in% cty | input$j %in% cty)
     logg(paste(year, ':', 'extracted cty', sep = '\t'))
-    }else cty <- gfi_cty(logf = logg)
-# gaps files only have ctys in consideration, no select necessary; but all_trade needs cty
+    }# else cty <- gfi_cty('dev', logf = logg)
+# gaps files only have ctys in consideration, no select necessary; all_trade needs cty
   setkeyv(input, c('i', 'j'))
   input$f <- ifelse(input$gap_wtd > 0, 'p', 'n'); input$f[input$gap_wtd==0] <- 'x'
   input$gap_wtd <- abs(input$gap_wtd)
