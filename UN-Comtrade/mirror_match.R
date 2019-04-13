@@ -7,12 +7,12 @@
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'sparklyr', 'scripting')
 for(i in pkgs)library(i, character.only = T)
-remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
+remotes::install_github("sherrisherry/DC-Trees-App", subdir="pkg"); library(pkg)
 
 #=====================================modify the following parameters for each new run==============================================#
 
 usr <- 'aws00' # the user account for using AWS service
-dates <- 2005:2001 # the years we want to download
+dates <- 2008:2013 # the years we want to download
 out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 oplog <- 'mirror_match.log' # progress report file
 opcounter <- 'mirror_match.csv'
@@ -25,6 +25,10 @@ spark_home <- '/home/gfi/spark/spark-2.3.2-bin-hadoop2.7' # SPARK_HOME isn't req
 master_node <- 'spark://ip-172-31-91-141.ec2.internal:7077'
 cols_swiss <- c("character","integer","character","integer",rep("numeric",2))
 names(cols_swiss) <- c('mx','j','k','t','v','q_kg')
+cols_cnt <- rep('integer', 19)
+names(cols_cnt) <- c('year','raw_M','raw_X','raw_rX','raw_rM','treat_M',
+                     'treat_X','treat_rX','treat_rM','swiss_M','swiss_X','swiss_rX','swiss_rM',
+                     'M_pair', 'X_pair','M_matched','M_orphaned','X_matched','M_lost')
 
 #===================================================================================================================================#
 
@@ -43,7 +47,7 @@ conf$sparklyr.apply.env.AWS_SECRET_ACCESS_KEY <- Sys.getenv('AWS_SECRET_ACCESS_K
 conf$sparklyr.apply.env.AWS_DEFAULT_REGION <- Sys.getenv('AWS_DEFAULT_REGION')
 conf$sparklyr.apply.env.TMPDIR <- '/home/gfi/temp'
 conf$sparklyr.apply.env.max_try <- as.character(max_try)
-conf$sparklyr.apply.schema.infer <- 2
+# conf$sparklyr.apply.schema.infer <- 2
 conf$spark.executor.memory <- "11GB" # the memory to request from each executor, workers having less memory are not used
 conf$spark.executor.instances <- ceiling(n_d/nload)
 conf$spark.dynamicAllocation.enabled <- "false"
@@ -63,9 +67,10 @@ opcounter <- file.path('data', opcounter)
   swiss <- subset(swiss,swiss$k=='710812')
 
 dist_codes <- function(in_df, swiss){
-  pkgs <- c('aws.s3', 'stats', 'scripting', 'data.table')
-  for(i in pkgs)library(i, character.only = T)
-  remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
+  pkgs <- c('aws.s3', 'stats', 'scripting', 'data.table', 'pkg')
+  for(i in pkgs){# spark starts a plain R session so settings taken care by RStudio need to be addressed.
+    if(!require(i, character.only = T))install.packages(i, repos = "http://cran.us.r-project.org")
+    library(i, character.only = T)}
   #===================================================================================================================================#
   in_bucket <- 'gfi-comtrade' # read in raw data from this bucket
   tag <- "Comtrade"
@@ -209,14 +214,20 @@ dist_codes <- function(in_df, swiss){
                     max_try,
                     {logg(paste(year, '|', paste('uploaded', basename(tmp[i]), sep = ' '), sep = '\t')); unlink(tmp[i])}))
     }
-  return(counter)
+  return(matrix(counter, nrow = 1, dimnames = list(NULL, names(counter)))) # ensure the output dims to be right
 }
 
 logg(paste('0000', '|', 'cluster started', sep = '\t'))
 tbl_dinfo <- sdf_copy_to(sc, dinfo, repartition = n_d)
 # spark_apply takes a partition per time; if partitioned less than nrow, more than one row is taken into function.
-# function is excuted by a partition once if without sdf_collect()
-dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = F, context = swiss, rdd = T, 
+# function is excuted by the 1st partition once if without sdf_collect() and param 'columns'
+# if without param 'columns', sdf_collect() makes function repeat an execution on the 1st partition.
+# param 'columns' can significantly improve performance with types, eliminating duplicated excution of the 1st partition.
+# pass named vector to 'columns' for performance boost.
+# packages passed by 'packages' param are installed before executing function.
+# 'packages': FALSE, node's R lib is used, otherwise, independent R lib is created only for the application.
+dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = c('pkg', 'scripting'), 
+                            context = swiss, columns = cols_cnt, rdd = T,
                             env = list(out_bucket = out_bucket, oplog = oplog)) %>% sdf_collect()
 logg(paste('0000', '|', 'cluster ended', sep = '\t'))
 write.csv(dist_counter, file = opcounter, row.names = F)
