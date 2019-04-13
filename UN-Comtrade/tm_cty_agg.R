@@ -101,7 +101,7 @@ for(year in years){
   colnames(tmp$X)[match(c('i','j','v_i','v_j'), colnames(tmp$X))] <- c('j','i','v_j','v_i')
   tmp <- do.call(rbind, tmp)
   tmp$t <- year
-  output[[year]] <- tmp
+  output[[as.character(year)]] <- tmp
   logg(paste(year, '|', 'processed flows', sep = '\t'))
 }
 output <- do.call(rbind, output)
