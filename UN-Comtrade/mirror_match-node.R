@@ -139,6 +139,8 @@ for(year in dates){
   # Start MATCH module
   # Matching M
   mirror$M <- split(mirror$M, is.na(mirror$M$v_X))
+    tmp <- colnames(mirror$X)
+    colnames(mirror$X)[match(c("hs_rpt","hs_ptn","i","j"), tmp)] <- c("hs_ptn","hs_rpt","j","i")
   mirror$X <- split(mirror$X, is.na(mirror$X$v_M))
   mirror <- unlist(mirror, recursive = F)
   # mirror$M.FALSE should equal mirror$X.FALSE
@@ -151,8 +153,6 @@ for(year in dates){
   
   # verify matched M==X
   if(counter['M_matched']==counter['X_matched']){
-    tmp <- colnames(mirror$X_matched)
-    colnames(mirror$X_matched)[match(c("hs_rpt","hs_ptn","i","j"), tmp)] <- c("hs_ptn","hs_rpt","j","i")
     tmp <- duplicated(rbind(mirror$M_matched, mirror$X_matched))
     if(sum(tmp)!=counter['M_matched'])logg(paste(year, '!', 'MX nrow not identical', sep = '\t'))
     else{logg(paste(year, ':', 'identical', sep = '\t')); mirror$X_matched <-NULL}

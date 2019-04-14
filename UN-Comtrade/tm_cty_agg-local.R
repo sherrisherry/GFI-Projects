@@ -10,7 +10,6 @@ for(i in pkgs)library(i, character.only = T)
 #=====================================modify the following parameters for each new run==============================================#
 
 years <- 2016:2001 # the years we want to download
-out_dir <- '/efs/work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_dir <- '/efs/work' # read in raw data from this bucket
 tag <- "Comtrade"
 oplog <- 'tm_cty.log' # progress report file
@@ -46,8 +45,8 @@ for(year in years){
   if(all_trade){
     colnames(input)[match(c('v_M_fob','v_X'), colnames(input))] <- c('v_i','v_j')
     tmp <- list()
-    tmp$M <- subset(input, input$i %in% cty, c("t","j","i","k","v_j",'v_i','f','gap_wtd'))
-    tmp$X <- subset(input, input$j %in% cty, c("t","j","i","k","v_j",'v_i','f','gap_wtd'))
+    tmp$'m' <- subset(input, input$i %in% cty, c("t","j","i","k","v_j",'v_i','f','gap_wtd'))
+    tmp$'x' <- subset(input, input$j %in% cty, c("t","j","i","k","v_j",'v_i','f','gap_wtd'))
     logg(paste(year, ':', 'divided mx', sep = '\t'))
     rm(input)
     if(k_digit>0){
@@ -63,8 +62,8 @@ for(year in years){
                                               eval(partition),sum, na.rm=TRUE))
       logg(paste(year, ':', 'aggregated k', sep = '\t'))
     }
-    tmp$M$f <- c(p='mo', n='mu', x='ng')[tmp$M$f]; tmp$M$mx <- 'm'
-    tmp$X$f <- c(p='xu', n='xo', x='ng')[tmp$X$f]; tmp$X$mx <- 'x'
+    tmp$'m'$f <- c(p='mo', n='mu', x='ng')[tmp$'m'$f]; tmp$'m'$mx <- 'm'
+    tmp$'x'$f <- c(p='xu', n='xo', x='ng')[tmp$'x'$f]; tmp$'x'$mx <- 'x'
   }else{
     colnames(input)[match(c('d_dev_i','v_M_fob','v_X'), colnames(input))] <- c('mx','v_i','v_j')
     tmp <- subset(input,input$d_dev_i+input$d_dev_j<2 & input$d_dev_i+input$d_dev_j>0, c("t","j","i","mx","k","v_j",'v_i','f','gap_wtd'))
@@ -85,17 +84,18 @@ for(year in years){
     tmp$mx <- ifelse(tmp$mx==1, 'm', 'x')
     tmp <- split(tmp, tmp$mx)
     logg(paste(year, ':', 'divided mx', sep = '\t'))
-    tmp$M$f <- c(p='mo', n='mu', x='ng')[tmp$M$f]
-    tmp$X$f <- c(p='xu', n='xo', x='ng')[tmp$X$f]
+    tmp$m$f <- c(p='mo', n='mu', x='ng')[tmp$m$f]
+    tmp$x$f <- c(p='xu', n='xo', x='ng')[tmp$x$f]
   }
-  colnames(tmp$X)[match(c('i','j','v_i','v_j'), colnames(tmp$X))] <- c('j','i','v_j','v_i')
+  colnames(tmp$'x')[match(c('i','j','v_i','v_j'), colnames(tmp$'x'))] <- c('j','i','v_j','v_i')
   tmp <- do.call(rbind, tmp)
   tmp$t <- year
-  output[[year]] <- tmp
+  output[[as.character(year)]] <- tmp
   logg(paste(year, '|', 'processed flows', sep = '\t'))
 }
 output <- do.call(rbind, output)
 
 outfile <- paste('data/', 'flow_', agg_lv, '_', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
 write.csv(output, file= outfile, row.names = F)
+logg(paste('0000', '|', 'saved flows', sep = '\t'))
 rm(list=ls())
