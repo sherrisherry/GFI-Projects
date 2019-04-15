@@ -45,20 +45,14 @@ for(i in 1:length(in_nm)){
 		unlink('tmp/tmp.csv.bz2')
 		partition <- c('i', 'j')
 		colnames(input)[match(c('v_M','v_X'), colnames(input))] <- c('v_i','v_j')
-		if(i==1){
-		  input <- subset(input, input$i %in% cty | input$j %in% cty)
-		  tmp <- list()
-		  tmp$M <- subset(input, input$i %in% cty, c('j',"i","k","v_j",'v_i')); tmp$M$mx <- 'm'
-		  tmp$X <- subset(input, input$j %in% cty, c("j","i","k","v_j",'v_i')); tmp$X$mx <- 'x'
-		  colnames(tmp$X)[match(c('i','j','v_i','v_j'), colnames(tmp$X))] <- c('j','i','v_j','v_i')
-		  tmp <- do.call(rbind, tmp)
-		  logg(paste(year, ':', 'divided mx', sep = '\t'))
-		  agg <- c('v_i','v_j'); partition <- append(partition, 'mx')
-		}else{
-		  tmp <- subset(input, input$i %in% cty)
-		  agg <- if(is.na(tmp[1,'v_i']))'v_j'else'v_i'
-		}
+		input <- subset(input, input$i %in% cty | input$j %in% cty)
+		tmp <- list()
+		tmp$M <- subset(input, input$i %in% cty, c('j',"i","k","v_j",'v_i'))
+		tmp$X <- subset(input, input$j %in% cty, c("j","i","k","v_j",'v_i'))
+		logg(paste(year, ':', 'divided mx', sep = '\t'))
 		rm(input)
+		colnames(tmp$X)[match(c('i','j','v_i','v_j'), colnames(tmp$X))] <- c('j','i','v_j','v_i')
+		agg <- c('v_i','v_j'); agg <- agg[!is.na(subset(tmp, 1, agg))]
 		if(!all_trade)tmp <- subset(tmp, tmp$j %in% gfi_cty('adv', logg))
 		if(k_digit>0){
 		  if(k_digit < k_len){
@@ -66,11 +60,11 @@ for(i in 1:length(in_nm)){
 		    partition <- append(partition, 'k')
 		  }
 		  setkeyv(tmp, partition)
-		  tmp <- aggregate(subset(tmp, select = agg),
-		                      as.list(subset(tmp, select = partition)),sum, na.rm=T)
+		  tmp <- lapply(output, function(x)aggregate(subset(x, select = agg), 
+		                                             as.list(subset(x, select = partition)), sum, na.rm=T))
 		  logg(paste(year, ':', 'aggregated k', sep = '\t'))
 		}
-		tmp$t <- year
+		tmp$M$mx <- 'm'; tmp$X$mx <- 'x'; tmp <- do.call(rbind, tmp); tmp$t <- year
 		output[[j]] <- tmp
 		logg(paste(year, ':', paste('processed', in_nm[i]), sep = '\t'))
     }# end loop by date

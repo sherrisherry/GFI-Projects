@@ -46,20 +46,14 @@ for(i in 1:length(in_nm)){
 		unlink('tmp/tmp.csv.bz2')
 		partition <- c('i', 'j')
 		colnames(input)[match(c('v_M','v_X'), colnames(input))] <- c('v_i','v_j')
-		if(i==1){
-		  input <- subset(input, input$i %in% cty | input$j %in% cty)
-		  output <- list()
-		  output$M <- subset(input, input$i %in% cty, c('j',"i","k","v_j",'v_i')); output$M$mx <- 'm'
-		  output$X <- subset(input, input$j %in% cty, c("j","i","k","v_j",'v_i')); output$X$mx <- 'x'
-		  colnames(output$X)[match(c('i','j','v_i','v_j'), colnames(output$X))] <- c('j','i','v_j','v_i')
-		  output <- do.call(rbind, output)
-		  logg(paste(year, ':', 'divided mx', sep = '\t'))
-		  agg <- c('v_i','v_j'); partition <- append(partition, 'mx')
-		}else{
-		  output <- subset(input, input$i %in% cty)
-		  agg <- if(is.na(output[1,'v_i']))'v_j'else'v_i'
-		}
+		input <- subset(input, input$i %in% cty | input$j %in% cty)
+		output <- list()
+		output$M <- subset(input, input$i %in% cty, c('j',"i","k","v_j",'v_i'))
+		output$X <- subset(input, input$j %in% cty, c("j","i","k","v_j",'v_i'))
+		logg(paste(year, ':', 'divided mx', sep = '\t'))
 		rm(input)
+		colnames(output$X)[match(c('i','j','v_i','v_j'), colnames(output$X))] <- c('j','i','v_j','v_i')
+		agg <- c('v_i','v_j'); agg <- agg[!is.na(subset(output, 1, agg))]
 		if(!all_trade)output <- subset(output, output$j %in% gfi_cty('adv', logg))
 		if(k_digit>0){
 		  if(k_digit < k_len){
@@ -67,11 +61,11 @@ for(i in 1:length(in_nm)){
 		    partition <- append(partition, 'k')
 		  }
 		  setkeyv(output, partition)
-		  output <- aggregate(subset(output, select = agg),
-		                      as.list(subset(output, select = partition)),sum, na.rm=T)
+		  output <- lapply(output, function(x)aggregate(subset(x, select = agg), 
+		                                                as.list(subset(x, select = partition)), sum, na.rm=T))
 		  logg(paste(year, ':', 'aggregated k', sep = '\t'))
 		}
-		output$t <- year
+		output$M$mx <- 'm'; output$X$mx <- 'x'; output <- do.call(rbind, output); output$t <- year
 		logg(paste(year, ':', paste('processed', in_nm[i]), sep = '\t'))
 		tmp <- paste('tmp/', paste(tag, year, names(in_nm)[i], all_trade, sep = '-'), '.csv.bz2', sep = '')
 		ecycle(write.csv(output, file = bzfile(tmp), row.names=F, na=""), 

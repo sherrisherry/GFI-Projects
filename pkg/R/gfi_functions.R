@@ -1,8 +1,9 @@
 nv_cols <- function(nm, cl, obj, io = TRUE){
   switch(obj,
-         bridge = {
-           cols <- rep('NULL',21)
-           names(cols) <- c('un_code','imf_code','imf_nm','un_nm','d_gfi','d_dev','d_ssa','d_asia','d_deur','d_mena','d_whem','d_adv','un_nm_en_full','un_nm_en_abbr','un_note','iso2','iso3','un_start','un_end','wb_code','wb_nm')
+         bridge = {# "whem","mena","ssa","deur","asia" in imf_reg
+           cols <- c(rep('integer',7), rep('character',9))
+           names(cols) <- c('un_code','un_start','un_end','wb_code','imf_code','d_gfi','d_dev',
+                            'imf_reg','imf_nm','un_nm','un_nm_en_full','un_nm_en_abbr','un_note','iso2','iso3','wb_nm')
          },
          geo = {
            cols <- c(rep("integer",4),"numeric",rep("integer",4))
@@ -60,11 +61,12 @@ in_hkrx <- function(yr, nm, cl, logf, max_try = 10, io = TRUE){
   return(hk)
 }
 
-gfi_cty <- function(logf, max_try = 10){
-  bridge <- in_bridge(c('un_code','d_gfi'), rep('integer',2), logf, max_try)
+gfi_cty <- function(opt, logf, max_try = 10){
+  cols <- if(is.missing(opt))switch(opt, dev = 'd_dev', adv = c('d_gfi', 'd_dev'))else 'd_gfi'
+  bridge <- in_bridge(c(cols, 'un_code'), logf, max_try)
   if(is.null(bridge))return(NULL)
   bridge <- unique(bridge)
-  cty <- bridge$un_code[bridge$d_gfi==1]
+  cty <- bridge$un_code[bridge[, col]==1]
   if(!missing(logf))logf(paste('0000', ':', 'decided cty', sep = '\t'))
   return(cty)
 }
