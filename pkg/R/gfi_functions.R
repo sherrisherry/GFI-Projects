@@ -62,11 +62,14 @@ in_hkrx <- function(yr, nm, cl, logf, max_try = 10, io = TRUE){
 }
 
 gfi_cty <- function(opt, logf, max_try = 10){
-  cols <- if(is.missing(opt))switch(opt, dev = 'd_dev', adv = c('d_gfi', 'd_dev'))else 'd_gfi'
+  cols <- if(is.missing(opt))switch(opt, dev = 'd_dev', adv = c('d_gfi', 'd_dev'), c('d_gfi', 'imf_reg'))else 'd_gfi'
   bridge <- in_bridge(c(cols, 'un_code'), logf, max_try)
   if(is.null(bridge))return(NULL)
   bridge <- unique(bridge)
-  cty <- bridge$un_code[bridge[, col]==1]
+  cty <- if(length(cols)==1)bridge$un_code[bridge[, cols]==1]
+          else switch(class(bridge[, setdiff(cols, 'd_gfi')]),
+                      integer = bridge$un_code[abs(bridge[, 1]-bridge[, 2])==1]
+                      character = bridge$un_code[bridge$d_gfi==1 & bridge$imf_reg==opt])
   if(!missing(logf))logf(paste('0000', ':', 'decided cty', sep = '\t'))
   return(cty)
 }
