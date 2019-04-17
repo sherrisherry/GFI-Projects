@@ -19,7 +19,7 @@ opcounter <- 'mirror_match.csv'
 dinfo <- 'bulk_download.log' # file of the information of the downloaded data
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 sup_bucket <- 'gfi-supplemental' # supplemental files
-nload <- 1 # years for a worker, full cap 2, recommend leaving some room for handling executor errors
+nload <- 1.5 # years for a worker, full cap 2, recommend leaving some room for handling executor errors
 max_try <- 10L # the maximum number of attempts for a failed process
 spark_home <- '/home/gfi/spark/spark-2.3.2-bin-hadoop2.7' # SPARK_HOME isn't required with 'local' master
 master_node <- 'spark://ip-172-31-91-141.ec2.internal:7077'

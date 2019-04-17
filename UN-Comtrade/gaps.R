@@ -22,7 +22,7 @@ names(cols_pdict) <- c('t', 'i', 'j', 'd_dev_i', 'd_dev_j', 'k')
 oplog <- paste('/efs/logs', oplog, sep = '/')
 logg <- function(x)mklog(x, path = oplog)
 ec2env(keycache,usr)
-npar <- ceiling(n_d/nload)
+npar <- ceiling(length(years)/nload)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 conf <- spark_config()
 conf$sparklyr.apply.env.AWS_ACCESS_KEY_ID <- Sys.getenv('AWS_ACCESS_KEY_ID')
@@ -79,8 +79,7 @@ dist_codes <- function(years, cols){
     logg(paste(year, ':', 'loaded data', sep = '\t'))
     unlink('tmp/tmp.csv.bz2')
     tinv <- subset(tinv, tinv$i %in% cty | tinv$j %in% cty) # subset cty
-    logg(paste(year, ':', 'sub_cty', sep = '\t'))
-    logg(paste(year, '#', nrow(tinv), sep = '\t'))
+    logg(paste(year, '#', paste('sub_cty', nrow(tinv), sep = ':'), sep = '\t'))
     tinv$d <- factor(tinv$t, levels = yrs_model); tmp <- encode_onehot(tinv[,'d', drop=FALSE], drop1st = T)
     tinv$d <- NULL; tinv <- cbind(tinv, tmp)
     logg(paste(year, ':', 'prepared data', sep = '\t'))
@@ -90,7 +89,7 @@ dist_codes <- function(years, cols){
     logg(paste(year, ':', 'applied model', sep = '\t'))
     pdict <- exp(pdict)
     tinv$'0'$"v_M_fob" <- tinv$'0'$"v_M" / pdict
-    pdict <- cbind(tinv[, cols], pdict); tinv <- do.call(rbind, tinv)
+    pdict <- cbind(tinv$'0'[, cols], pdict); tinv <- do.call(rbind, tinv)
     tinv[(tinv$v_M_fob>tinv$v_M),"v_M_fob"] <- tinv[(tinv$v_M_fob>tinv$v_M),"v_M"]# DEFAULT: when fob>cif set FOB = CIF
     # calculate weights & gaps
     tinv$a_wt <- 1
@@ -122,7 +121,7 @@ predicts <- spark_apply(tbl_yrs, dist_codes, packages = c('pkg', 'scripting'),
                             context = data.frame(cols_pdict), memory = T, name = 'pred_gaps',
                             rdd = T, columns = append(cols_pdict, c(prd = 'numeric')), 
                             env = list(out_bucket = out_bucket, oplog = oplog))
-logg(paste('0000', '|', 'cluster ended', sep = '\t'))
 capture.output(sdf_describe(predicts), file= "data/Stats_Fitted_Exp_Values_Full.txt")
 logg(paste('0000', '|', 'summarized predictions', sep = '\t'))
+spark_disconnect(sc)
 put_object(oplog, basename(oplog), bucket = out_bucket)
