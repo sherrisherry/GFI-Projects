@@ -22,7 +22,7 @@ names(cols_pdict) <- c('t', 'i', 'j', 'd_dev_i', 'd_dev_j', 'k')
 				  
 oplog <- paste('/efs/logs', oplog, sep = '/')
 logg <- function(x)mklog(x, path = oplog)
-ec2env(keycache,usr)
+ec2env(keycache,usr); Sys.setenv('SPARK_HOME' = spark_home)
 npar <- ceiling(length(years)/nload)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 conf <- spark_config()

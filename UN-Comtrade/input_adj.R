@@ -1,3 +1,4 @@
+# suggested 8 years per node
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
