@@ -1,5 +1,5 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'sparklyr', 'scripting', 'remotes')
+pkgs <- c('aws.s3', 'sparklyr', 'scripting', 'dplyr', 'remotes')
 for(i in pkgs)library(i, character.only = T)
 install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
@@ -9,6 +9,7 @@ usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
 out_bucket <- 'gfi-work' # save the results to this S3 bucket
 oplog <- 'gaps.log' # progress report file
+outfile <- 'data/summ_prd.csv'
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 nload <- 3 # years for a worker
 max_try <- 10L # the maximum number of attempts for a failed process
@@ -118,10 +119,28 @@ dist_codes <- function(years, cols){
 logg(paste('0000', '|', 'cluster started', sep = '\t'))
 tbl_yrs <- sdf_copy_to(sc, data.frame(years), repartition = npar)
 predicts <- spark_apply(tbl_yrs, dist_codes, packages = c('pkg', 'scripting'), 
-                            context = data.frame(cols_pdict), memory = T, name = 'pred_gaps',
-                            rdd = T, columns = append(cols_pdict, c(prd = 'numeric')), 
-                            env = list(out_bucket = out_bucket, oplog = oplog))
-capture.output(sdf_describe(predicts), file= "data/Stats_Fitted_Exp_Values_Full.txt")
+                        context = data.frame(names(cols_pdict), stringsAsFactors = F), 
+                        memory = T, name = 'pred_gaps', rdd = T, 
+                        columns = append(cols_pdict, c(prd = 'numeric')), 
+                        env = list(out_bucket = out_bucket, oplog = oplog))
+summ_prd <- list()
+summ_prd[[1]] <- predicts %>% group_by(t, d_dev_i, d_dev_j) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[2]] <- predicts %>% group_by(t, d_dev_i) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[2]][, 'd_dev_j'] <- NA
+summ_prd[[3]] <- predicts %>% group_by(t, d_dev_j) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[3]][, 'd_dev_i'] <- NA
+summ_prd[[4]] <- predicts %>% group_by(t) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[4]][, c('d_dev_i', 'd_dev_j')] <- NA
+summ_prd[[5]] <- predicts %>% group_by(d_dev_i, d_dev_j) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[5]][, 't'] <- NA
+summ_prd[[6]] <- predicts %>% group_by(d_dev_i) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[6]][, c('t', 'd_dev_j')] <- NA
+summ_prd[[7]] <- predicts %>% group_by(d_dev_j) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[7]][, c('t', 'd_dev_i')] <- NA
+summ_prd[[8]] <- predicts %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[8]][, c('t', 'd_dev_i', 'd_dev_j')] <- NA
 logg(paste('0000', '|', 'summarized predictions', sep = '\t'))
 spark_disconnect(sc)
+write.csv(do.call(rbind, summ_prd), outfile, row.names = F)
 put_object(oplog, basename(oplog), bucket = out_bucket)
+put_object(outfile, basename(outfile), bucket = out_bucket)
