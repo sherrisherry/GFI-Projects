@@ -51,11 +51,12 @@ for(year in years){
     rm(input)
     if(k_digit>0){
       if(k_digit < k_len){
-        tmp$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', tmp$k)
-        setkeyv(tmp, c('i', 'j', 'k', 'f'))
+        tmp$m$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', tmp$m$k)
+		tmp$x$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', tmp$x$k)
+        setkeyv(tmp$m, c('i', 'j', 'k', 'f')); setkeyv(tmp$x, c('i', 'j', 'k', 'f'))
         partition <- expression(list(i=x$i,j=x$j,k=x$k,f=x$f))
       }else{
-        setkeyv(tmp, c('i', 'j', 'f'))
+        setkeyv(tmp$m, c('i', 'j', 'f')); setkeyv(tmp$x, c('i', 'j', 'f'))
         partition <- expression(list(i=x$i,j=x$j,f=x$f))
       }
       tmp <- lapply(tmp, function(x)aggregate(x[,c('v_i','v_j','gap_wtd')],

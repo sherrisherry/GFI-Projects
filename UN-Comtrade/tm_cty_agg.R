@@ -62,12 +62,13 @@ for(year in years){
     rm(input)
     if(k_digit>0){
       if(k_digit < k_len){
-        output$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', output$k)
+		output$m$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', output$m$k)
+		output$x$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', output$x$k)
 		partition <- c('i', 'j', 'k', 'f')
       }else{
         partition <- c('i', 'j', 'f')
       }
-	  setkeyv(output, partition)
+	  setkeyv(output$m, partition); setkeyv(output$x, partition)
       output <- lapply(output, function(x)aggregate(x[,c('v_i','v_j','gap_wtd')], as.list(subset(x, select = partition)),sum, na.rm=T))
       logg(paste(year, ':', 'aggregated k', sep = '\t'))
     }
@@ -97,7 +98,7 @@ for(year in years){
   colnames(output$x)[match(c('i','j','v_i','v_j'), colnames(output$x))] <- c('j','i','v_j','v_i')
   output <- do.call(rbind, output)
   output$t <- year
-  outfile <- paste('data/', 'flow_', agg_lv, all_trade, year, '.csv', sep = '')
+  outfile <- paste('data/', 'flow_', agg_lv, all_trade, year, '.csv.bz2', sep = '')
   logg(paste(year, '|', 'processed flows', sep = '\t'))
   ecycle(write.csv(output, file = bzfile(outfile),row.names=FALSE,na=""), 
        ecycle(s3write_using(output, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
