@@ -4,7 +4,7 @@
 # 'eu' = export underinvoicing; 'eo' = export overinvoicing
 
 rm(list=ls()) # clean up environment
-pkgs <- c('stats', 'scripting', 'data.table')
+pkgs <- c('stats', 'batchscr', 'data.table')
 for(i in pkgs)library(i, character.only = T)
 
 #=====================================modify the following parameters for each new run==============================================#

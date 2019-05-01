@@ -25,7 +25,7 @@ nv_cols <- function(nm, cl, obj, io = TRUE){
 
 in_bridge <- function(nm, cl, logf, max_try = 10, io = TRUE){
   cols <- nv_cols(nm, cl, 'bridge', io)
-  scripting::ecycle(bridge <- aws.s3::s3read_using(FUN = function(x)read.csv(x, colClasses=cols, header=T, fileEncoding = 'UTF8'),
+  batchscr::ecycle(bridge <- aws.s3::s3read_using(FUN = function(x)read.csv(x, colClasses=cols, header=T, fileEncoding = 'UTF8'),
                                                    object = 'bridge.csv', bucket = 'gfi-supplemental'),
                     {if(!missing(logf))logf(paste('0000', '!', 'loading bridge.csv failed', sep = '\t')); return(NULL)}, max_try)
   return(bridge)
@@ -33,7 +33,7 @@ in_bridge <- function(nm, cl, logf, max_try = 10, io = TRUE){
 
 in_geo <- function(nm, cl, logf, max_try = 10, io = TRUE){
   cols <- nv_cols(nm, cl, 'geo', io)
-  scripting::ecycle(geo <- aws.s3::s3read_using(FUN = function(x)read.csv(x, colClasses=cols, header=T, na.strings=''),
+  batchscr::ecycle(geo <- aws.s3::s3read_using(FUN = function(x)read.csv(x, colClasses=cols, header=T, na.strings=''),
                                                 object = 'CEPII_GeoDist.csv', bucket = 'gfi-supplemental'),
                     {if(!missing(logf))logf(paste('0000', '!', 'loading CEPII_GeoDist.csv failed', sep = '\t')); return(NULL)}, max_try)
   return(geo)
@@ -42,9 +42,9 @@ in_geo <- function(nm, cl, logf, max_try = 10, io = TRUE){
 in_eia <- function(nm, cl, logf, max_try = 10, io = TRUE){
   cols <- nv_cols(nm, cl, 'eia', io)
   tmp <- tempfile()
-  scripting::ecycle(aws.s3::save_object(object = 'EIA.csv.bz2', bucket = 'gfi-supplemental', file = tmp, overwrite = TRUE),
+  batchscr::ecycle(aws.s3::save_object(object = 'EIA.csv.bz2', bucket = 'gfi-supplemental', file = tmp, overwrite = TRUE),
                     {if(!missing(logf))logf(paste('0000', '!', 'retrieving EIA file failed', sep = '\t')); return(NULL)}, max_try)
-  scripting::ecycle(eia <- read.csv(bzfile(tmp), header=T, colClasses=cols, na.strings="", stringsAsFactors = F),
+  batchscr::ecycle(eia <- read.csv(bzfile(tmp), header=T, colClasses=cols, na.strings="", stringsAsFactors = F),
                     {if(!missing(logf))logf(paste('0000', '!', 'loading file failed', sep = '\t')); return(NULL)},
                     max_try, cond = is.data.frame(eia) && nrow(eia)>10)
   return(eia)
@@ -53,9 +53,9 @@ in_eia <- function(nm, cl, logf, max_try = 10, io = TRUE){
 in_hkrx <- function(yr, nm, cl, logf, max_try = 10, io = TRUE){
   cols <- nv_cols(nm, cl, 'hkrx', io)
   tmp <- tempfile()
-  scripting::ecycle(aws.s3::save_object(object = paste('HK', yr, 'rx.csv.bz2', sep = '_'), bucket = 'gfi-supplemental', file = tmp, overwrite = TRUE),
+  batchscr::ecycle(aws.s3::save_object(object = paste('HK', yr, 'rx.csv.bz2', sep = '_'), bucket = 'gfi-supplemental', file = tmp, overwrite = TRUE),
                     {if(!missing(logf))logf(paste(yr, '!', 'retrieving hkrx file failed', sep = '\t')); return(NULL)}, max_try)
-  scripting::ecycle(hk <- read.csv(bzfile(tmp), header=T, colClasses=cols, na.strings="", stringsAsFactors = F),
+  batchscr::ecycle(hk <- read.csv(bzfile(tmp), header=T, colClasses=cols, na.strings="", stringsAsFactors = F),
                     {if(!missing(logf))logf(paste(yr, '!', 'loading hkrx file failed', sep = '\t')); return(NULL)},
                     max_try, cond = is.data.frame(hk) && nrow(hk)>10)
   return(hk)

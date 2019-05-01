@@ -1,5 +1,5 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'scripting', 'cleandata', 'remotes')
+pkgs <- c('aws.s3', 'batchscr', 'cleandata', 'remotes')
 for(i in pkgs)library(i, character.only = T)
 install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 

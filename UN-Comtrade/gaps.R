@@ -1,5 +1,5 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'sparklyr', 'scripting', 'dplyr', 'remotes')
+pkgs <- c('aws.s3', 'sparklyr', 'batchscr', 'dplyr', 'remotes')
 for(i in pkgs)library(i, character.only = T)
 install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
@@ -38,7 +38,7 @@ conf$spark.dynamicAllocation.enabled <- "false"
 sc <- spark_connect(master= master_node, config = conf)
 
 dist_codes <- function(years, cols){
-  pkgs <- c('aws.s3', 'stats', 'cleandata', 'scripting', 'pkg')
+  pkgs <- c('aws.s3', 'stats', 'cleandata', 'batchscr', 'pkg')
   for(i in pkgs){# spark starts a plain R session so settings taken care by RStudio need to be addressed.
     if(!require(i, character.only = T))install.packages(i, repos = "http://cran.us.r-project.org")
     library(i, character.only = T)}
@@ -118,7 +118,7 @@ dist_codes <- function(years, cols){
 
 logg(paste('0000', '|', 'cluster started', sep = '\t'))
 tbl_yrs <- sdf_copy_to(sc, data.frame(years), repartition = npar)
-predicts <- spark_apply(tbl_yrs, dist_codes, packages = c('pkg', 'scripting'), 
+predicts <- spark_apply(tbl_yrs, dist_codes, packages = c('pkg', 'batchscr'), 
                         context = data.frame(names(cols_pdict), stringsAsFactors = F), 
                         memory = T, name = 'pred_gaps', rdd = T, 
                         columns = append(cols_pdict, c(prd = 'numeric')), 

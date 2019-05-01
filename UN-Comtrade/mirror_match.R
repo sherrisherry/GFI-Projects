@@ -5,7 +5,7 @@
 # 6. shutdown system after completion.
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'sparklyr', 'scripting')
+pkgs <- c('aws.s3', 'sparklyr', 'batchscr')
 for(i in pkgs)library(i, character.only = T)
 remotes::install_github("sherrisherry/DC-Trees-App", subdir="pkg"); library(pkg)
 
@@ -67,7 +67,7 @@ opcounter <- file.path('data', opcounter)
   swiss <- subset(swiss,swiss$k=='710812')
 
 dist_codes <- function(in_df, swiss){
-  pkgs <- c('aws.s3', 'stats', 'scripting', 'data.table', 'pkg')
+  pkgs <- c('aws.s3', 'stats', 'batchscr', 'data.table', 'pkg')
   for(i in pkgs){# spark starts a plain R session so settings taken care by RStudio need to be addressed.
     if(!require(i, character.only = T))install.packages(i, repos = "http://cran.us.r-project.org")
     library(i, character.only = T)}
@@ -226,7 +226,7 @@ tbl_dinfo <- sdf_copy_to(sc, dinfo, repartition = n_d)
 # pass named vector to 'columns' for performance boost.
 # packages passed by 'packages' param are installed before executing function.
 # 'packages': FALSE, node's R lib is used, otherwise, independent R lib is created only for the application.
-dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = c('pkg', 'scripting'), 
+dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = c('pkg', 'batchscr'), 
                             context = swiss, columns = cols_cnt, rdd = T,
                             env = list(out_bucket = out_bucket, oplog = oplog)) %>% sdf_collect()
 logg(paste('0000', '|', 'cluster ended', sep = '\t'))

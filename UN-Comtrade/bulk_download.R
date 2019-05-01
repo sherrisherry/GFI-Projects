@@ -5,7 +5,7 @@
 # 5. shutdown system after completion.
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'jsonlite', 'scripting', 'remotes', 'data.table')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'jsonlite', 'batchscr', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
 install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 

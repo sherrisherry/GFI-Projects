@@ -2,7 +2,7 @@
 # produce cif-fob model coefficients: Margins Model Coefficients.csv
 
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'scripting', 'cleandata', 'remotes')
+pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'batchscr', 'cleandata', 'remotes')
 for(i in pkgs)library(i, character.only = T)
 install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
