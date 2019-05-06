@@ -6,13 +6,14 @@
 
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'sparklyr', 'batchscr')
-for(i in pkgs)library(i, character.only = T)
+for(i in pkgs){if(!require(i, character.only = T))install.packages(i); library(i, character.only = T)}
+if(!require(remotes))install.packages('remotes')
 remotes::install_github("sherrisherry/DC-Trees-App", subdir="pkg"); library(pkg)
 
 #=====================================modify the following parameters for each new run==============================================#
 
 usr <- 'aws00' # the user account for using AWS service
-dates <- 2008:2013 # the years we want to download
+dates <- 2001:2010 # the years we want to download
 out_bucket <- 'gfi-mirror-analysis' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 oplog <- 'mirror_match.log' # progress report file
 opcounter <- 'mirror_match.csv'
@@ -226,7 +227,7 @@ tbl_dinfo <- sdf_copy_to(sc, dinfo, repartition = n_d)
 # pass named vector to 'columns' for performance boost.
 # packages passed by 'packages' param are installed before executing function.
 # 'packages': FALSE, node's R lib is used, otherwise, independent R lib is created only for the application.
-dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = c('pkg', 'batchscr'), 
+dist_counter <- spark_apply(tbl_dinfo, dist_codes, packages = c('pkg', 'aws.s3', 'data.table'), 
                             context = swiss, columns = cols_cnt, rdd = T,
                             env = list(out_bucket = out_bucket, oplog = oplog)) %>% sdf_collect()
 logg(paste('0000', '|', 'cluster ended', sep = '\t'))
