@@ -11,12 +11,12 @@ out_bucket <- 'gfi-work' # save the results to this S3 bucket
 oplog <- 'gaps.log' # progress report file
 outfile <- 'data/summ_prd.csv'
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-nload <- 3 # years for a worker
+nload <- 3.5 # years for a worker
 max_try <- 10L # the maximum number of attempts for a failed process
 spark_home <- '/home/gfi/spark/spark-2.3.2-bin-hadoop2.7' # SPARK_HOME isn't required with 'local' master
 master_node <- 'spark://ip-172-31-91-141.ec2.internal:7077'
-cols_pdict <- c(rep('integer',5), 'character')
-names(cols_pdict) <- c('t', 'i', 'j', 'd_dev_i', 'd_dev_j', 'k')
+cols_pdict <- rep('integer',5)
+names(cols_pdict) <- c('t', 'i', 'j', 'd_dev_i', 'd_dev_j') # 'k' makes return value of spark_apply too large (thus too io consuming)
 
 #===================================================================================================================================#
 				  
@@ -90,7 +90,10 @@ dist_codes <- function(years, cols){
     logg(paste(year, ':', 'applied model', sep = '\t'))
     pdict <- exp(pdict)
     tinv$'0'$"v_M_fob" <- tinv$'0'$"v_M" / pdict
-    pdict <- cbind(tinv$'0'[, cols], pdict); tinv <- do.call(rbind, tinv)
+    # pdict <- cbind(tinv$'0'[, cols], pdict)
+	# may use SSEtotal=SSEbetween+SSEwithin for stdev; median + cnt for global median.
+	pdict <- aggregate(pdict, as.list(tinv$'0'[, cols]), function(x)c(max=max(x),min=min(x),sum=sum(x),cnt=length(x)))
+	tinv <- do.call(rbind, tinv)
     tinv[(tinv$v_M_fob>tinv$v_M),"v_M_fob"] <- tinv[(tinv$v_M_fob>tinv$v_M),"v_M"]# DEFAULT: when fob>cif set FOB = CIF
     # calculate weights & gaps
     tinv$a_wt <- 1
@@ -109,7 +112,7 @@ dist_codes <- function(years, cols){
                   logg(paste(year, '!', paste('uploading', basename(file_out), 'failed', sep = ' '), sep = '\t')),
                   max_try,
                   {logg(paste(year, '|', paste('uploaded', basename(file_out), sep = ' '), sep = '\t')); unlink(file_out)}))
-    predicts[[as.character(year)]] <- pdict
+	predicts[[as.character(year)]] <- pdict
     rm(tinv)
   }
   rm(cifob_model)
@@ -121,23 +124,23 @@ tbl_yrs <- sdf_copy_to(sc, data.frame(years), repartition = npar)
 predicts <- spark_apply(tbl_yrs, dist_codes, packages = c('pkg', 'batchscr'), 
                         context = data.frame(names(cols_pdict), stringsAsFactors = F), 
                         memory = T, name = 'pred_gaps', rdd = T, 
-                        columns = append(cols_pdict, c(prd = 'numeric')), 
+                        columns = append(cols_pdict, c(max_prd = 'numeric', min_prd = 'numeric', sum_prd = 'numeric', cnt_prd = 'integer')), 
                         env = list(out_bucket = out_bucket, oplog = oplog))
 summ_prd <- list()
-summ_prd[[1]] <- predicts %>% group_by(t, d_dev_i, d_dev_j) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
-summ_prd[[2]] <- predicts %>% group_by(t, d_dev_i) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[1]] <- predicts %>% group_by(t, d_dev_i, d_dev_j) %>% summarize(max = max(max_prd), min = min(min_prd), mean = sum(sum_prd)/sum(cnt_prd)) %>% sdf_collect()
+summ_prd[[2]] <- predicts %>% group_by(t, d_dev_i) %>% summarize(max = max(max_prd), min = min(min_prd), mean = sum(sum_prd)/sum(cnt_prd)) %>% sdf_collect()
 summ_prd[[2]][, 'd_dev_j'] <- NA
-summ_prd[[3]] <- predicts %>% group_by(t, d_dev_j) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[3]] <- predicts %>% group_by(t, d_dev_j) %>% summarize(max = max(max_prd), min = min(min_prd), mean = sum(sum_prd)/sum(cnt_prd)) %>% sdf_collect()
 summ_prd[[3]][, 'd_dev_i'] <- NA
-summ_prd[[4]] <- predicts %>% group_by(t) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[4]] <- predicts %>% group_by(t) %>% summarize(max = max(max_prd), min = min(min_prd), mean = sum(sum_prd)/sum(cnt_prd)) %>% sdf_collect()
 summ_prd[[4]][, c('d_dev_i', 'd_dev_j')] <- NA
-summ_prd[[5]] <- predicts %>% group_by(d_dev_i, d_dev_j) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[5]] <- predicts %>% group_by(d_dev_i, d_dev_j) %>% summarize(max = max(max_prd), min = min(min_prd), mean = sum(sum_prd)/sum(cnt_prd)) %>% sdf_collect()
 summ_prd[[5]][, 't'] <- NA
-summ_prd[[6]] <- predicts %>% group_by(d_dev_i) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[6]] <- predicts %>% group_by(d_dev_i) %>% summarize(max = max(max_prd), min = min(min_prd), mean = sum(sum_prd)/sum(cnt_prd)) %>% sdf_collect()
 summ_prd[[6]][, c('t', 'd_dev_j')] <- NA
-summ_prd[[7]] <- predicts %>% group_by(d_dev_j) %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[7]] <- predicts %>% group_by(d_dev_j) %>% summarize(max = max(max_prd), min = min(min_prd), mean = sum(sum_prd)/sum(cnt_prd)) %>% sdf_collect()
 summ_prd[[7]][, c('t', 'd_dev_i')] <- NA
-summ_prd[[8]] <- predicts %>% summarize(max = max(prd), min = min(prd), mean = mean(prd), stdv = sd(prd)) %>% sdf_collect()
+summ_prd[[8]] <- predicts %>% summarize(max = max(max_prd), min = min(min_prd), mean = sum(sum_prd)/sum(cnt_prd)) %>% sdf_collect()
 summ_prd[[8]][, c('t', 'd_dev_i', 'd_dev_j')] <- NA
 logg(paste('0000', '|', 'summarized predictions', sep = '\t'))
 spark_disconnect(sc)
