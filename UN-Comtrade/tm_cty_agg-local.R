@@ -96,7 +96,7 @@ for(year in years){
 }
 output <- do.call(rbind, output)
 
-outfile <- paste('data/', 'flow_', agg_lv, '_', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
+outfile <- paste('data/', 'f_', agg_lv, '_', all_trade, min(years), max(years), '.csv', sep = '')
 write.csv(output, file= outfile, row.names = F)
 logg(paste('0000', '|', 'saved flows', sep = '\t'))
 rm(list=ls())

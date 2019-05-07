@@ -1,7 +1,8 @@
 rm(list=ls()) # clean up environment
-pkgs <- c('aws.s3', 'sparklyr', 'batchscr', 'dplyr', 'remotes')
-for(i in pkgs)library(i, character.only = T)
-install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
+pkgs <- c('aws.s3', 'sparklyr', 'batchscr', 'dplyr')
+for(i in pkgs){if(!require(i, character.only = T))install.packages(i); library(i, character.only = T)}
+if(!require(remotes))install.packages('remotes')
+remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
 #=====================================modify the following parameters for each new run==============================================#
 
@@ -44,7 +45,7 @@ dist_codes <- function(years, cols){
     library(i, character.only = T)}
   #==============================================================================================#
   
-  cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
+  # cty <- NULL # don't select cty because this is done in input_adj. if not, do this in tm_cty_agg
   cifob_model <- 'cifob_model.rds.bz2'
   tag <- 'Comtrade'
   yrs_model <- 2016:2001 # the years for cifob_model
@@ -79,8 +80,8 @@ dist_codes <- function(years, cols){
            {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try)
     logg(paste(year, ':', 'loaded data', sep = '\t'))
     unlink('tmp/tmp.csv.bz2')
-    tinv <- subset(tinv, tinv$i %in% cty | tinv$j %in% cty) # subset cty
-    logg(paste(year, '#', paste('sub_cty', nrow(tinv), sep = ':'), sep = '\t'))
+    # tinv <- subset(tinv, tinv$i %in% cty | tinv$j %in% cty) # subset cty
+    # logg(paste(year, '#', paste('sub_cty', nrow(tinv), sep = ':'), sep = '\t'))
     tinv$d <- factor(tinv$t, levels = yrs_model); tmp <- encode_onehot(tinv[,'d', drop=FALSE], drop1st = T)
     tinv$d <- NULL; tinv <- cbind(tinv, tmp)
     logg(paste(year, ':', 'prepared data', sep = '\t'))
@@ -121,7 +122,7 @@ dist_codes <- function(years, cols){
 
 logg(paste('0000', '|', 'cluster started', sep = '\t'))
 tbl_yrs <- sdf_copy_to(sc, data.frame(years), repartition = npar)
-predicts <- spark_apply(tbl_yrs, dist_codes, packages = c('pkg', 'batchscr'), 
+predicts <- spark_apply(tbl_yrs, dist_codes, packages = c('pkg', 'aws.s3'), 
                         context = data.frame(names(cols_pdict), stringsAsFactors = F), 
                         memory = T, name = 'pred_gaps', rdd = T, 
                         columns = append(cols_pdict, c(max_prd = 'numeric', min_prd = 'numeric', sum_prd = 'numeric', cnt_prd = 'integer')), 

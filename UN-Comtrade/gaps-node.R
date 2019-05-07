@@ -13,7 +13,7 @@ out_dir <- '/efs/work' # save the results to this S3 bucket
 in_bucket <- 'gfi-work' # read in raw data from this bucket
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
+cty <- c(231, 404, 800) # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
 cifob_model <- 'cifob_model.rds.bz2'
 tag <- "Comtrade"
 oplog <- paste('gaps', min(years), max(years), '_', paste(cty, collapse = '-'), '_', '.log', sep = '') # progress report file
@@ -47,8 +47,7 @@ for(year in years){
   logg(paste(year, ':', 'loaded data', sep = '\t'))
   unlink('tmp/tmp.csv.bz2')
   tinv <- subset(tinv, tinv$i %in% cty | tinv$j %in% cty) # subset cty
-  logg(paste(year, ':', 'sub_cty', sep = '\t'))
-  logg(paste(year, '#', nrow(tinv), sep = '\t'))
+  logg(paste(year, '#', paste('sub_cty', nrow(tinv), sep = ':'), sep = '\t'))
   tinv$d <- factor(tinv$t, levels = yrs_model); tmp <- encode_onehot(tinv[,'d', drop=FALSE], drop1st = T)
   tinv$d <- NULL; tinv <- cbind(tinv, tmp)
   logg(paste(year, ':', 'prepared data', sep = '\t'))

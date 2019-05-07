@@ -19,7 +19,7 @@ oplog <- 'trf.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
 all_trade <- TRUE
 cty <- c(699, 360, 818) # set to NULL to use all countries within GFI's consideration
-infile <- paste('data/', 'flow_k6_', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
+infile <- paste('data/', 'f_k6_', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
 trfile <- paste('data/', 'trf_', paste(cty, collapse = '-'), '_', min(years), max(years), '.csv', sep = '')
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 cols_in <- c(rep('integer', 3),rep('character',3), rep('numeric',3))
@@ -61,6 +61,6 @@ tm[['TRUE']][, c('wb_code_i','wb_code_j')] <- NULL
 tm[['FALSE']][, c('source','trf_wtd')] <- NA
 tm <- do.call(rbind, tm)
 
-outfile <- paste('data/', 'flowtrf_', paste(cty, collapse = '-'), '_', min(years), max(years), '.csv', sep = '')
+outfile <- paste('data/', 'ftrf_', paste(cty, collapse = '-'), '_', min(years), max(years), '.csv', sep = '')
 write.csv(tm, file= outfile,row.names = F)
 rm(list=ls())

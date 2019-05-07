@@ -20,7 +20,7 @@ max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 all_trade <- TRUE
 cty <- 170 # set to NULL to use all countries within GFI's consideration
-infile <- paste('data/', 'flow_k6_', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
+infile <- paste('data/', 'f_k6_', paste(cty, collapse = '-'), all_trade, min(years), max(years), '.csv', sep = '')
 trfile <- paste('data/', 'trf_', paste(cty, collapse = '-'), '_', min(years), max(years), '.csv', sep = '')
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
 cols_in <- c(rep('integer', 3),rep('character',3), rep('numeric',3))

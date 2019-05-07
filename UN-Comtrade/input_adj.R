@@ -1,4 +1,5 @@
 # suggested 8 years per node
+# NA dev for cty outside gfi consideration in bridge.csv, input_adj removes them by removing NAs
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'batchscr', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)

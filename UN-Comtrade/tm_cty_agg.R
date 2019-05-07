@@ -38,6 +38,7 @@ cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 options(stringsAsFactors= FALSE)
 agg_lv <- paste('k', k_digit, sep = '')
 k_digit <- k_len - k_digit
+if(is.null(cty))cty <- gfi_cty('dev', logf = logg) # select cty for security
 
 for(year in years){
   ecycle(save_object(object = paste(tag, year,"gaps.csv.bz2",sep="-"), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
@@ -45,11 +46,8 @@ for(year in years){
   ecycle(input <- fread(cmd = "bzip2 -dkc ./tmp/tmp.csv.bz2", colClasses=cols_in, na.strings="", header = T),
          {logg(paste(year, '!', 'loading file failed', sep = '\t')); next}, max_try)
   logg(paste(year, ':', 'loaded data', sep = '\t'))
-  if(!is.null(cty)){
     input <- subset(input, input$i %in% cty | input$j %in% cty)
     logg(paste(year, ':', 'extracted cty', sep = '\t'))
-    }else cty <- gfi_cty('dev', logf = logg)
-# gaps files only have ctys in consideration, no select necessary; all_trade needs cty
   setkeyv(input, c('i', 'j'))
   input$f <- ifelse(input$gap_wtd > 0, 'p', 'n'); input$f[input$gap_wtd==0] <- 'x'
   input$gap_wtd <- abs(input$gap_wtd)
@@ -98,7 +96,7 @@ for(year in years){
   colnames(output$x)[match(c('i','j','v_i','v_j'), colnames(output$x))] <- c('j','i','v_j','v_i')
   output <- do.call(rbind, output)
   output$t <- year
-  outfile <- paste('data/', 'flow_', agg_lv, all_trade, year, '.csv.bz2', sep = '')
+  outfile <- paste('data/', 'f_', agg_lv, all_trade, year, '.csv.bz2', sep = '')
   logg(paste(year, '|', 'processed flows', sep = '\t'))
   ecycle(write.csv(output, file = bzfile(outfile),row.names=FALSE,na=""), 
        ecycle(s3write_using(output, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),

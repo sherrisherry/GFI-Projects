@@ -64,7 +64,7 @@ in_hkrx <- function(yr, nm, cl, logf, max_try = 10, io = TRUE){
 # opt can be missing, dev, adv, or a region abbrivation
 gfi_cty <- function(opt, logf, max_try = 10){
   cols <- if(!missing(opt))switch(opt, dev = 'd_dev', adv = c('d_gfi', 'd_dev'), c('d_gfi', 'imf_reg'))else 'd_gfi'
-  bridge <- in_bridge(c(cols, 'un_code'), logf, max_try)
+  bridge <- in_bridge(c(cols, 'un_code'), logf = logf, max_try = max_try)
   if(is.null(bridge))return(NULL)
   bridge <- unique(bridge)
   cty <- if(length(cols)==1)subset(bridge, bridge[, cols]==1, 'un_code', drop = T)
