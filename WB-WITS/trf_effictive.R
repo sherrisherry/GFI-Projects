@@ -10,4 +10,4 @@ trf <- rbind(trains, wto)
 trf <- trf[!duplicated(trf[, -match(c('Trade.Source', 'Weighted.Average'), colnames(trf))]), ]
 names(cols) <- c('t', 'wb_code_i', 'wb_code_j', 'k', 'source', 'trf_wtd')
 colnames(trf)[match(cols, colnames(trf))] <- names(cols)
-write.csv(trf, 'data/trf.csv', row.names = F)
+write.csv(trf, '/efs/work/trf.csv', row.names = F)

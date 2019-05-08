@@ -11,7 +11,6 @@ usr <- 'aws00' # the user account for using AWS service
 dates <- 2016:2001 # the years we want to download
 out_dir <- '/efs/unct'
 in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
-sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
 oplog <- 'input_adj.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
