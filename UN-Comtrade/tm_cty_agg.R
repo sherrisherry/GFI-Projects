@@ -1,4 +1,5 @@
-# use for lots of cty, input from bucket
+# use k2 and cty NULL for lots of cty
+# use k6 for a few cty to add trf
 # 'p' = positive; 'n' = negative; 'x' = zero
 # 'mu' = import underinvoicing; 'mo' = import overinvoicing; 'ng' = no gap
 # 'eu' = export underinvoicing; 'eo' = export overinvoicing
