@@ -13,7 +13,7 @@ install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
-out_bucket <- 'gfi-work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
+out_dir <- '/efs/work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-work' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
@@ -40,7 +40,7 @@ options(stringsAsFactors= FALSE)
 agg_lv <- paste('k', k_digit, sep = '')
 k_digit <- k_len - k_digit
 if(is.null(cty))cty <- gfi_cty('dev', logf = logg) # select cty for security
-
+outputs <- list()
 for(year in years){
   ecycle(save_object(object = paste(tag, year,"gaps.csv.bz2",sep="-"), bucket = in_bucket, file = 'tmp/tmp.csv.bz2', overwrite = TRUE),
          {logg(paste(year, '!', 'retrieving file failed', sep = '\t')); next}, max_try)
@@ -97,18 +97,14 @@ for(year in years){
   colnames(output$x)[match(c('i','j','v_i','v_j'), colnames(output$x))] <- c('j','i','v_j','v_i')
   output <- do.call(rbind, output)
   output$t <- year
-  outfile <- paste('data/', 'f_', agg_lv, all_trade, year, '.csv.bz2', sep = '')
+  outputs[[as.character(year)]] <- output
+  rm(output)
   logg(paste(year, '|', 'processed flows', sep = '\t'))
-  ecycle(write.csv(output, file = bzfile(outfile),row.names=FALSE,na=""), 
-       ecycle(s3write_using(output, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
-                            bucket = out_bucket, object = basename(outfile)),
-              logg(paste(year, '!', paste('uploading', basename(outfile), 'failed', sep = ' '), sep = '\t')), max_try), 
-       max_try,
-       ecycle(put_object(outfile, basename(outfile), bucket = out_bucket), 
-              logg(paste(year, '!', paste('uploading', basename(outfile), 'failed', sep = ' '), sep = '\t')),
-              max_try,
-              {logg(paste(year, '|', paste('uploaded', basename(outfile), sep = ' '), sep = '\t')); unlink(outfile)}))
 }
-
-put_object(oplog, basename(oplog), bucket = out_bucket)
+outputs <- do.call(rbind, outputs)
+outfile <- paste('data/', 'f_', agg_lv, all_trade, '.csv.bz2', sep = '')
+ecycle(write.csv(outputs, file = bzfile(outfile),row.names=FALSE,na=""), 
+              logg(paste('0000', '!', paste('saving', basename(outfile), 'failed', sep = ' '), sep = '\t')),
+       max_try,
+              logg(paste('0000', '|', paste('saved', basename(outfile), sep = ' '), sep = '\t')))
 rm(list=ls())

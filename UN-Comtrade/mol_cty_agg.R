@@ -7,15 +7,15 @@ install_github("sherrisherry/DC-Trees-App", subdir="pkg"); library(pkg)
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
-out_bucket <- 'gfi-work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
+out_dir <- '/efs/work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
+cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
+all_trade <- TRUE
 oplog <- 'mol_cty.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 tag <- 'Comtrade'
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
-cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
-all_trade <- TRUE
 in_nm <- c('M_matched','M_orphaned','M_lost'); names(in_nm) <- c('m', 'o', 'l')
 cols_in <- c(rep("integer",2),rep("character",3),rep("numeric",8),rep("integer",2))
 names(cols_in) <- c("j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")
@@ -33,6 +33,7 @@ k_digit <- k_len - k_digit
 if(is.null(cty))cty <- gfi_cty('dev', logg)
 
 for(i in 1:length(in_nm)){
+    outputs <- list()
 	for(j in 1:length(years)){
 		year <- years[j]
 		nm <- paste(in_nm[i],'.csv.bz2', sep =''); nm <- paste(tag,year,nm,sep="-")
@@ -66,18 +67,14 @@ for(i in 1:length(in_nm)){
 		}
 		output$M$mx <- 'm'; output$X$mx <- 'x'; output <- do.call(rbind, output); output$t <- year
 		logg(paste(year, ':', paste('processed', in_nm[i]), sep = '\t'))
-		tmp <- paste('tmp/', paste(names(in_nm)[i], '_', agg_lv, all_trade, year, sep = ''), '.csv.bz2', sep = '')
-		ecycle(write.csv(output, file = bzfile(tmp), row.names=F, na=""), 
-		       ecycle(s3write_using(output, FUN = function(x, y)write.csv(x, file=bzfile(y), row.names = FALSE),
-		                            bucket = out_bucket, object = basename(tmp)),
-		              logg(paste(year, '!', paste('uploading', basename(tmp), 'failed', sep = ' '), sep = '\t')), max_try), 
-		       max_try,
-		       ecycle(put_object(tmp, basename(tmp), bucket = out_bucket), 
-		              logg(paste(year, '!', paste('uploading', basename(tmp), 'failed', sep = ' '), sep = '\t')),
-		              max_try,
-		              {logg(paste(year, '|', paste('uploaded', basename(tmp), sep = ' '), sep = '\t')); unlink(tmp)}))
-    }# end loop by date
-  rm(output)
+		outputs[[j]] <- output
+		rm(output)
+    }
+  outputs <- do.call(rbind, outputs)
+  tmp <- paste(out_dir, '/', paste(names(in_nm)[i], '_', agg_lv, all_trade, sep = ''), '.csv.bz2', sep = '')
+  ecycle(write.csv(outputs, file = bzfile(tmp), row.names=F, na=""), 
+		       logg(paste('0000', '!', paste('saving', basename(tmp), 'failed', sep = ' '), sep = '\t')),
+			   max_try,
+			   logg(paste('0000', '|', paste('saved', basename(tmp), sep = ' '), sep = '\t')))
 }
-put_object(oplog, basename(oplog), bucket = out_bucket)
 rm(list=ls())
