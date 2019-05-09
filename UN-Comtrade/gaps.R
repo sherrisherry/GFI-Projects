@@ -72,7 +72,7 @@ dist_codes <- function(years, cols){
   logg(paste('0000',':', 'loaded model', sep = '\t'))
   unlink('tmp/tmp.csv.bz2')
   
-  if(is.null(cty))cty <- gfi_cty(logf = logg)
+  # if(is.null(cty))cty <- gfi_cty(logf = logg)
   
   predicts <- list()
   for(year in years){
