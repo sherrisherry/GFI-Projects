@@ -16,7 +16,7 @@ max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 tag <- 'Comtrade'
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
-in_nm <- c('M_matched','M_orphaned','M_lost'); names(in_nm) <- c('m', 'o', 'l')
+in_nm <- c('M_matched','M_orphaned','M_lost'); names(in_nm) <- c('mm', 'om', 'lm')
 cols_in <- c(rep("integer",2),rep("character",3),rep("numeric",8),rep("integer",2))
 names(cols_in) <- c("j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")
 k_len <- 6
@@ -33,7 +33,7 @@ k_digit <- k_len - k_digit
 if(is.null(cty))cty <- gfi_cty('dev', logg)
 
 for(i in 1:length(in_nm)){
-    outputs <- list()
+    out_m <- list(); out_x <- list()
 	for(j in 1:length(years)){
 		year <- years[j]
 		nm <- paste(in_nm[i],'.csv.bz2', sep =''); nm <- paste(tag,year,nm,sep="-")
@@ -52,29 +52,33 @@ for(i in 1:length(in_nm)){
 		logg(paste(year, ':', 'divided mx', sep = '\t'))
 		rm(input)
 		colnames(output$X)[match(c('i','j','v_i','v_j'), colnames(output$X))] <- c('j','i','v_j','v_i')
-		agg <- c('v_i','v_j'); agg <- agg[!is.na(subset(output, 1, agg))]
-		if(!all_trade)output <- subset(output, output$j %in% gfi_cty('adv', logg))
+		if(!all_trade)output <- lapply(output, function(x)subset(x, x$j %in% gfi_cty('adv', logg)))
 		partition <- c('i', 'j')
 		if(k_digit>0){
+		  agg <- c('v_i','v_j')
 		  if(k_digit < k_len){
 		    output$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', output$k)
 		    partition <- append(partition, 'k')
 		  }
-		  setkeyv(output, partition)
-		  output <- lapply(output, function(x)aggregate(subset(x, select = agg), 
-		                                                as.list(subset(x, select = partition)), sum, na.rm=T))
+		  output <- lapply(output, function(x)aggregate(subset(x, TRUE, select = agg[!is.na(x[1, agg, with = F])]), 
+		                                                as.list(subset(x, TRUE, select = partition)), sum, na.rm=T))
 		  logg(paste(year, ':', 'aggregated k', sep = '\t'))
 		}
-		output$M$mx <- 'm'; output$X$mx <- 'x'; output <- do.call(rbind, output); output$t <- year
+		output$M$t <- year; output$X$t <- year
 		logg(paste(year, ':', paste('processed', in_nm[i]), sep = '\t'))
-		outputs[[j]] <- output
+		out_m[[j]] <- output$M; out_x[[j]] <- output$X
 		rm(output)
     }
-  outputs <- do.call(rbind, outputs)
-  tmp <- paste(out_dir, '/', paste(names(in_nm)[i], '_', agg_lv, all_trade, sep = ''), '.csv.bz2', sep = '')
-  ecycle(write.csv(outputs, file = bzfile(tmp), row.names=F, na=""), 
+  out_m <- do.call(rbind, out_m); out_x <- do.call(rbind, out_x)
+  tmp <- paste(out_dir, '/', paste(names(in_nm)[i], '_m_', agg_lv, all_trade, sep = ''), '.csv.bz2', sep = '')
+  ecycle(write.csv(out_m, file = bzfile(tmp), row.names=F, na=""), 
 		       logg(paste('0000', '!', paste('saving', basename(tmp), 'failed', sep = ' '), sep = '\t')),
 			   max_try,
 			   logg(paste('0000', '|', paste('saved', basename(tmp), sep = ' '), sep = '\t')))
+  tmp <- paste(out_dir, '/', paste(names(in_nm)[i], '_x_', agg_lv, all_trade, sep = ''), '.csv.bz2', sep = '')
+  ecycle(write.csv(out_x, file = bzfile(tmp), row.names=F, na=""), 
+         logg(paste('0000', '!', paste('saving', basename(tmp), 'failed', sep = ' '), sep = '\t')),
+         max_try,
+         logg(paste('0000', '|', paste('saved', basename(tmp), sep = ' '), sep = '\t')))
 }
 rm(list=ls())
