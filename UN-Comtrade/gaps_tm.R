@@ -96,8 +96,6 @@ input <- data.table(tinv[, cols_out], key = c('i', 'j'))
                                               eval(partition),sum, na.rm=TRUE))
       logg(paste(year, ':', 'aggregated k', sep = '\t'))
     }
-    tmp$'m'$f <- c(p='mo', n='mu', x='ng')[tmp$'m'$f]; tmp$'m'$mx <- 'm'
-    tmp$'x'$f <- c(p='xu', n='xo', x='ng')[tmp$'x'$f]; tmp$'x'$mx <- 'x'
   }else{
     colnames(input)[match(c('d_dev_i','v_M_fob','v_X'), colnames(input))] <- c('mx','v_i','v_j')
     tmp <- subset(input,input$d_dev_i+input$d_dev_j<2 & input$d_dev_i+input$d_dev_j>0, c("t","j","i","mx","k","v_j",'v_i','f','gap_wtd'))
@@ -115,21 +113,20 @@ input <- data.table(tinv[, cols_out], key = c('i', 'j'))
                        eval(partition),sum, na.rm=TRUE)
       logg(paste(year, ':', 'aggregated k', sep = '\t'))
     }
-    tmp$mx <- ifelse(tmp$mx==1, 'm', 'x')
-    tmp <- split(tmp, tmp$mx)
+    tmp <- split(tmp, tmp$mx); names(tmp) <- ifelse(names(tmp)=='1', 'm', 'x')
     logg(paste(year, ':', 'divided mx', sep = '\t'))
-    tmp$m$f <- c(p='mo', n='mu', x='ng')[tmp$m$f]
-    tmp$x$f <- c(p='xu', n='xo', x='ng')[tmp$x$f]
+    tmp$'m'$'mx' <- NULL; tmp$'x'$'mx' <- NULL
   }
+    tmp$m$f <- c(p='mo', n='mu', x='mn')[tmp$m$f]
+    tmp$x$f <- c(p='xu', n='xo', x='xn')[tmp$x$f]
   colnames(tmp$'x')[match(c('i','j','v_i','v_j'), colnames(tmp$'x'))] <- c('j','i','v_j','v_i')
-  tmp <- do.call(rbind, tmp)
-  tmp$t <- year
+  tmp <- do.call(rbind, tmp); tmp$t <- year
   output[[as.character(year)]] <- tmp
 logg(paste(year, '|', 'processed flows', sep = '\t'))
 }
 output <- do.call(rbind, output)
-file_out <- paste(out_dir, '/f_', agg_lv, '.csv', sep = '')
-  ecycle(write.csv(output, file = file_out,row.names=FALSE,na=""), 
-         logg(paste(year, '!', paste('uploading', basename(file_out), 'failed', sep = ' '), sep = '\t')), 
+file_out <- paste(out_dir, '/tm_', agg_lv, all_trade, '.csv.bz2', sep = '')
+  ecycle(write.csv(output, file = bzfile(file_out),row.names=FALSE,na=""), 
+         logg(paste(year, '!', paste('saving', basename(file_out), 'failed', sep = ' '), sep = '\t')), 
          max_try)
 logg(paste('0000', ':', 'done', sep = '\t'))

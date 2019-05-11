@@ -1,8 +1,8 @@
 # use k2 and cty NULL for lots of cty
 # use k6 for a few cty to add trf
 # 'p' = positive; 'n' = negative; 'x' = zero
-# 'mu' = import underinvoicing; 'mo' = import overinvoicing; 'ng' = no gap
-# 'eu' = export underinvoicing; 'eo' = export overinvoicing
+# 'mu' = import underinvoicing; 'mo' = import overinvoicing; 'mn' = no gap
+# 'xu' = export underinvoicing; 'xo' = export overinvoicing; 'xn' = no gap
 
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'stats', 'batchscr', 'remotes', 'data.table')
@@ -31,6 +31,7 @@ k_len <- 6
 #===================================================================================================================================#
 
 # if(is.null(cty) && all_trade)stop('all cty and all trade mutually exclusive') # for our methodology; mechanically feasible
+if(!file.exists(out_dir))system(paste('sudo mkdir -m777', out_dir))
 oplog <- paste('logs/', oplog, sep = '')
 logg <- function(x)mklog(x, path = oplog)
 ec2env(keycache,usr)
@@ -71,7 +72,6 @@ for(year in years){
       output <- lapply(output, function(x)aggregate(x[,c('v_i','v_j','gap_wtd')], as.list(subset(x, select = partition)),sum, na.rm=T))
       logg(paste(year, ':', 'aggregated k', sep = '\t'))
     }
-    output$m$mx <- 'm'; output$x$mx <- 'x'
   }else{
     colnames(input)[match(c('d_dev_i','v_M_fob','v_X'), colnames(input))] <- c('mx','v_i','v_j')
     output <- subset(input,input$d_dev_i+input$d_dev_j<2 & input$d_dev_i+input$d_dev_j>0, c("t","j","i","mx","k","v_j",'v_i','f','gap_wtd'))
@@ -88,12 +88,12 @@ for(year in years){
                        as.list(subset(output, select = partition)),sum, na.rm=T)
       logg(paste(year, ':', 'aggregated k', sep = '\t'))
     }
-    output$mx <- ifelse(output$mx==1, 'm', 'x')
-    output <- split(output, output$mx)
+    output <- split(output, output$mx); names(output) <- ifelse(names(output)=='1', 'm', 'x')
     logg(paste(year, ':', 'divided mx', sep = '\t'))
+    output$'m'$'mx' <- NULL; output$'x'$'mx' <- NULL
   }
-  output$m$f <- c(p='mo', n='mu', x='ng')[output$m$f]
-  output$x$f <- c(p='xu', n='xo', x='ng')[output$x$f]
+  output$m$f <- c(p='mo', n='mu', x='mn')[output$m$f]
+  output$x$f <- c(p='xu', n='xo', x='xn')[output$x$f]
   colnames(output$x)[match(c('i','j','v_i','v_j'), colnames(output$x))] <- c('j','i','v_j','v_i')
   output <- do.call(rbind, output)
   output$t <- year
@@ -102,7 +102,7 @@ for(year in years){
   logg(paste(year, '|', 'processed flows', sep = '\t'))
 }
 outputs <- do.call(rbind, outputs)
-outfile <- paste('data/', 'f_', agg_lv, all_trade, '.csv.bz2', sep = '')
+outfile <- paste('data/', 'tm_', agg_lv, all_trade, '.csv.bz2', sep = '')
 ecycle(write.csv(outputs, file = bzfile(outfile),row.names=FALSE,na=""), 
               logg(paste('0000', '!', paste('saving', basename(outfile), 'failed', sep = ' '), sep = '\t')),
        max_try,

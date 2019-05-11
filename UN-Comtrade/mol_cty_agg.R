@@ -16,12 +16,13 @@ max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 tag <- 'Comtrade'
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
-in_nm <- c('M_matched','M_orphaned','M_lost'); names(in_nm) <- c('mm', 'om', 'lm')
+in_nm <- c('M_matched','M_orphaned','M_lost'); names(in_nm) <- c('mm', 'mo', 'ml')
 cols_in <- c(rep("integer",2),rep("character",3),rep("numeric",8),rep("integer",2))
 names(cols_in) <- c("j","i","hs_rpt","hs_ptn","k","v_rX","v_rM","v_M","v_X","q_M","q_X","q_kg_M","q_kg_X","q_code_M","q_code_X")
 k_len <- 6
 
 #===================================================================================================================================#
+if(!file.exists(out_dir))system(paste('sudo mkdir -m777', out_dir))
 oplog <- file.path('logs', oplog)
 logg <- function(x)mklog(x, path = oplog)
 ec2env(keycache,usr)
