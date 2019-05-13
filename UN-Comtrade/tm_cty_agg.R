@@ -7,12 +7,12 @@
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'stats', 'batchscr', 'remotes', 'data.table')
 for(i in pkgs)library(i, character.only = T)
-install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
+install_github("sherrisherry/DC-Trees-App", subdir="pkg"); library(pkg)
 
 #=====================================modify the following parameters for each new run==============================================#
 
 usr <- 'aws00' # the user account for using AWS service
-years <- 2016:2001 # the years we want to download
+years <- 2016:2007 # the years we want to download
 out_dir <- '/efs/work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
 in_bucket <- 'gfi-work' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
@@ -20,7 +20,7 @@ tag <- "Comtrade"
 oplog <- 'tm_cty.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-all_trade <- TRUE
+all_trade <- FALSE
 cty <- NULL # set to NULL to use all dev countries within GFI's consideration
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
 cols_in <- c(rep('integer', 5),'character', rep('numeric',3), rep('NULL',5))
@@ -69,12 +69,12 @@ for(year in years){
         partition <- c('i', 'j', 'f')
       }
 	  setkeyv(output$m, partition); setkeyv(output$x, partition)
-      output <- lapply(output, function(x)aggregate(x[,c('v_i','v_j','gap_wtd')], as.list(subset(x, select = partition)),sum, na.rm=T))
+      output <- lapply(output, function(x)aggregate(x[,c('v_i','v_j','gap_wtd')], as.list(subset(x, TRUE, select = partition)),sum, na.rm=T))
       logg(paste(year, ':', 'aggregated k', sep = '\t'))
     }
   }else{
     colnames(input)[match(c('d_dev_i','v_M_fob','v_X'), colnames(input))] <- c('mx','v_i','v_j')
-    output <- subset(input,input$d_dev_i+input$d_dev_j<2 & input$d_dev_i+input$d_dev_j>0, c("t","j","i","mx","k","v_j",'v_i','f','gap_wtd'))
+    output <- subset(input,input$mx+input$d_dev_j<2 & input$mx+input$d_dev_j>0, c("t","j","i","mx","k","v_j",'v_i','f','gap_wtd'))
     rm(input)
     if(k_digit>0){
       if(k_digit < k_len){
@@ -85,7 +85,7 @@ for(year in years){
       }
 	  setkeyv(output, partition)
       output <- aggregate(output[,c('v_i','v_j','gap_wtd')],
-                       as.list(subset(output, select = partition)),sum, na.rm=T)
+                       as.list(subset(output, TRUE, select = partition)),sum, na.rm=T)
       logg(paste(year, ':', 'aggregated k', sep = '\t'))
     }
     output <- split(output, output$mx); names(output) <- ifelse(names(output)=='1', 'm', 'x')
@@ -102,7 +102,7 @@ for(year in years){
   logg(paste(year, '|', 'processed flows', sep = '\t'))
 }
 outputs <- do.call(rbind, outputs)
-outfile <- paste('data/', 'tm_', agg_lv, all_trade, '.csv.bz2', sep = '')
+outfile <- paste(out_dir, 'tm_', agg_lv, all_trade, '.csv.bz2', sep = '')
 ecycle(write.csv(outputs, file = bzfile(outfile),row.names=FALSE,na=""), 
               logg(paste('0000', '!', paste('saving', basename(outfile), 'failed', sep = ' '), sep = '\t')),
        max_try,

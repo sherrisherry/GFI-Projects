@@ -32,6 +32,7 @@ agg_lv <- paste('k', k_digit, sep = '')
 k_digit <- k_len - k_digit
 
 if(is.null(cty))cty <- gfi_cty('dev', logg)
+if(!all_trade)ptn <- gfi_cty('adv', logg)
 
 for(i in 1:length(in_nm)){
     out_m <- list(); out_x <- list()
@@ -48,17 +49,16 @@ for(i in 1:length(in_nm)){
 		colnames(input)[match(c('v_M','v_X'), colnames(input))] <- c('v_i','v_j')
 		input <- subset(input, input$i %in% cty | input$j %in% cty)
 		output <- list()
-		output$M <- subset(input, input$i %in% cty, c('j',"i","k","v_j",'v_i'))
-		output$X <- subset(input, input$j %in% cty, c("j","i","k","v_j",'v_i'))
+		output$M <- subset(input, if(all_trade)input$i %in% cty else input$i %in% cty & input$j %in% ptn, c('j',"i","k","v_j",'v_i'))
+		output$X <- subset(input, if(all_trade)input$j %in% cty else input$j %in% cty & input$i %in% ptn, c("j","i","k","v_j",'v_i'))
 		logg(paste(year, ':', 'divided mx', sep = '\t'))
 		rm(input)
 		colnames(output$X)[match(c('i','j','v_i','v_j'), colnames(output$X))] <- c('j','i','v_j','v_i')
-		if(!all_trade)output <- lapply(output, function(x)subset(x, x$j %in% gfi_cty('adv', logg)))
 		partition <- c('i', 'j')
 		if(k_digit>0){
 		  agg <- c('v_i','v_j')
 		  if(k_digit < k_len){
-		    output$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', output$k)
+		    output <- lapply(output, function(x){x$k <- gsub(paste('.{',k_digit,'}$', sep = ''), '', x$k); return(x)})
 		    partition <- append(partition, 'k')
 		  }
 		  output <- lapply(output, function(x)aggregate(subset(x, TRUE, select = agg[!is.na(x[1, agg, with = F])]), 
