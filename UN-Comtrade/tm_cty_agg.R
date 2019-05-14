@@ -102,7 +102,7 @@ for(year in years){
   logg(paste(year, '|', 'processed flows', sep = '\t'))
 }
 outputs <- do.call(rbind, outputs)
-outfile <- paste(out_dir, 'tm_', agg_lv, all_trade, '.csv.bz2', sep = '')
+outfile <- paste(out_dir, '/tm_', agg_lv, all_trade, '.csv.bz2', sep = '')
 ecycle(write.csv(outputs, file = bzfile(outfile),row.names=FALSE,na=""), 
               logg(paste('0000', '!', paste('saving', basename(outfile), 'failed', sep = ' '), sep = '\t')),
        max_try,
