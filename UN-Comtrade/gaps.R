@@ -94,6 +94,7 @@ dist_codes <- function(years, cols){
     # pdict <- cbind(tinv$'0'[, cols], pdict)
 	# may use SSEtotal=SSEbetween+SSEwithin for stdev; median + cnt for global median.
 	pdict <- aggregate(pdict, as.list(tinv$'0'[, cols]), function(x)c(max=max(x),min=min(x),sum=sum(x),cnt=length(x)))
+	pdict <- cbind(pdict[, cols], pdict[['x']]); pdict$cnt <- as.integer(pdict$cnt) # organize pdict list into data.frame and match col types with output.
 	tinv <- do.call(rbind, tinv)
     tinv[(tinv$v_M_fob>tinv$v_M),"v_M_fob"] <- tinv[(tinv$v_M_fob>tinv$v_M),"v_M"]# DEFAULT: when fob>cif set FOB = CIF
     # calculate weights & gaps
@@ -124,7 +125,7 @@ logg(paste('0000', '|', 'cluster started', sep = '\t'))
 tbl_yrs <- sdf_copy_to(sc, data.frame(years), repartition = npar)
 predicts <- spark_apply(tbl_yrs, dist_codes, packages = c('pkg', 'aws.s3'), 
                         context = data.frame(names(cols_pdict), stringsAsFactors = F), 
-                        memory = T, name = 'pred_gaps', rdd = T, 
+                        memory = T, name = 'pred_gaps', rdd = T, # rdd = T to enable columns parameter to stop pre-exe
                         columns = append(cols_pdict, c(max_prd = 'numeric', min_prd = 'numeric', sum_prd = 'numeric', cnt_prd = 'integer')), 
                         env = list(out_bucket = out_bucket, oplog = oplog))
 summ_prd <- list()
