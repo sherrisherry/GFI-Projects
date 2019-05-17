@@ -12,7 +12,7 @@ out_bucket <- 'gfi-work' # save the results to this S3 bucket
 oplog <- 'gaps.log' # progress report file
 outfile <- 'data/summ_prd.csv'
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
-nload <- 3.5 # years for a worker
+nload <- 3 # years for a worker
 max_try <- 10L # the maximum number of attempts for a failed process
 spark_home <- '/home/gfi/spark/spark-2.3.2-bin-hadoop2.7' # SPARK_HOME isn't required with 'local' master
 master_node <- 'spark://ip-172-31-91-141.ec2.internal:7077'
@@ -95,7 +95,7 @@ dist_codes <- function(years, cols){
 	# may use SSEtotal=SSEbetween+SSEwithin for stdev; median + cnt for global median.
 	pdict <- aggregate(pdict, as.list(tinv$'0'[, cols]), function(x)c(max=max(x),min=min(x),sum=sum(x),cnt=length(x)))
 	pdict <- cbind(pdict[, cols], pdict[['x']]); pdict$cnt <- as.integer(pdict$cnt) # organize pdict list into data.frame and match col types with output.
-	tinv <- do.call(rbind, tinv)
+    tinv <- do.call(rbind, tinv)
     tinv[(tinv$v_M_fob>tinv$v_M),"v_M_fob"] <- tinv[(tinv$v_M_fob>tinv$v_M),"v_M"]# DEFAULT: when fob>cif set FOB = CIF
     # calculate weights & gaps
     tinv$a_wt <- 1
