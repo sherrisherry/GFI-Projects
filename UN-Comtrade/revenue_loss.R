@@ -3,7 +3,8 @@
 
 rm(list=ls()) # clean up environment
 pkgs <- c('stats', 'data.table')
-for(i in pkgs)library(i, character.only = T)
+for(i in pkgs){if(!require(i, character.only = T))install.packages(i); library(i, character.only = T)}
+if(!require(remotes))install.packages('remotes')
 remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
 
 #=====================================modify the following parameters for each new run==============================================#
