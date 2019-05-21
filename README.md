@@ -1,6 +1,6 @@
 # GFI-Cloud
 
-This repository is intended to be a mirror of the home folder of data analyst on AWS, which may include multiple projects. The reason for using this structure is that it makes clear of what files are shared between projects.
+This repository is intended to be a mirror of the home folder of GFI's data analyst on AWS, which may include multiple projects. The reason for using this structure is that it makes clear of what files are shared between projects.
 
 Some files are modified to prevent leaking sensitive information such as our user credentials.
 
@@ -14,26 +14,33 @@ At this stage, we use a data lake rather than a database strategy to manage data
 
 * Memory: AWS EBS
   * 9G root, gp2
-  * 21G swap, gp2
+  * 12G - 21G swap, gp2
 
 * Storage: AWS S3 + EFS
   * S3
     * gfi-comtrade: downsized Comtrade datasets
     * gfi-supplemental: supplemental files
-    * gfi-mirror-analysis: matched data for mirror analysis
+    * gfi-mirror-analysis: paired data for mirror analysis
+	* gfi-work: intermediate results that used repeatly
+	* gfi-archive: backup files
   * EFS
     * mounted to /efs
-
-* Supplement: Google Drive
-  * work progress reports
+	* /efs/work: results of each project
 
 ## Structure of Repository
 
 * vars/: Files shared by multiple projects, usually user credentials and environment settings.
 
-* UN-Comtrade/: Dealing with raw Comtrade data
+* UN-Comtrade/: Dealing with Comtrade data
+
+* WB-WITS/: Dealing with World Bank WITS data
+
+* pkg/: package for GFI projects
+
+* norm/: normalizing legacy data for new process
 
 ## Update History
 
 * 01/30/2019: repository creation, with vars/ and UN-Comtrade/
-* 02/19/2019: large update, improving efficiency and robustness
+* 02/19/2019: debuging, improving efficiency and robustness
+* 03/10/2019: implemented distributed computing
