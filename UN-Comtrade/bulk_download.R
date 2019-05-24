@@ -1,5 +1,6 @@
+# CPU intensive, enable unlimited mode of instance
 # 1. automatically download Comtrade data that is newer than our existing data from the UN;
-# 2. decompress and subset the raw data to only keep aggregation level 6 and remove country names and commodity names;
+# 2. decompress and subset the raw data to only keep aggregation level 6 and remove redundant columns;
 # 3. compress the results and send them to AWS S3;
 # 4. record the information of downloaded data;
 # 5. shutdown system after completion.

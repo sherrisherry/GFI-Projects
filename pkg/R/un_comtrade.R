@@ -98,12 +98,12 @@ unct_treat <- function(unct,t_in) {
              839,   # non-geographic: Special categories
              577,   # Africa, nes
              636,   # Rest of America, nes
-             568,   #         Europe, nes
-             637,   #         North & Central America, nes
-             527,   #         Oceania, nes
-             899,   #         Areas, nes
-             473,   #         South America, nes
-             879    #         Western Asia, nes
+             568,   # Europe, nes
+             637,   # North & Central America, nes
+             527,   # Oceania, nes
+             899,   # Areas, nes
+             473,   # South America, nes
+             879    # Western Asia, nes
   )
   unct <- subset(unct,!(unct$i %in% x_cty) & !(unct$j %in% x_cty))
   # NEC commodity exclusions
