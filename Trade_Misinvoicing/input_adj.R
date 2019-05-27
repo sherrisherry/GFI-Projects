@@ -1,3 +1,4 @@
+# both CPU and IO intensive
 # suggested 8 years per node
 # NA dev for cty outside gfi consideration in bridge.csv, input_adj removes them by removing NAs
 rm(list=ls()) # clean up environment

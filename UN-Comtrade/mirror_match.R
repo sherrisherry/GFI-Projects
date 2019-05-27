@@ -1,7 +1,8 @@
-# 1. decompress and subset the raw data to only keep aggregation level 6 and remove country names and commodity names;
-# 3. compress the results and send them to AWS S3;
-# 4. record the information of downloaded data;
-# 5. send a progress report to Google Drive;
+# IO intensive
+# 1. pair import records with export records;
+# 3. adjust for swiss, hong kong, .etc;
+# 4. separate matched, orphaned, and lost;
+# 5. compress the results and send them to AWS S3;
 # 6. shutdown system after completion.
 
 rm(list=ls()) # clean up environment

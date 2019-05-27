@@ -1,3 +1,5 @@
+# IO intensive
+
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'sparklyr', 'batchscr', 'dplyr')
 for(i in pkgs){if(!require(i, character.only = T))install.packages(i); library(i, character.only = T)}

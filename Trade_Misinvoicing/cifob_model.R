@@ -1,5 +1,4 @@
 # build model to estimate gap between CIF and FOB
-# produce cif-fob model coefficients: Margins Model Coefficients.csv
 
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'aws.ec2metadata', 'stats', 'batchscr', 'cleandata', 'remotes')
