@@ -39,6 +39,16 @@ At this stage, we use a data lake rather than a database strategy to manage data
 
 * norm/: normalizing legacy data for new process
 
+* documentation.docx: documentation of all the projects; refer to the master flow chart in each project folder for detailed process in a technical aspect.
+
+* spacious.sh: environment setup for processes that run in a single computing unit.
+
+* spark-master.sh: environment setup of the master node for processes that run on multiple computing units.
+
+* spark-worker.sh: environment setup of the worker nodes for processes that run on multiple computing units.
+
+* .Renviron: environment setting for R sessions; complementing the *.sh environment setup files.
+
 ## Update History
 
 * 01/30/2019: repository creation, with vars/ and UN-Comtrade/

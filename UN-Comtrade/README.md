@@ -1,7 +1,7 @@
 # Downloading and Preprocessing Comtrade Data
 
 This project downloads the Comtrade datasets, downsizes them, and stores them in a completely automated manner.
-I didn't use the [public API](https://comtrade.un.org/data/doc/api/) because it has limit on the number of records for download. I used the [bulk API](https://comtrade.un.org/data/Doc/api/bulk) instead.
+We don't use the [public API](https://comtrade.un.org/data/doc/api/) because it has limit on the number of records for download. The [bulk API](https://comtrade.un.org/data/Doc/api/bulk) is used.
 
 ## List of Files
 

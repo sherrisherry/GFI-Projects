@@ -5,7 +5,7 @@ cols <- c("Trade.Year","Reporter","Partner","Product","Trade.Source","Weighted.A
 if(!setequal(colnames(trains), cols) | !setequal(colnames(wto), cols))stop('input structure changed')
 trains <- na.omit(trains); wto <- na.omit(wto)
 trf <- merge(x=trains, y=wto, by=c("Trade.Year","Reporter","Partner","Product"))
-if(sum(trf$Weighted.Average.x!=trf$Weighted.Average.y)!=0)stop('overlap not equal')
+if(sum(trf$Weighted.Average.x!=trf$Weighted.Average.y)!=0)message('overlap not equal')
 trf <- rbind(trains, wto)
 trf <- trf[!duplicated(trf[, -match(c('Trade.Source', 'Weighted.Average'), colnames(trf))]), ]
 names(cols) <- c('t', 'wb_code_i', 'wb_code_j', 'k', 'source', 'trf_wtd')
