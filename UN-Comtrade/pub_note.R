@@ -4,7 +4,7 @@
 pkgs <- c('aws.s3', 'aws.ec2metadata', 'XML')
 for(i in pkgs){if(!require(i, character.only = T))install.packages(i); library(i, character.only = T)}
 if(!require(remotes))install.packages('remotes')
-remotes::install_github("sherrisherry/GFI-Cloud", subdir="pkg"); library(pkg)
+remotes::install_github("sherrisherry/GFI-Projects", subdir="pkg"); library(pkg)
 usr <- 'aws00' # the user account for using AWS service
 keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE)
 out_bucket <- 'gfi-comtrade'
