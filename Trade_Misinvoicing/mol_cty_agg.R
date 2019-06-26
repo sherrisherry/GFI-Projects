@@ -1,3 +1,11 @@
+# i: reporter; j: partner; k: hs code
+# output names: A_B_CD.csv.bz2
+## A: mm = import matched; mo = import orphaned; ml = import lost
+## B: m = import; x = export
+### mm_m: matched import; mm_x: matched export
+### mo_m: orphaned import; mo_x: lost export
+### ml_m: lost import; ml_x: orphaned export
+## C: k# = hs codes aggregated to #-digit level; D: TRUE = with all countries | FALSE = with advanced economies
 rm(list=ls()) # clean up environment
 pkgs <- c('aws.s3', 'aws.ec2metadata', 'batchscr', 'remotes', 'data.table')
 for(i in pkgs){if(!require(i, character.only = T))install.packages(i); library(i, character.only = T)}
@@ -8,7 +16,7 @@ remotes::install_github("sherrisherry/GFI-Projects", subdir="pkg"); library(pkg)
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2001 # the years we want to download
-out_dir <- '/efs/work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
+out_dir <- '/efs/work' # save the results to a EFS folder
 in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
 cty <- NULL # set to NULL to select all countries within GFI's consideration; or exp. c(231, 404, 800)
 all_trade <- TRUE
@@ -50,8 +58,8 @@ for(i in 1:length(in_nm)){
 		colnames(input)[match(c('v_M','v_X'), colnames(input))] <- c('v_i','v_j')
 		input <- subset(input, input$i %in% cty | input$j %in% cty)
 		output <- list()
-		output$M <- subset(input, if(all_trade)input$i %in% cty else input$i %in% cty & input$j %in% ptn, c('j',"i","k","v_j",'v_i'))
-		output$X <- subset(input, if(all_trade)input$j %in% cty else input$j %in% cty & input$i %in% ptn, c("j","i","k","v_j",'v_i'))
+		output$M <- subset(input, input$i %in% cty & if(all_trade) input$j %in% gfi_cty() else input$j %in% ptn, c('j',"i","k","v_j",'v_i'))
+		output$X <- subset(input, input$j %in% cty & if(all_trade) input$i %in% gfi_cty() else input$i %in% ptn, c("j","i","k","v_j",'v_i'))
 		logg(paste(year, ':', 'divided mx', sep = '\t'))
 		rm(input)
 		colnames(output$X)[match(c('i','j','v_i','v_j'), colnames(output$X))] <- c('j','i','v_j','v_i')

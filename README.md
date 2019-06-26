@@ -1,10 +1,8 @@
-# GFI-Cloud
+# GFI-Projects
 
-This repository is intended to be a mirror of the home folder of GFI's data analyst on AWS, which may include multiple projects. The reason for using this structure is that it makes clear of what files are shared between projects.
+This repository is intended to be a mirror of the home folder of GFI's data analyst on AWS, which may include multiple projects.
 
-Some files are modified to prevent leaking sensitive information such as our user credentials.
-
-At this stage, we use a data lake rather than a database strategy to manage data so that we can be flexible with our analysis.
+Some files in vars/ are modified to prevent leaking sensitive information such as our user credentials.
 
 ## System Environment
 

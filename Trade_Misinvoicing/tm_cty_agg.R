@@ -14,7 +14,7 @@ remotes::install_github("sherrisherry/GFI-Projects", subdir="pkg"); library(pkg)
 
 usr <- 'aws00' # the user account for using AWS service
 years <- 2016:2007 # the years we want to download
-out_dir <- '/efs/work' # save the results to a S3 bucket called 'gfi-mirror-analysis'
+out_dir <- '/efs/work' # save the results to a ESF folder
 in_bucket <- 'gfi-work' # read in raw data from this bucket
 sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
