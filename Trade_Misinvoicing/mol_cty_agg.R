@@ -15,6 +15,7 @@ remotes::install_github("sherrisherry/GFI-Projects", subdir="pkg"); library(pkg)
 #=====================================modify the following parameters for each new run==============================================#
 
 usr <- 'aws00' # the user account for using AWS service
+keycache <- read.csv('~/vars/accesscodes.csv', header = T, stringsAsFactors = F); ec2env(keycache,usr)
 years <- 2016:2001 # the years we want to download
 out_dir <- '/efs/work' # save the results to a EFS folder
 in_bucket <- 'gfi-mirror-analysis' # read in raw data from this bucket
@@ -22,7 +23,6 @@ cty <- NULL # set to NULL to select all countries within GFI's consideration; or
 all_trade <- TRUE
 oplog <- 'mol_cty.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
-keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
 tag <- 'Comtrade'
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
 in_nm <- c('M_matched','M_orphaned','M_lost'); names(in_nm) <- c('mm', 'mo', 'ml')
@@ -34,7 +34,6 @@ k_len <- 6
 if(!file.exists(out_dir))system(paste('sudo mkdir -m777', out_dir))
 oplog <- file.path('logs', oplog)
 logg <- function(x)mklog(x, path = oplog)
-ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 agg_lv <- paste('k', k_digit, sep = '')

@@ -20,7 +20,7 @@ sup_bucket <- 'gfi-supplemental' # supplemental files
 tag <- "Comtrade"
 oplog <- 'tm_cty.log' # progress report file
 max_try <- 10 # the maximum number of attempts for a failed process
-keycache <- read.csv('~/vars/accesscodes.csv', header = TRUE, stringsAsFactors = FALSE) # the database of our credentials
+keycache <- read.csv('~/vars/accesscodes.csv', header = T, stringsAsFactors = F); ec2env(keycache,usr)
 all_trade <- FALSE
 cty <- NULL # set to NULL to use all dev countries within GFI's consideration
 k_digit <- 2 # the number of digits of HS codes to be aggregated to
@@ -35,7 +35,6 @@ k_len <- 6
 if(!file.exists(out_dir))system(paste('sudo mkdir -m777', out_dir))
 oplog <- paste('logs/', oplog, sep = '')
 logg <- function(x)mklog(x, path = oplog)
-ec2env(keycache,usr)
 options(stringsAsFactors= FALSE)
 cat('Time\tZone\tYear\tMark\tStatus\n', file = oplog, append = FALSE)
 options(stringsAsFactors= FALSE)

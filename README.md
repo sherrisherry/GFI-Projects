@@ -47,6 +47,10 @@ Some files in vars/ are modified to prevent leaking sensitive information such a
 
 * .Renviron: environment setting for R sessions; complementing the *.sh environment setup files.
 
+## Related Repos
+
+* [Trade Misinvoicing Analysis Using DOTS](https://github.com/sherrisherry/Trade_Misinvoicing-DOTS)
+
 ## Update History
 
 * 01/30/2019: repository creation, with vars/ and UN-Comtrade/
